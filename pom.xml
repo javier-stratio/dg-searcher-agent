@@ -4,12 +4,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>groupId</groupId>
+    <groupId>com.stratio.governance.agent.searcher</groupId>
     <artifactId>dg-searcher-agent</artifactId>
     <packaging>pom</packaging>
     <version>1.0.0-SNAPSHOT</version>
     <modules>
+        <module>commons</module>
         <module>partialindexer</module>
+        <module>totalindexer</module>
     </modules>
 
     <properties>
@@ -38,6 +40,7 @@
         <http_client_version>4.5.5</http_client_version>
         <json4s_version>3.5.2</json4s_version>
         <postgresql_version>42.1.1</postgresql_version>
+        <play-json.version>2.6.9</play-json.version>
     </properties>
 
     <dependencyManagement>
@@ -79,6 +82,13 @@
             <version>${scalacheck.version}</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>com.typesafe.scala-logging</groupId>
+            <artifactId>scala-logging_${scala.binary.version}</artifactId>
+            <version>${scala-logging}</version>
+        </dependency>
+
     </dependencies>
 </dependencyManagement>
 

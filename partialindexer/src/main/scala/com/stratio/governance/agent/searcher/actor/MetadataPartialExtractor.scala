@@ -117,5 +117,5 @@ class MetadataPartialExtractor(indexer: ActorRef, override val circuitBreakerCon
     case msg: AnyRef => LOG.debug(s"Actor in error state no messages processed: ${msg.getClass.getCanonicalName}")
   }
 
-  object MetadataPartialExtractor
+
 }

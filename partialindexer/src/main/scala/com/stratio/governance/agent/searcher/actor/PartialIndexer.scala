@@ -67,7 +67,7 @@ class PartialIndexer extends Actor {
 
       val documentsBulk: String = org.json4s.native.Serialization.write(lista)
 
-      sender ! Future(HttpRequester.postRequest(documentsBulk))
+      sender ! Future(HttpRequester.partialPostRequest(documentsBulk))
 
   }
 

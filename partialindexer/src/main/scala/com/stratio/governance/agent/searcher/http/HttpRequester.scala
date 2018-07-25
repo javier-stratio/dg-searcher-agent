@@ -6,7 +6,7 @@ import org.apache.http.impl.client.HttpClientBuilder
 
 object HttpRequester {
 
-  def postRequest(json: String): CloseableHttpResponse = {
+  def partialPostRequest(json: String): CloseableHttpResponse = {
 
     //http://${indexer_base_path}/domain/partial
     val post = new HttpPost("http://localhost:8080/indexer/test_domain/partial")

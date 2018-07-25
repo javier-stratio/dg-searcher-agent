@@ -1,5 +1,7 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>dg-searcher-agent</artifactId>
         <groupId>groupId</groupId>
@@ -7,11 +9,10 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.stratio.governance.agent.searcher</groupId>
-    <artifactId>partial-indexer</artifactId>
+    <artifactId>total-indexer</artifactId>
     <name>${project.artifactId}</name>
-    <description>Partial documents indexation from Governance Datastore</description>
+    <description>Total documents indexation from Governance Datastore</description>
     <inceptionYear>2018</inceptionYear>
-
 
     <dependencies>
         <!-- ScalikeJdbc -->
@@ -19,12 +20,6 @@
             <groupId>org.scalikejdbc</groupId>
             <artifactId>scalikejdbc_2.11</artifactId>
             <version>2.2.8</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.typesafe</groupId>
-            <artifactId>config</artifactId>
-            <version>${typesafe.config.version}</version>
         </dependency>
 
         <!-- Akka-http -->
@@ -45,18 +40,9 @@
             <version>${akka.version}</version>
         </dependency>
 
-        <!-- Apache Http client-->
         <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>${http_client_version}</version>
-        </dependency>
-
-        <!-- Json4s-->
-        <dependency>
-            <groupId>org.json4s</groupId>
-            <artifactId>json4s-native_2.11</artifactId>
-            <version>${json4s_version}</version>
+            <groupId>com.typesafe.scala-logging</groupId>
+            <artifactId>scala-logging_${scala.binary.version}</artifactId>
         </dependency>
 
         <!-- Postgresql-->
@@ -66,11 +52,33 @@
             <version>${postgresql_version}</version>
         </dependency>
 
+        <!-- JSON -->
         <dependency>
-            <groupId>com.typesafe.scala-logging</groupId>
-            <artifactId>scala-logging_${scala.binary.version}</artifactId>
+            <groupId>com.typesafe.play</groupId>
+            <artifactId>play-json_${scala.binary.version}</artifactId>
+            <version>${play-json.version}</version>
         </dependency>
 
+        <!-- Json4s-->
+        <dependency>
+            <groupId>org.json4s</groupId>
+            <artifactId>json4s-native_2.11</artifactId>
+            <version>${json4s_version}</version>
+        </dependency>
+
+
+        <!-- https://mvnrepository.com/artifact/com.typesafe.play/play-iteratees -->
+        <dependency>
+            <groupId>com.typesafe.play</groupId>
+            <artifactId>play-iteratees_2.11</artifactId>
+            <version>2.5.17</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.stratio.governance.agent.searcher</groupId>
+            <artifactId>commons</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -154,4 +162,5 @@
             </plugin>
         </plugins>
     </build>
+
 </project>

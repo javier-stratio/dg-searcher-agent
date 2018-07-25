@@ -1,50 +1,18 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>dg-searcher-agent</artifactId>
-        <groupId>groupId</groupId>
+        <groupId>com.stratio.governance.agent.searcher</groupId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.stratio.governance.agent.searcher</groupId>
-    <artifactId>partial-indexer</artifactId>
-    <name>${project.artifactId}</name>
-    <description>Partial documents indexation from Governance Datastore</description>
-    <inceptionYear>2018</inceptionYear>
 
+    <groupId>com.stratio.governance.agent.searcher</groupId>
+    <artifactId>commons</artifactId>
 
     <dependencies>
-        <!-- ScalikeJdbc -->
-        <dependency>
-            <groupId>org.scalikejdbc</groupId>
-            <artifactId>scalikejdbc_2.11</artifactId>
-            <version>2.2.8</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.typesafe</groupId>
-            <artifactId>config</artifactId>
-            <version>${typesafe.config.version}</version>
-        </dependency>
-
-        <!-- Akka-http -->
-        <dependency>
-            <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-actor_${scala.binary.version}</artifactId>
-            <version>${akka.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-stream_${scala.binary.version}</artifactId>
-            <version>${akka.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-slf4j_${scala.binary.version}</artifactId>
-            <version>${akka.version}</version>
-        </dependency>
-
         <!-- Apache Http client-->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
@@ -52,23 +20,11 @@
             <version>${http_client_version}</version>
         </dependency>
 
-        <!-- Json4s-->
+        <!-- https://mvnrepository.com/artifact/org.json4s/json4s-jackson -->
         <dependency>
             <groupId>org.json4s</groupId>
-            <artifactId>json4s-native_2.11</artifactId>
-            <version>${json4s_version}</version>
-        </dependency>
-
-        <!-- Postgresql-->
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>${postgresql_version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.typesafe.scala-logging</groupId>
-            <artifactId>scala-logging_${scala.binary.version}</artifactId>
+            <artifactId>json4s-jackson_2.12</artifactId>
+            <version>3.5.4</version>
         </dependency>
 
     </dependencies>
@@ -154,4 +110,5 @@
             </plugin>
         </plugins>
     </build>
+
 </project>

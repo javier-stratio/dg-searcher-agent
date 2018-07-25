@@ -5,7 +5,7 @@ import com.stratio.governance.agent.searcher.actor.{MetadataPartialExtractor, Pa
 import org.apache.commons.dbcp.PoolingDataSource
 import scalikejdbc._
 
-object PostgresNotifications extends App with AppConf {
+object BootPartialIndexer extends App with AppConf {
 
   // initialize JDBC driver & connection pool
   Class.forName("org.postgresql.Driver")

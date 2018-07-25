@@ -1,0 +1,328 @@
+{
+  "id": "governance_search",
+  "name": "Governance Search",
+  "model": {
+    "id": "generated_id",
+    "category": "generated.categories",
+    "language": "spanish",
+    "fields": [
+      {
+        "field": "accessTime",
+        "name": "Access Time",
+        "type": "date",
+        "format": "yyyy-MM-dd'T'HH:mm:ss.SSS",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "agentVersion",
+        "name": "Agent Version",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "baseType",
+        "name": "Base Type",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "createdAt",
+        "name": "Created At",
+        "type": "date",
+        "format": "yyyy-MM-dd'T'HH:mm:ss.SSS",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "credentials",
+        "name": "Credentials",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "databaseSchemaId",
+        "name": "Database Schema Id",
+        "type": "number",
+        "subtype": "long",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "datastoreEngineId",
+        "name": "Datastore Engine Id",
+        "type": "number",
+        "subtype": "long",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "description",
+        "name": "Description",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "displayName",
+        "name": "Display Name",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "id",
+        "name": "Id",
+        "type": "number",
+        "subtype": "long",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "isDir",
+        "name": "Is Dir",
+        "type": "boolean",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "isFk",
+        "name": "Is Fk",
+        "type": "boolean",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "isPartK",
+        "name": "Is PartK",
+        "type": "boolean",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "isPk",
+        "name": "Is Pk",
+        "type": "boolean",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "isView",
+        "name": "Is View",
+        "type": "boolean",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "metadataPath",
+        "name": "Metadata Path",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "modificationTime",
+        "name": "Modification Time",
+        "type": "date",
+        "format": "yyyy-MM-dd'T'HH:mm:ss.SSS",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "name",
+        "name": "Name",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "operationCommandType",
+        "name": "Operation Command Type",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "schema",
+        "name": "Schema",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "schemaName",
+        "name": "Schema Name",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "serverVersion",
+        "name": "Server Version",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "tableId",
+        "name": "Table Id",
+        "type": "number",
+        "subtype": "long",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "type",
+        "name": "Type",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "updatedAt",
+        "name": "Updated At",
+        "type": "date",
+        "format": "yyyy-MM-dd'T'HH:mm:ss.SSS",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "uri",
+        "name": "URI",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "generated.entity",
+        "name": "(G) Entity",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "generated.id",
+        "name": "(G) Identifier",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "generated.parent_id",
+        "name": "(G) Parent Id",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "generated.type",
+        "name": "(G) Type",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "generated.categories",
+        "name": "(G) Category",
+        "type": "compound",
+        "aggregable": true,
+        "key": {
+          "field": "id",
+          "name": "(G) Category Id",
+          "type": "text",
+          "searchable": true,
+          "sortable": true,
+          "aggregable": true
+        },
+        "value": {
+          "field": "name",
+          "name": "(G) Category Name",
+          "type": "text",
+          "searchable": true,
+          "sortable": true,
+          "aggregable": true
+        }
+      },
+      {
+        "field": "generated.keyValuePairs.owner",
+        "name": "(G) KeyValue Owner",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "generated.keyValuePairs.gdp",
+        "name": "(G) KeyValue GDP",
+        "type": "boolean",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "generated.keyValuePairs.quality",
+        "name": "(G) KeyValue Quality",
+        "type": "number",
+        "subtype": "float",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      }
+    ]
+  },
+  "search_fields": {
+    "baseType": 1,
+    "credentials": 1,
+    "description": 1,
+    "displayName": 1,
+    "metadataPath": 1,
+    "name": 1,
+    "operationCommandType": 1,
+    "schema": 1,
+    "schemaName": 1,
+    "uri": 1,
+    "generated.entity": 10,
+    "generated.type": 10,
+    "generated.categories.name": 1,
+    "generated.keyValuePairs.owner": 1,
+    "generated.keyValuePairs.gdp": 1,
+    "generated.keyValuePairs.quality": 1
+  },
+  "elasticsearch": {
+    "shards": 1,
+    "replicas": 1
+  }
+}
