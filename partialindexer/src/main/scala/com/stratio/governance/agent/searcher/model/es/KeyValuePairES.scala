@@ -19,71 +19,62 @@ object KeyValuePairES {
   def fromDatabaseSchemaList(databaseSchemaList: List[(DatabaseSchema, KeyValuePair)])
   : KeyValuePairES = {
 
-    databaseSchemaList.head._2 match {
-      case null => null
-      case _ =>     KeyValuePairES(
-        Try(databaseSchemaList.filter(_._2.key == GDP).head._2.value.toBoolean).getOrElse(false),
-        Try(databaseSchemaList.filter(_._2.key == QUALITY).head._2.value.toFloat).getOrElse(0),
-        Try(databaseSchemaList.filter(_._2.key == OWNER).head._2.value.toString).getOrElse("")
-      )
+    val kvpList = databaseSchemaList.filter(_._2 != null)
 
-    }
+    val gdp = Try(kvpList.filter(_._2.key == GDP).head._2.value.toBoolean).getOrElse(false)
+    val quality = Try(kvpList.filter(_._2.key == QUALITY).head._2.value.toFloat).getOrElse(0F)
+    val owner = Try(kvpList.filter(_._2.key == OWNER).head._2.value.toString).getOrElse("")
+
+    KeyValuePairES(gdp, quality, owner)
+
   }
 
   def fromFileTableList(fileTable: List[(FileTable, KeyValuePair)])
   : KeyValuePairES = {
 
-    fileTable.head._2 match {
-      case null => null
-      case _ =>     KeyValuePairES(
-        Try(fileTable.filter(_._2.key == GDP).head._2.value.toBoolean).getOrElse(false),
-        Try(fileTable.filter(_._2.key == QUALITY).head._2.value.toFloat).getOrElse(0),
-        Try(fileTable.filter(_._2.key == OWNER).head._2.value.toString).getOrElse("")
-      )
+    val kvpList = fileTable.filter(_._2 != null)
 
-    }
+    val gdp = Try(kvpList.filter(_._2.key == GDP).head._2.value.toBoolean).getOrElse(false)
+    val quality = Try(kvpList.filter(_._2.key == QUALITY).head._2.value.toFloat).getOrElse(0F)
+    val owner = Try(kvpList.filter(_._2.key == OWNER).head._2.value.toString).getOrElse("")
+
+    KeyValuePairES(gdp, quality, owner)
   }
 
   def fromFileColumnList(fileColumn: List[(FileColumn, KeyValuePair)])
   : KeyValuePairES = {
 
-    fileColumn.head._2 match {
-      case null => null
-      case _ =>     KeyValuePairES(
-        Try(fileColumn.filter(_._2.key == GDP).head._2.value.toBoolean).getOrElse(false),
-        Try(fileColumn.filter(_._2.key == QUALITY).head._2.value.toFloat).getOrElse(0),
-        Try(fileColumn.filter(_._2.key == OWNER).head._2.value.toString).getOrElse("")
-      )
+    val kvpList = fileColumn.filter(_._2 != null)
 
-    }
+    val gdp = Try(kvpList.filter(_._2.key == GDP).head._2.value.toBoolean).getOrElse(false)
+    val quality = Try(kvpList.filter(_._2.key == QUALITY).head._2.value.toFloat).getOrElse(0F)
+    val owner = Try(kvpList.filter(_._2.key == OWNER).head._2.value.toString).getOrElse("")
+
+    KeyValuePairES(gdp, quality, owner)
   }
 
   def fromSqlTableList(sqlTable: List[(SqlTable, KeyValuePair)])
   : KeyValuePairES = {
 
-    sqlTable.head._2 match {
-      case null => null
-      case _ => KeyValuePairES(
-        Try(sqlTable.filter(_._2.key == GDP).head._2.value.toBoolean).getOrElse(false),
-        Try(sqlTable.filter(_._2.key == QUALITY).head._2.value.toFloat).getOrElse(0),
-        Try(sqlTable.filter(_._2.key == OWNER).head._2.value.toString).getOrElse("")
-      )
+    val kvpList = sqlTable.filter(_._2 != null)
 
-    }
+    val gdp = Try(kvpList.filter(_._2.key == GDP).head._2.value.toBoolean).getOrElse(false)
+    val quality = Try(kvpList.filter(_._2.key == QUALITY).head._2.value.toFloat).getOrElse(0F)
+    val owner = Try(kvpList.filter(_._2.key == OWNER).head._2.value.toString).getOrElse("")
+
+    KeyValuePairES(gdp, quality, owner)
   }
 
   def fromSqlColumnList(sqlColumn: List[(SqlColumn, KeyValuePair)])
-    : KeyValuePairES = {
+  : KeyValuePairES = {
 
-    sqlColumn.head._2 match {
-      case null => null
-      case _ => KeyValuePairES(
-        Try(sqlColumn.filter(_._2.key == GDP).head._2.value.toBoolean).getOrElse(false),
-        Try(sqlColumn.filter(_._2.key == QUALITY).head._2.value.toFloat).getOrElse(0),
-        Try(sqlColumn.filter(_._2.key == OWNER).head._2.value.toString).getOrElse("")
-      )
+    val kvpList = sqlColumn.filter(_._2 != null)
 
-    }
+    val gdp = Try(kvpList.filter(_._2.key == GDP).head._2.value.toBoolean).getOrElse(false)
+    val quality = Try(kvpList.filter(_._2.key == QUALITY).head._2.value.toFloat).getOrElse(0F)
+    val owner = Try(kvpList.filter(_._2.key == OWNER).head._2.value.toString).getOrElse("")
+
+    KeyValuePairES(gdp, quality, owner)
   }
 
 
