@@ -2,6 +2,8 @@ package com.stratio.governance.agent.searcher.model
 
 import java.sql.ResultSet
 
+import scala.util.Try
+
 case class DatastoreEngine(id: Int,
                            `type`: String,
                            credentials: Option[String],
@@ -14,7 +16,7 @@ case class DatastoreEngine(id: Int,
                            operation_command_type: String,
                            modification_time: Option[Long],
                            access_time: Option[Long]
-                           ) extends EntityRow
+                          ) extends EntityRow
 
 object DatastoreEngine{
 
@@ -26,8 +28,8 @@ object DatastoreEngine{
         Some(resultSet.getString(3)),
         resultSet.getString(4),
         resultSet.getString(5),
-        resultSet.getString(6),
-        resultSet.getString(7),
+        resultSet.getString(6).replaceAll(" ", "T"),
+        resultSet.getString(7).replaceAll(" ", "T"),
         resultSet.getString(8),
         resultSet.getString(9),
         resultSet.getString(10),

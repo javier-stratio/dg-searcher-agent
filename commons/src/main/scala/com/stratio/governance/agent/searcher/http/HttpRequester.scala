@@ -1,7 +1,7 @@
 package com.stratio.governance.agent.searcher.http
 
 import com.stratio.governance.agent.searcher.model.utils.JsonUtils
-import org.apache.http.client.methods.{CloseableHttpResponse, HttpPost}
+import org.apache.http.client.methods.{CloseableHttpResponse, HttpPost, HttpPut}
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.util.EntityUtils
@@ -36,17 +36,22 @@ object HttpRequester {
     println(s"responseString :: $responseTotalString")
 
     val responseTotalMap = JsonUtils.jsonStrToMap(responseTotalString)
-    val token = responseTotalMap.get("token")
+    val token = responseTotalMap("token")
 
-    //TODO token
     //http://localhost:8081/indexer/test_domain/total/{{token}}/index
-    val postDocuments = new HttpPost(s"http://localhost:8081/indexer/test_domain/total/$token/index")
-    postDocuments.setHeader("Content-type", "application/json")
-    postDocuments.setEntity(new StringEntity(json))
-    val responseDocuments: CloseableHttpResponse = client.execute(postDocuments)
+    val putDocuments = new HttpPut(s"http://localhost:8081/indexer/test_domain/total/$token/index")
+    putDocuments.setHeader("Content-type", "application/json")
+    putDocuments.setEntity(new StringEntity(json))
+    val responseDocuments: CloseableHttpResponse = client.execute(putDocuments)
     val entityDocuments = responseDocuments.getEntity
     val responseDocumentsString = EntityUtils.toString(entityDocuments, "UTF-8")
-    println(s"responseString :: $responseTotalString")
+    println(s"responseString :: $responseDocumentsString")
+
+    val endTotalPut = new HttpPut(s"http://localhost:8081/indexer/test_domain/total/$token/end")
+    val finalResponse = client.execute(endTotalPut)
+    val entityFinalResponse = finalResponse.getEntity
+    val responseFinalResponse = EntityUtils.toString(entityFinalResponse, "UTF-8")
+    println(s"responseFinalResponse :: $responseFinalResponse")
 
     responseDocuments
   }

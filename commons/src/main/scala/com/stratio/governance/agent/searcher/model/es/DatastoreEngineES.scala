@@ -7,7 +7,7 @@ case class DatastoreEngineES(generated_id: String,
                              generated: GeneratedES,
                              id: Int,
                              name: String,
-                            `type`: String,
+                             `type`: String,
                              credentials: String,
                              agentVersion: String,
                              serverVersion: String,
@@ -34,11 +34,13 @@ object DatastoreEngineES {
       datastoreEngine.metadata_path,
       datastoreEngine.modification_time.getOrElse(null) match {
         case null => null
+        case 0 => null
         case _ => datastoreEngine.modification_time.get.toString
       }
-    ,
+      ,
       datastoreEngine.access_time.getOrElse(null) match {
         case null => null
+        case 0 => null
         case _ => datastoreEngine.access_time.get.toString
       }
     )
