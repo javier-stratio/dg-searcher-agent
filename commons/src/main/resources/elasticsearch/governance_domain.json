@@ -320,9 +320,5 @@
     "generated.keyValuePairs.owner": 1,
     "generated.keyValuePairs.gdp": 1,
     "generated.keyValuePairs.quality": 1
-  },
-  "elasticsearch": {
-    "shards": 1,
-    "replicas": 1
   }
 }
