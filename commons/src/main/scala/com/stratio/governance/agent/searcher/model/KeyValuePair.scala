@@ -1,6 +1,6 @@
 package com.stratio.governance.agent.searcher.model
 
-case class KeyValuePair(id: Option[Int],
+case class KeyValuePair(id: Int,
                         parent_id: Int,
                         parent_type: Int,
                         key_id: Int,
@@ -13,4 +13,5 @@ case class KeyValuePair(id: Option[Int],
                         created_at: String,
                         updated_at: String,
                         modification_time: Option[Long],
-                        access_time: Option[Long]) extends EntityRow
+                        access_time: Option[Long])
+    extends EntityRow

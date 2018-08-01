@@ -15,7 +15,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration.MILLISECONDS
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class TotalIndexer extends Actor  {
+class TotalIndexer extends Actor {
 
   implicit val formats: DefaultFormats.type = DefaultFormats
 
@@ -25,17 +25,16 @@ class TotalIndexer extends Actor  {
 
   override def receive = {
     case IndexerEvent(chunk) =>
-
-      val list = chunk.map{ entity =>
+      val list = chunk.map { entity =>
         DatastoreEngineES.fromDatastoreEngine(entity)
       }
 
       val documentsBulk: String = org.json4s.native.Serialization.write(list)
 
-      sender ! Future(HttpRequester.totalPostRequest(documentsBulk))
+//      sender ! Future(HttpRequester.totalPostRequest("", documentsBulk))
 
-      //TODO call total indexer endpoint and control status and errors
-/*
+    //TODO call total indexer endpoint and control status and errors
+    /*
       val lista: Array[EntityRowES] = chunk.map { not =>
 
         // convert to object
@@ -76,21 +75,20 @@ class TotalIndexer extends Actor  {
       val documentsBulk: String = org.json4s.native.Serialization.write(lista)
 
       sender ! Future(HttpRequester.postRequest(documentsBulk))
-*/
+   */
   }
 }
 
 object TotalIndexer {
 
   /**
-    * Default Actor name
-    */
+   * Default Actor name
+   */
   lazy val NAME = "Total Indexer"
 
   /**
-    * Actor messages
-    */
+   * Actor messages
+   */
   case class IndexerEvent(notificationChunks: Seq[DatastoreEngine])
 
 }
-

@@ -16,13 +16,16 @@ case class DatastoreEngineES(generated_id: String,
                              updatedAt: String,
                              metadataPath: String,
                              modificationTime: String,
-                             accessTime: String) extends EntityRowES
+                             accessTime: String)
+    extends EntityRowES
 
 object DatastoreEngineES {
 
-  def fromDatastoreEngine(datastoreEngine: DatastoreEngine): DatastoreEngineES ={
-    DatastoreEngineES(datastoreEngine.metadata_path,
-      GenerateESObject.genGenerated(datastoreEngine), datastoreEngine.id,
+  def fromDatastoreEngine(datastoreEngine: DatastoreEngine): DatastoreEngineES = {
+    DatastoreEngineES(
+      datastoreEngine.metadata_path,
+      GenerateESObject.genGenerated(datastoreEngine),
+      datastoreEngine.id,
       datastoreEngine.name,
       datastoreEngine.`type`,
       datastoreEngine.credentials.orNull,
@@ -34,14 +37,13 @@ object DatastoreEngineES {
       datastoreEngine.metadata_path,
       datastoreEngine.modification_time.getOrElse(null) match {
         case null => null
-        case 0 => null
-        case _ => datastoreEngine.modification_time.get.toString
-      }
-      ,
+        case 0    => null
+        case _    => datastoreEngine.modification_time.get.toString
+      },
       datastoreEngine.access_time.getOrElse(null) match {
         case null => null
-        case 0 => null
-        case _ => datastoreEngine.access_time.get.toString
+        case 0    => null
+        case _    => datastoreEngine.access_time.get.toString
       }
     )
   }

@@ -22,8 +22,8 @@ case class SqlColumn(id: Int,
                      access_time: Option[Long],
                      operation_command_type: String,
                      nullable: Boolean,
-                     metadata: String) extends EntityRow
-
+                     metadata: String)
+    extends EntityRow
 
 object SqlColumn {
 
@@ -33,17 +33,18 @@ object SqlColumn {
 
     val sqlColumnList: List[(SqlColumn, KeyValuePair)] = getResult(resultSet, sqlColumn)
 
-    val sqlColumnES: Seq[SqlColumnES] = Seq(SqlColumnES.
-      fromSqlColumnList(sqlColumnList))
+    val sqlColumnES: Seq[SqlColumnES] = Seq(SqlColumnES.fromSqlColumnList(sqlColumnList))
     sqlColumnES
 
   }
 
   @scala.annotation.tailrec
-  def getResult(resultSet: ResultSet, sqlColumn: SqlColumn, list: List[(SqlColumn, KeyValuePair)] = Nil)
-  : List[(SqlColumn, KeyValuePair)] = {
+  def getResult(resultSet: ResultSet,
+                sqlColumn: SqlColumn,
+                list: List[(SqlColumn, KeyValuePair)] = Nil): List[(SqlColumn, KeyValuePair)] = {
     if (resultSet.next()) {
-      val keyValuePair = KeyValuePair.apply(Some(resultSet.getInt(1)),
+      val keyValuePair = KeyValuePair.apply(
+        resultSet.getInt(1),
         resultSet.getInt(2),
         resultSet.getInt(3),
         resultSet.getInt(4),
@@ -56,11 +57,11 @@ object SqlColumn {
         resultSet.getString(11),
         resultSet.getString(12),
         Some(resultSet.getLong(13)),
-        Some(resultSet.getLong(14)))
+        Some(resultSet.getLong(14))
+      )
 
       getResult(resultSet, sqlColumn, (sqlColumn, keyValuePair) :: list)
-    }
-    else {
+    } else {
       (sqlColumn, null) :: list
     }
   }

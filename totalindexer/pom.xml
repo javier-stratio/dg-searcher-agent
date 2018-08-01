@@ -8,7 +8,6 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.stratio.governance.agent.searcher</groupId>
     <artifactId>total-indexer</artifactId>
     <name>${project.artifactId}</name>
     <description>Total documents indexation from Governance Datastore</description>
@@ -18,8 +17,14 @@
         <!-- ScalikeJdbc -->
         <dependency>
             <groupId>org.scalikejdbc</groupId>
-            <artifactId>scalikejdbc_2.11</artifactId>
-            <version>2.2.8</version>
+            <artifactId>scalikejdbc_${scala.binary.version}</artifactId>
+            <version>${scalikejdbc.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.scalikejdbc</groupId>
+            <artifactId>scalikejdbc-streams_${scala.binary.version}</artifactId>
+            <version>${scalikejdbc.version}</version>
         </dependency>
 
         <!-- Akka-http -->
@@ -62,16 +67,8 @@
         <!-- Json4s-->
         <dependency>
             <groupId>org.json4s</groupId>
-            <artifactId>json4s-native_2.11</artifactId>
-            <version>${json4s_version}</version>
-        </dependency>
-
-
-        <!-- https://mvnrepository.com/artifact/com.typesafe.play/play-iteratees -->
-        <dependency>
-            <groupId>com.typesafe.play</groupId>
-            <artifactId>play-iteratees_2.11</artifactId>
-            <version>2.5.17</version>
+            <artifactId>json4s-native_${scala.binary.version}</artifactId>
+            <version>${json4s.version}</version>
         </dependency>
 
         <dependency>

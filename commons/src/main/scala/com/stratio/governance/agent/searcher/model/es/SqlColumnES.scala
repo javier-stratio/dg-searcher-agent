@@ -16,13 +16,15 @@ case class SqlColumnES(generated_id: String,
                        updatedAt: String,
                        metadataPath: String,
                        modificationTime: String,
-                       accessTime: String) extends EntityRowES
+                       accessTime: String)
+    extends EntityRowES
 
 object SqlColumnES {
 
   def fromSqlColumnList(sqlColumnList: List[(SqlColumn, KeyValuePair)]): SqlColumnES = {
     val sqlColumn = sqlColumnList.head._1
-    SqlColumnES(sqlColumn.metadata_path,
+    SqlColumnES(
+      sqlColumn.metadata_path,
       GenerateESObject.genGenerated(sqlColumn, sqlColumnList),
       sqlColumn.id,
       sqlColumn.name,
@@ -36,14 +38,13 @@ object SqlColumnES {
       sqlColumn.metadata_path,
       sqlColumn.modification_time.getOrElse(null) match {
         case null => null
-        case 0 => null
-        case _ => sqlColumn.modification_time.get.toString
-      }
-      ,
+        case 0    => null
+        case _    => sqlColumn.modification_time.get.toString
+      },
       sqlColumn.access_time.getOrElse(null) match {
         case null => null
-        case 0 => null
-        case _ => sqlColumn.access_time.get.toString
+        case 0    => null
+        case _    => sqlColumn.access_time.get.toString
       }
     )
   }

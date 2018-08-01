@@ -24,7 +24,8 @@ case class SqlTable(id: Int,
                     provider: String,
                     partitioncolumnnames: String,
                     stats: String,
-                    storage: String) extends EntityRow
+                    storage: String)
+    extends EntityRow
 
 object SqlTable {
 
@@ -34,17 +35,18 @@ object SqlTable {
 
     val sqlTableList: List[(SqlTable, KeyValuePair)] = getResult(resultSet, sqlTable)
 
-    val sqlTableES: Seq[SqlTableES] = Seq(SqlTableES.
-      fromSqlTableList(sqlTableList))
+    val sqlTableES: Seq[SqlTableES] = Seq(SqlTableES.fromSqlTableList(sqlTableList))
     sqlTableES
 
   }
 
   @scala.annotation.tailrec
-  def getResult(resultSet: ResultSet, sqlTable: SqlTable, list: List[(SqlTable, KeyValuePair)] = Nil)
-  : List[(SqlTable, KeyValuePair)] = {
+  def getResult(resultSet: ResultSet,
+                sqlTable: SqlTable,
+                list: List[(SqlTable, KeyValuePair)] = Nil): List[(SqlTable, KeyValuePair)] = {
     if (resultSet.next()) {
-      val keyValuePair = KeyValuePair.apply(Some(resultSet.getInt(1)),
+      val keyValuePair = KeyValuePair.apply(
+        resultSet.getInt(1),
         resultSet.getInt(2),
         resultSet.getInt(3),
         resultSet.getInt(4),
@@ -57,11 +59,11 @@ object SqlTable {
         resultSet.getString(11),
         resultSet.getString(12),
         Some(resultSet.getLong(13)),
-        Some(resultSet.getLong(14)))
+        Some(resultSet.getLong(14))
+      )
 
       getResult(resultSet, sqlTable, (sqlTable, keyValuePair) :: list)
-    }
-    else {
+    } else {
       (sqlTable, null) :: list
     }
   }

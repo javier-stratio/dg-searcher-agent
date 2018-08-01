@@ -18,10 +18,10 @@ object KeyValuePairMapping {
   )
 
   val parentType: Map[String, Int] = Map[String, Int](
-    "database" -> 1,
-    "sqltable" -> 2,
-    "sqlcolumn" -> 3,
-    "filetable" -> 4,
+    "database"   -> 1,
+    "sqltable"   -> 2,
+    "sqlcolumn"  -> 3,
+    "filetable"  -> 4,
     "filecolumn" -> 5
   )
 
@@ -31,17 +31,17 @@ object KeyValuePairMapping {
         //resultSet has as many records as key value pairs has got the database
         val databaseSchemaList: List[(DatabaseSchema, KeyValuePair)] = getResult(resultSet)
 
-        val databaseSchemaES: Seq[DatabaseSchemaES] = Seq(DatabaseSchemaES.
-          fromDatabaseSchemaList(databaseSchemaList))
+        val databaseSchemaES: Seq[DatabaseSchemaES] = Seq(DatabaseSchemaES.fromDatabaseSchemaList(databaseSchemaList))
         databaseSchemaES
     }
   }
 
   @scala.annotation.tailrec
-  def getResult(resultSet: ResultSet, list: List[(DatabaseSchema, KeyValuePair)] = Nil)
-  : List[(DatabaseSchema, KeyValuePair)] = {
+  def getResult(resultSet: ResultSet,
+                list: List[(DatabaseSchema, KeyValuePair)] = Nil): List[(DatabaseSchema, KeyValuePair)] = {
     if (resultSet.next()) {
-      val databaseSchema = DatabaseSchema.apply(resultSet.getInt(1),
+      val databaseSchema = DatabaseSchema.apply(
+        resultSet.getInt(1),
         resultSet.getInt(2),
         resultSet.getString(3),
         resultSet.getString(4),
@@ -54,8 +54,10 @@ object KeyValuePairMapping {
         Some(resultSet.getLong(11)),
         Some(resultSet.getLong(12)),
         resultSet.getString(13),
-        Some(resultSet.getString(14)))
-      val keyValuePair = KeyValuePair.apply(Some(resultSet.getInt(15)),
+        Some(resultSet.getString(14))
+      )
+      val keyValuePair = KeyValuePair.apply(
+        resultSet.getInt(15),
         resultSet.getInt(16),
         resultSet.getInt(17),
         resultSet.getInt(18),
@@ -68,14 +70,13 @@ object KeyValuePairMapping {
         resultSet.getString(25),
         resultSet.getString(26),
         Some(resultSet.getLong(27)),
-        Some(resultSet.getLong(28)))
+        Some(resultSet.getLong(28))
+      )
 
       getResult(resultSet, (databaseSchema, keyValuePair) :: list)
-    }
-    else {
+    } else {
       list
     }
   }
-
 
 }

@@ -16,13 +16,15 @@ case class FileTableES(generated_id: String,
                        updatedAt: String,
                        metadataPath: String,
                        modificationTime: String,
-                       accessTime: String) extends EntityRowES
+                       accessTime: String)
+    extends EntityRowES
 
 object FileTableES {
 
   def fromFileTableList(fileTableList: List[(FileTable, KeyValuePair)]): FileTableES = {
     val fileTable = fileTableList.head._1
-    FileTableES(GenerateESObject.genGeneratedId(s"HDFS/${fileTable.datastore_engine_id}/FileTable", fileTable.id),
+    FileTableES(
+      GenerateESObject.genGeneratedId(s"HDFS/${fileTable.datastore_engine_id}/FileTable", fileTable.id),
       GenerateESObject.genGenerated(fileTable, fileTableList),
       fileTable.id,
       fileTable.name,
@@ -36,14 +38,13 @@ object FileTableES {
       fileTable.metadata_path,
       fileTable.modification_time.getOrElse(null) match {
         case null => null
-        case 0 => null
-        case _ => fileTable.modification_time.get.toString
-      }
-      ,
+        case 0    => null
+        case _    => fileTable.modification_time.get.toString
+      },
       fileTable.access_time.getOrElse(null) match {
         case null => null
-        case 0 => null
-        case _ => fileTable.access_time.get.toString
+        case 0    => null
+        case _    => fileTable.access_time.get.toString
       }
     )
   }

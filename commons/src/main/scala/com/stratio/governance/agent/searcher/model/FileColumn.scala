@@ -20,7 +20,8 @@ case class FileColumn(id: Int,
                       metadata_path: String,
                       modification_time: Option[Long],
                       access_time: Option[Long],
-                      operation_command_type: String) extends EntityRow
+                      operation_command_type: String)
+    extends EntityRow
 
 object FileColumn {
 
@@ -30,17 +31,18 @@ object FileColumn {
 
     val fileColumnList: List[(FileColumn, KeyValuePair)] = getResult(resultSet, fileColumn)
 
-    val fileColumnES: Seq[FileColumnES] = Seq(FileColumnES.
-      fromFileColumnList(fileColumnList))
+    val fileColumnES: Seq[FileColumnES] = Seq(FileColumnES.fromFileColumnList(fileColumnList))
     fileColumnES
 
   }
 
   @scala.annotation.tailrec
-  def getResult(resultSet: ResultSet, fileColumn: FileColumn, list: List[(FileColumn, KeyValuePair)] = Nil)
-  : List[(FileColumn, KeyValuePair)] = {
+  def getResult(resultSet: ResultSet,
+                fileColumn: FileColumn,
+                list: List[(FileColumn, KeyValuePair)] = Nil): List[(FileColumn, KeyValuePair)] = {
     if (resultSet.next()) {
-      val keyValuePair = KeyValuePair.apply(Some(resultSet.getInt(1)),
+      val keyValuePair = KeyValuePair.apply(
+        resultSet.getInt(1),
         resultSet.getInt(2),
         resultSet.getInt(3),
         resultSet.getInt(4),
@@ -53,11 +55,11 @@ object FileColumn {
         resultSet.getString(11),
         resultSet.getString(12),
         Some(resultSet.getLong(13)),
-        Some(resultSet.getLong(14)))
+        Some(resultSet.getLong(14))
+      )
 
       getResult(resultSet, fileColumn, (fileColumn, keyValuePair) :: list)
-    }
-    else {
+    } else {
       (fileColumn, null) :: list
     }
   }

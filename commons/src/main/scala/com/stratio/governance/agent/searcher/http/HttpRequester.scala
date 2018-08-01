@@ -1,59 +1,66 @@
 package com.stratio.governance.agent.searcher.http
 
+import akka.actor.ActorSystem
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers.`Content-Type`
+import akka.http.scaladsl.unmarshalling.Unmarshal
+import akka.stream.ActorMaterializer
 import com.stratio.governance.agent.searcher.model.utils.JsonUtils
-import org.apache.http.client.methods.{CloseableHttpResponse, HttpPost, HttpPut}
-import org.apache.http.entity.StringEntity
-import org.apache.http.impl.client.HttpClientBuilder
-import org.apache.http.util.EntityUtils
+import org.json4s.DefaultFormats
 
+import scala.concurrent.duration.DurationInt
+import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 
 object HttpRequester {
 
-  def partialPostRequest(json: String): CloseableHttpResponse = {
+  implicit val formats: DefaultFormats = org.json4s.DefaultFormats
 
+  def partialPostRequest(json: String)(implicit system: ActorSystem): Future[HttpResponse] = {
     //http://${indexer_base_path}/domain/partial
-    val post = new HttpPost("http://localhost:8081/indexer/test_domain/partial")
-    post.setHeader("Content-type", "application/json")
-    post.setEntity(new StringEntity(json))
-
-    val client = HttpClientBuilder.create.build
-    client.execute(post)
+    val entity: RequestEntity = HttpEntity(ContentType(MediaTypes.`application/json`), json)
+    val request: HttpRequest =
+      HttpRequest(HttpMethods.POST, uri = "http://localhost:8081/indexer/test_domain/partial", entity = entity)
+    Http(system).singleRequest(request)
   }
 
-  def totalPostRequest(json: String): CloseableHttpResponse = {
+  def initTotalRequest()(implicit system: ActorSystem,
+                         mat: ActorMaterializer,
+                         executor: ExecutionContextExecutor): String = {
+    val initTotal: HttpRequest             = HttpRequest(HttpMethods.POST, uri = "http://localhost:8081/indexer/test_domain/total")
+    val httpResponse: Future[HttpResponse] = Http(system).singleRequest(initTotal)
 
-    //http://${indexer_base_path}/domain/partial
-    val initTotal = new HttpPost("http://localhost:8081/indexer/test_domain/total")
-    //post.setHeader("Content-type", "application/json")
-    //post.setEntity(new StringEntity(json))
 
-    val client = HttpClientBuilder.create.build
-    val responseTotal: CloseableHttpResponse = client.execute(initTotal)
+    val response: String = Await.result(httpResponse.flatMap { res =>
+      Unmarshal(res).to[String]
+    }, 10 seconds)
 
-    import org.apache.http.HttpEntity
-    val entity = responseTotal.getEntity
-    val responseTotalString = EntityUtils.toString(entity, "UTF-8")
-    println(s"responseString :: $responseTotalString")
+    println(response)
+    println(JsonUtils.jsonStrToMap(response))
+    println(JsonUtils.jsonStrToMap(response)("token").toString)
 
-    val responseTotalMap = JsonUtils.jsonStrToMap(responseTotalString)
-    val token = responseTotalMap("token")
+    JsonUtils.jsonStrToMap(response)("token").toString
+  }
 
+  def indexRequest(token: String, json: String)(implicit system: ActorSystem,
+                                                mat: ActorMaterializer,
+                                                executor: ExecutionContextExecutor): Future[HttpResponse] = {
     //http://localhost:8081/indexer/test_domain/total/{{token}}/index
-    val putDocuments = new HttpPut(s"http://localhost:8081/indexer/test_domain/total/$token/index")
-    putDocuments.setHeader("Content-type", "application/json")
-    putDocuments.setEntity(new StringEntity(json))
-    val responseDocuments: CloseableHttpResponse = client.execute(putDocuments)
-    val entityDocuments = responseDocuments.getEntity
-    val responseDocumentsString = EntityUtils.toString(entityDocuments, "UTF-8")
-    println(s"responseString :: $responseDocumentsString")
 
-    val endTotalPut = new HttpPut(s"http://localhost:8081/indexer/test_domain/total/$token/end")
-    val finalResponse = client.execute(endTotalPut)
-    val entityFinalResponse = finalResponse.getEntity
-    val responseFinalResponse = EntityUtils.toString(entityFinalResponse, "UTF-8")
-    println(s"responseFinalResponse :: $responseFinalResponse")
+    val putDocuments: HttpRequest = HttpRequest(
+      HttpMethods.PUT,
+      uri = s"http://localhost:8081/indexer/test_domain/total/$token/index",
+      entity = HttpEntity(ContentTypes.`application/json`, json)
+    )
+    Http(system).singleRequest(putDocuments)
+  }
 
-    responseDocuments
+  def endRequest(
+    token: String
+  )(implicit system: ActorSystem, mat: ActorMaterializer, executor: ExecutionContextExecutor): Future[HttpResponse] = {
+    val endTotalPut: HttpRequest =
+      HttpRequest(HttpMethods.PUT, uri = s"http://localhost:8081/indexer/test_domain/total/$token/end")
+    Http(system).singleRequest(endTotalPut)
   }
 
 }

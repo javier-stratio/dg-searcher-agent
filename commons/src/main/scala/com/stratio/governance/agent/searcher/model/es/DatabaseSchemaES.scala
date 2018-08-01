@@ -16,14 +16,14 @@ case class DatabaseSchemaES(generated_id: String,
                             updatedAt: String,
                             metadataPath: String,
                             modificationTime: String,
-                            accessTime: String) extends EntityRowES{
-
-}
+                            accessTime: String)
+    extends EntityRowES
 
 object DatabaseSchemaES {
 
   def fromDatabaseSchema(databaseSchema: DatabaseSchema, keyValuePair: KeyValuePair): DatabaseSchemaES = {
-    DatabaseSchemaES(databaseSchema.metadata_path,
+    DatabaseSchemaES(
+      databaseSchema.metadata_path,
       GenerateESObject.genGenerated(databaseSchema, keyValuePair),
       databaseSchema.id,
       databaseSchema.name,
@@ -37,19 +37,19 @@ object DatabaseSchemaES {
       databaseSchema.metadata_path,
       databaseSchema.modification_time.getOrElse(null) match {
         case null => null
-        case _ => databaseSchema.modification_time.get.toString
-      }
-      ,
+        case _    => databaseSchema.modification_time.get.toString
+      },
       databaseSchema.access_time.getOrElse(null) match {
         case null => null
-        case _ => databaseSchema.access_time.get.toString
+        case _    => databaseSchema.access_time.get.toString
       }
     )
   }
 
   def fromDatabaseSchemaList(databaseSchemaList: List[(DatabaseSchema, KeyValuePair)]): DatabaseSchemaES = {
     val databaseSchema = databaseSchemaList.head._1
-    DatabaseSchemaES(GenerateESObject.genGeneratedId("PostgreSQL", databaseSchema.id),
+    DatabaseSchemaES(
+      GenerateESObject.genGeneratedId("PostgreSQL", databaseSchema.id),
       GenerateESObject.genGenerated(databaseSchema, databaseSchemaList),
       databaseSchema.id,
       databaseSchema.name,
@@ -63,14 +63,13 @@ object DatabaseSchemaES {
       databaseSchema.metadata_path,
       databaseSchema.modification_time.getOrElse(null) match {
         case null => null
-        case 0 => null
-        case _ => databaseSchema.modification_time.get.toString
-      }
-      ,
+        case 0    => null
+        case _    => databaseSchema.modification_time.get.toString
+      },
       databaseSchema.access_time.getOrElse(null) match {
         case null => null
-        case 0 => null
-        case _ => databaseSchema.access_time.get.toString
+        case 0    => null
+        case _    => databaseSchema.access_time.get.toString
       }
     )
   }

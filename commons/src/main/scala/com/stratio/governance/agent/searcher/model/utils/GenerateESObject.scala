@@ -7,12 +7,13 @@ object GenerateESObject {
 
   def genParentId(generatedId: String): String = {
     val genIdToList = generatedId.split("/")
-    genIdToList.take(genIdToList.length - 2).mkString("/")
+    val x = genIdToList.take(genIdToList.length - 2).mkString("/")
+    x
   }
 
-
   def genGeneratedId(datastoreEngine: DatastoreEngine): String = {
-    s"/${datastoreEngine.`type`}/${datastoreEngine.id}"
+    val x = s"/${datastoreEngine.`type`}/${datastoreEngine.id}"
+    x
   }
 
   def genGeneratedId(sType: String, id: Int): String = {
@@ -21,77 +22,87 @@ object GenerateESObject {
 
   def genGenerated(datastoreEngine: DatastoreEngine): GeneratedES = {
     val generatedId = GenerateESObject.genGeneratedId(datastoreEngine)
-    GeneratedES(DatastoreEngine.entity,
-                datastoreEngine.`type`,
-                generatedId,
-                GenerateESObject.genParentId(generatedId),
-                Seq(CategoryES.fromDatastoreEngineGeneratedId(generatedId)),
-                KeyValuePairES.fromDatastoreEngine(datastoreEngine))
+    GeneratedES(
+      DatastoreEngine.entity,
+      datastoreEngine.`type`,
+      generatedId,
+      GenerateESObject.genParentId(generatedId),
+      Seq(CategoryES.fromGeneratedId(generatedId)),
+      KeyValuePairES.fromDatastoreEngine(datastoreEngine)
+    )
   }
 
   def genGenerated(databaseSchema: DatabaseSchema, keyValuePair: KeyValuePair): GeneratedES = {
     val generatedId = GenerateESObject.genGeneratedId("PostgreSQL", databaseSchema.id)
-    GeneratedES(DatastoreEngine.entity,
+    GeneratedES(
+      DatastoreEngine.entity,
       "PostgreSQL",
       generatedId,
       GenerateESObject.genParentId(generatedId),
-      Seq(CategoryES.fromDatabaseSchemaGeneratedId(generatedId)),
-      KeyValuePairES.fromKeyValuePair(keyValuePair))
+      Seq(CategoryES.fromGeneratedId(generatedId)),
+      KeyValuePairES.fromKeyValuePair(keyValuePair)
+    )
   }
 
-  def genGenerated(databaseSchema: DatabaseSchema, databaseSchemaList: List[(DatabaseSchema, KeyValuePair)])
-  : GeneratedES = {
+  def genGenerated(databaseSchema: DatabaseSchema,
+                   databaseSchemaList: List[(DatabaseSchema, KeyValuePair)]): GeneratedES = {
     val generatedId = GenerateESObject.genGeneratedId("PostgreSQL", databaseSchema.id)
-    GeneratedES(DatabaseSchema.entity,
+    GeneratedES(
+      DatabaseSchema.entity,
       "PostgreSQL",
       generatedId,
       GenerateESObject.genParentId(generatedId),
-      Seq(CategoryES.fromDatastoreEngineGeneratedId(generatedId)),
-      KeyValuePairES.fromDatabaseSchemaList(databaseSchemaList))
+      Seq(CategoryES.fromGeneratedId(generatedId)),
+      KeyValuePairES.fromDatabaseSchemaList(databaseSchemaList)
+    )
   }
 
-  def genGenerated(fileTable: FileTable, fileTableList: List[(FileTable, KeyValuePair)])
-  : GeneratedES = {
+  def genGenerated(fileTable: FileTable, fileTableList: List[(FileTable, KeyValuePair)]): GeneratedES = {
     val generatedId = GenerateESObject.genGeneratedId("PostgreSQL", fileTable.id)
-    GeneratedES(FileTable.entity,
+    GeneratedES(
+      FileTable.entity,
       "PostgreSQL",
       generatedId,
       GenerateESObject.genParentId(generatedId),
-      Seq(CategoryES.fromFileTableGeneratedId(generatedId)),
-      KeyValuePairES.fromFileTableList(fileTableList))
+      Seq(CategoryES.fromGeneratedId(generatedId)),
+      KeyValuePairES.fromFileTableList(fileTableList)
+    )
   }
 
-  def genGenerated(fileColumn: FileColumn, fileColumnList: List[(FileColumn, KeyValuePair)])
-  : GeneratedES = {
+  def genGenerated(fileColumn: FileColumn, fileColumnList: List[(FileColumn, KeyValuePair)]): GeneratedES = {
     val generatedId = GenerateESObject.genGeneratedId("PostgreSQL", fileColumn.id)
-    GeneratedES(FileColumn.entity,
+    GeneratedES(
+      FileColumn.entity,
       "PostgreSQL",
       generatedId,
       GenerateESObject.genParentId(generatedId),
-      Seq(CategoryES.fromFileColumnGeneratedId(generatedId)),
-      KeyValuePairES.fromFileColumnList(fileColumnList))
+      Seq(CategoryES.fromGeneratedId(generatedId)),
+      KeyValuePairES.fromFileColumnList(fileColumnList)
+    )
   }
 
-  def genGenerated(sqlTable: SqlTable, sqlTableList: List[(SqlTable, KeyValuePair)])
-  : GeneratedES = {
+  def genGenerated(sqlTable: SqlTable, sqlTableList: List[(SqlTable, KeyValuePair)]): GeneratedES = {
     val generatedId = GenerateESObject.genGeneratedId("PostgreSQL", sqlTable.id)
-    GeneratedES(SqlTable.entity,
+    GeneratedES(
+      SqlTable.entity,
       "PostgreSQL",
       generatedId,
       GenerateESObject.genParentId(generatedId),
-      Seq(CategoryES.fromSqlTableGeneratedId(generatedId)),
-      KeyValuePairES.fromSqlTableList(sqlTableList))
+      Seq(CategoryES.fromGeneratedId(generatedId)),
+      KeyValuePairES.fromSqlTableList(sqlTableList)
+    )
   }
 
-  def genGenerated(sqlColumn: SqlColumn, sqlColumnList: List[(SqlColumn, KeyValuePair)])
-  : GeneratedES = {
+  def genGenerated(sqlColumn: SqlColumn, sqlColumnList: List[(SqlColumn, KeyValuePair)]): GeneratedES = {
     val generatedId = GenerateESObject.genGeneratedId("PostgreSQL", sqlColumn.id)
-    GeneratedES(SqlColumn.entity,
+    GeneratedES(
+      SqlColumn.entity,
       "PostgreSQL",
       generatedId,
       GenerateESObject.genParentId(generatedId),
-      Seq(CategoryES.fromSqlColumnGeneratedId(generatedId)),
-      KeyValuePairES.fromSqlColumnList(sqlColumnList))
+      Seq(CategoryES.fromGeneratedId(generatedId)),
+      KeyValuePairES.fromSqlColumnList(sqlColumnList)
+    )
   }
 
 }

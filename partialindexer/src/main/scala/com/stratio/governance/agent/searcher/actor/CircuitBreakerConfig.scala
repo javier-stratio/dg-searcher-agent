@@ -14,9 +14,9 @@ trait CircuitBreakerConfig {
 
   val circuitBreakerConfig: Config
 
-  lazy val maxFailures = circuitBreakerConfig.getInt("maxFailures")
-  lazy val callTimeout = circuitBreakerConfig.getDuration("callTimeout.ms", TimeUnit.MILLISECONDS).millisecond
-  lazy val resetTimeout = circuitBreakerConfig.getDuration("resetTimeout.ms", TimeUnit.MILLISECONDS).millisecond
+  lazy val maxFailures    = circuitBreakerConfig.getInt("maxFailures")
+  lazy val callTimeout    = circuitBreakerConfig.getDuration("callTimeout.ms", TimeUnit.MILLISECONDS).millisecond
+  lazy val resetTimeout   = circuitBreakerConfig.getDuration("resetTimeout.ms", TimeUnit.MILLISECONDS).millisecond
   lazy val circuitBreaker = CircuitBreaker(context.system.scheduler, maxFailures, callTimeout, resetTimeout)
 
 }

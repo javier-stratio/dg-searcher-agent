@@ -16,6 +16,5 @@ object HttpRequester {
     val client = HttpClientBuilder.create.build
     client.execute(post)
 
-
   }
 }

@@ -5,7 +5,7 @@ import java.util.Date
 
 object Utils {
 
-  val DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS"
+  val DATE_FORMAT   = "yyyy-MM-dd HH:mm:ss.SSS"
   val DATE_FORMAT_T = "yyyy-MM-dd'T'HH:mm:ss.SSS"
 
   def getDateAsString(d: Date, format: String): String = {

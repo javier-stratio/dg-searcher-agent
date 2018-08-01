@@ -6,7 +6,7 @@ import org.json4s.jackson.JsonMethods._
 object JsonUtils {
 
   def jsonStrToMap(jsonStr: String): Map[String, Any] = {
-    implicit val formats = org.json4s.DefaultFormats
+    implicit val formats: DefaultFormats = org.json4s.DefaultFormats
 
     parse(jsonStr).extract[Map[String, Any]]
   }

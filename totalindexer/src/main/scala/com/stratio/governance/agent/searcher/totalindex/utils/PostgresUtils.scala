@@ -12,7 +12,7 @@ object PostgresUtils {
   def sqlResultSetToJson(rs: ResultSet): JsArray = {
     // This is loosely ported from https://gist.github.com/kdonald/2137988
 
-    val rsmd = rs.getMetaData
+    val rsmd        = rs.getMetaData
     val columnCount = rsmd.getColumnCount
 
     // It may be faster to collect each line into a Seq or other iterable
@@ -32,7 +32,7 @@ object PostgresUtils {
         // We should also be checking that there are no duplicate columnLabel's
         // The Json constructors will just mindlessly append items with dup names
         // to the JsObject.
-        val column = rsmd.getColumnLabel(index)
+        val column      = rsmd.getColumnLabel(index)
         val columnLabel = column.toLowerCase()
 
         val value = rs.getObject(column)
@@ -92,7 +92,7 @@ object PostgresUtils {
     qJsonArray
   }
 
-/*
+  /*
   @tailrec
   def processCursor(query: => ResultSet)(process: ResultSet => Unit): Unit = {
     @tailrec
@@ -106,7 +106,7 @@ object PostgresUtils {
     }
     if (loop(query, false)) processCursor(query)(process)
   }
-*/
+   */
 
   def processCursor[T](resultSet: ResultSet)(process: ResultSet => T) = {
     @tailrec

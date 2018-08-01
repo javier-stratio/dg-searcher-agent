@@ -5,6 +5,4 @@ case class GeneratedES(entity: String,
                        id: String,
                        parent_id: String,
                        categories: Seq[Seq[CategoryES]],
-                       keyValuePairs: KeyValuePairES) {
-
-}
+                       keyValuePairs: KeyValuePairES)

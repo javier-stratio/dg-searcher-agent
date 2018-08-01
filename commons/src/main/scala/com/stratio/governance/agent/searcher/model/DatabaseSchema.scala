@@ -17,28 +17,28 @@ case class DatabaseSchema(id: Int,
                           modification_time: Option[Long],
                           access_time: Option[Long],
                           operation_command_type: String,
-                          location_uri: Option[String]) extends EntityRow
+                          location_uri: Option[String])
+    extends EntityRow
 
-object DatabaseSchema{
+object DatabaseSchema {
 
   val entity = "database"
 
   def entityFromResultSet(databaseSchema: DatabaseSchema, resultSet: ResultSet): scala.Seq[EntityRowES] = {
 
-      val databaseSchemaList: List[(DatabaseSchema, KeyValuePair)] = getResult(resultSet, databaseSchema)
+    val databaseSchemaList: List[(DatabaseSchema, KeyValuePair)] = getResult(resultSet, databaseSchema)
 
-      val databaseSchemaES: Seq[DatabaseSchemaES] = Seq(DatabaseSchemaES.
-        fromDatabaseSchemaList(databaseSchemaList))
-      databaseSchemaES
+    val databaseSchemaES: Seq[DatabaseSchemaES] = Seq(DatabaseSchemaES.fromDatabaseSchemaList(databaseSchemaList))
+    databaseSchemaES
 
   }
-
-
   @scala.annotation.tailrec
-  def getResult(resultSet: ResultSet, databaseSchema: DatabaseSchema, list: List[(DatabaseSchema, KeyValuePair)] = Nil)
-  : List[(DatabaseSchema, KeyValuePair)] = {
+  def getResult(resultSet: ResultSet,
+                databaseSchema: DatabaseSchema,
+                list: List[(DatabaseSchema, KeyValuePair)] = Nil): List[(DatabaseSchema, KeyValuePair)] = {
     if (resultSet.next()) {
-      val keyValuePair = KeyValuePair.apply(Some(resultSet.getInt(1)),
+      val keyValuePair = KeyValuePair.apply(
+        resultSet.getInt(1),
         resultSet.getInt(2),
         resultSet.getInt(3),
         resultSet.getInt(4),
@@ -51,11 +51,11 @@ object DatabaseSchema{
         resultSet.getString(11),
         resultSet.getString(12),
         Some(resultSet.getLong(13)),
-        Some(resultSet.getLong(14)))
+        Some(resultSet.getLong(14))
+      )
 
       getResult(resultSet, databaseSchema, (databaseSchema, keyValuePair) :: list)
-    }
-    else {
+    } else {
       (databaseSchema, null) :: list
     }
   }

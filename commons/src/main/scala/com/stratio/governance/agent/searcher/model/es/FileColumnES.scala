@@ -16,13 +16,15 @@ case class FileColumnES(generated_id: String,
                         updatedAt: String,
                         metadataPath: String,
                         modificationTime: String,
-                        accessTime: String) extends EntityRowES
+                        accessTime: String)
+    extends EntityRowES
 
 object FileColumnES {
 
   def fromFileColumnList(fileColumnList: List[(FileColumn, KeyValuePair)]): FileColumnES = {
     val fileColumn = fileColumnList.head._1
-    FileColumnES(fileColumn.metadata_path,
+    FileColumnES(
+      fileColumn.metadata_path,
       GenerateESObject.genGenerated(fileColumn, fileColumnList),
       fileColumn.id,
       fileColumn.name,
@@ -36,14 +38,13 @@ object FileColumnES {
       fileColumn.metadata_path,
       fileColumn.modification_time.getOrElse(null) match {
         case null => null
-        case 0 => null
-        case _ => fileColumn.modification_time.get.toString
-      }
-      ,
+        case 0    => null
+        case _    => fileColumn.modification_time.get.toString
+      },
       fileColumn.access_time.getOrElse(null) match {
         case null => null
-        case 0 => null
-        case _ => fileColumn.access_time.get.toString
+        case 0    => null
+        case _    => fileColumn.access_time.get.toString
       }
     )
   }

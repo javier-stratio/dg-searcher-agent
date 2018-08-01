@@ -17,7 +17,8 @@ case class FileTable(id: Int,
                      display_name: Option[String],
                      description: Option[String],
                      metadata_path: String,
-                     schema_name: String) extends EntityRow
+                     schema_name: String)
+    extends EntityRow
 
 object FileTable {
 
@@ -27,17 +28,18 @@ object FileTable {
 
     val fileTableList: List[(FileTable, KeyValuePair)] = getResult(resultSet, fileTable)
 
-    val fileTableES: Seq[FileTableES] = Seq(FileTableES.
-      fromFileTableList(fileTableList))
+    val fileTableES: Seq[FileTableES] = Seq(FileTableES.fromFileTableList(fileTableList))
     fileTableES
 
   }
 
   @scala.annotation.tailrec
-  def getResult(resultSet: ResultSet, fileTable: FileTable, list: List[(FileTable, KeyValuePair)] = Nil)
-  : List[(FileTable, KeyValuePair)] = {
+  def getResult(resultSet: ResultSet,
+                fileTable: FileTable,
+                list: List[(FileTable, KeyValuePair)] = Nil): List[(FileTable, KeyValuePair)] = {
     if (resultSet.next()) {
-      val keyValuePair = KeyValuePair.apply(Some(resultSet.getInt(1)),
+      val keyValuePair = KeyValuePair.apply(
+        resultSet.getInt(1),
         resultSet.getInt(2),
         resultSet.getInt(3),
         resultSet.getInt(4),
@@ -50,11 +52,11 @@ object FileTable {
         resultSet.getString(11),
         resultSet.getString(12),
         Some(resultSet.getLong(13)),
-        Some(resultSet.getLong(14)))
+        Some(resultSet.getLong(14))
+      )
 
       getResult(resultSet, fileTable, (fileTable, keyValuePair) :: list)
-    }
-    else {
+    } else {
       (fileTable, null) :: list
     }
   }
