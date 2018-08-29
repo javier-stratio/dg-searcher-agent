@@ -65,7 +65,7 @@ class PartialIndexer extends Actor {
 
       val documentsBulk: String = org.json4s.native.Serialization.write(lista)
 
-      sender ! Future(HttpRequester.partialPostRequest(documentsBulk))
+      sender ! Future(HttpRequester.partialPostRequest(documentsBulk)(context.system))
 
   }
 
@@ -86,7 +86,6 @@ class PartialIndexer extends Actor {
     statement.close
 
     entity.head
-
   }
 
   //TODO these function could be probably merged into a generic one, using EntityRow trait
@@ -106,7 +105,6 @@ class PartialIndexer extends Actor {
     statement.close
 
     entity.head
-
   }
 
   def fileTableProcess(fileTable: FileTable): EntityRowES = {

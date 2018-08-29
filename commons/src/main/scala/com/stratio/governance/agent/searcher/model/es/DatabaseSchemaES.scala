@@ -24,7 +24,7 @@ object DatabaseSchemaES {
   def fromDatabaseSchema(databaseSchema: DatabaseSchema, keyValuePair: KeyValuePair): DatabaseSchemaES = {
     DatabaseSchemaES(
       databaseSchema.metadata_path,
-      GenerateESObject.genGenerated(databaseSchema, keyValuePair),
+      GenerateESObject.genGeneratedFromKeyValuePair(databaseSchema, keyValuePair),
       databaseSchema.id,
       databaseSchema.name,
       "PostgreSQL",
@@ -50,7 +50,7 @@ object DatabaseSchemaES {
     val databaseSchema = databaseSchemaList.head._1
     DatabaseSchemaES(
       GenerateESObject.genGeneratedId("PostgreSQL", databaseSchema.id),
-      GenerateESObject.genGenerated(databaseSchema, databaseSchemaList),
+      GenerateESObject.genGeneratedFromList(databaseSchema, databaseSchemaList),
       databaseSchema.id,
       databaseSchema.name,
       "PostgreSQL",

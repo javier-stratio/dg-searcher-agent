@@ -25,7 +25,7 @@ object SqlTableES {
     val sqlTable = sqlTableList.head._1
     SqlTableES(
       sqlTable.metadata_path,
-      GenerateESObject.genGenerated(sqlTable, sqlTableList),
+      GenerateESObject.genGeneratedFromList(sqlTable, sqlTableList),
       sqlTable.id,
       sqlTable.name,
       "PostgreSQL",

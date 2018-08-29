@@ -25,7 +25,7 @@ object FileColumnES {
     val fileColumn = fileColumnList.head._1
     FileColumnES(
       fileColumn.metadata_path,
-      GenerateESObject.genGenerated(fileColumn, fileColumnList),
+      GenerateESObject.genGeneratedFromList(fileColumn, fileColumnList),
       fileColumn.id,
       fileColumn.name,
       "HDFS",

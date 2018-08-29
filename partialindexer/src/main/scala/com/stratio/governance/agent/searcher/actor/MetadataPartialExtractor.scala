@@ -7,6 +7,7 @@ import akka.actor.{Actor, ActorRef, Cancellable}
 import akka.pattern.ask
 import akka.util.Timeout
 import com.stratio.governance.agent.searcher.actor.MetadataPartialExtractor.Chunks
+import com.stratio.governance.agent.searcher.model.DatabaseSchema
 import com.typesafe.config.Config
 import org.apache.commons.dbcp2.DelegatingConnection
 import org.json4s.DefaultFormats
@@ -14,6 +15,8 @@ import org.postgresql.jdbc.PgConnection
 import org.postgresql.{PGConnection, PGNotification}
 import org.slf4j.{Logger, LoggerFactory}
 import scalikejdbc._
+import scalikejdbc.DB
+import scalikejdbc.streams._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
@@ -75,7 +78,6 @@ class MetadataPartialExtractor(indexer: ActorRef, override val circuitBreakerCon
       stmt.setMaxRows(1000)
 
       stmt.execute("LISTEN events")
-
     }
   }
 
@@ -101,14 +103,11 @@ class MetadataPartialExtractor(indexer: ActorRef, override val circuitBreakerCon
       if (list.nonEmpty) {
         (indexer ? PartialIndexer.IndexerEvent(list.head)).onComplete {
           case Success(_) => self ! Chunks(list.tail)
-          case Failure(e) => {
+          case Failure(e) =>
             //TODO manage errors
             println(s"Indexation failed")
             e.printStackTrace()
-          }
-
         }
-
       } else {
         self ! "postgresNotification"
       }

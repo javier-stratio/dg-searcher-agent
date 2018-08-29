@@ -12,6 +12,18 @@
     <artifactId>commons</artifactId>
 
     <dependencies>
+        <!-- ScalikeJdbc -->
+        <dependency>
+            <groupId>org.scalikejdbc</groupId>
+            <artifactId>scalikejdbc_${scala.binary.version}</artifactId>
+            <version>${scalikejdbc.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.scalikejdbc</groupId>
+            <artifactId>scalikejdbc-streams_${scala.binary.version}</artifactId>
+            <version>${scalikejdbc.version}</version>
+        </dependency>
         <!-- Apache Http client-->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>

@@ -21,23 +21,21 @@ object HttpRequester {
     val entity: RequestEntity = HttpEntity(ContentType(MediaTypes.`application/json`), json)
     val request: HttpRequest =
       HttpRequest(HttpMethods.POST, uri = "http://localhost:8081/indexer/test_domain/partial", entity = entity)
-    Http(system).singleRequest(request)
+    Http().singleRequest(request)
   }
 
   def initTotalRequest()(implicit system: ActorSystem,
                          mat: ActorMaterializer,
                          executor: ExecutionContextExecutor): String = {
     val initTotal: HttpRequest             = HttpRequest(HttpMethods.POST, uri = "http://localhost:8081/indexer/test_domain/total")
-    val httpResponse: Future[HttpResponse] = Http(system).singleRequest(initTotal)
+    val httpResponse: Future[HttpResponse] = Http().singleRequest(initTotal)
 
 
     val response: String = Await.result(httpResponse.flatMap { res =>
       Unmarshal(res).to[String]
     }, 10 seconds)
 
-    println(response)
-    println(JsonUtils.jsonStrToMap(response))
-    println(JsonUtils.jsonStrToMap(response)("token").toString)
+    println("token: " + JsonUtils.jsonStrToMap(response)("token").toString)
 
     JsonUtils.jsonStrToMap(response)("token").toString
   }
@@ -52,7 +50,7 @@ object HttpRequester {
       uri = s"http://localhost:8081/indexer/test_domain/total/$token/index",
       entity = HttpEntity(ContentTypes.`application/json`, json)
     )
-    Http(system).singleRequest(putDocuments)
+    Http().singleRequest(putDocuments)
   }
 
   def endRequest(
@@ -60,7 +58,7 @@ object HttpRequester {
   )(implicit system: ActorSystem, mat: ActorMaterializer, executor: ExecutionContextExecutor): Future[HttpResponse] = {
     val endTotalPut: HttpRequest =
       HttpRequest(HttpMethods.PUT, uri = s"http://localhost:8081/indexer/test_domain/total/$token/end")
-    Http(system).singleRequest(endTotalPut)
+    Http().singleRequest(endTotalPut)
   }
 
 }

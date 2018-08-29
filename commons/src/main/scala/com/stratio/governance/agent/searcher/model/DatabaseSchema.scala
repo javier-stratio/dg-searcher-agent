@@ -3,6 +3,11 @@ package com.stratio.governance.agent.searcher.model
 import java.sql.ResultSet
 
 import com.stratio.governance.agent.searcher.model.es.{DatabaseSchemaES, EntityRowES}
+import scalikejdbc.DB
+import scalikejdbc._
+import scalikejdbc.streams._
+
+import scala.concurrent.ExecutionContext
 
 case class DatabaseSchema(id: Int,
                           datastore_engine_id: Int,
@@ -28,10 +33,9 @@ object DatabaseSchema {
 
     val databaseSchemaList: List[(DatabaseSchema, KeyValuePair)] = getResult(resultSet, databaseSchema)
 
-    val databaseSchemaES: Seq[DatabaseSchemaES] = Seq(DatabaseSchemaES.fromDatabaseSchemaList(databaseSchemaList))
-    databaseSchemaES
-
+    Seq(DatabaseSchemaES.fromDatabaseSchemaList(databaseSchemaList))
   }
+
   @scala.annotation.tailrec
   def getResult(resultSet: ResultSet,
                 databaseSchema: DatabaseSchema,
@@ -58,6 +62,35 @@ object DatabaseSchema {
     } else {
       (databaseSchema, null) :: list
     }
+  }
+
+  def getOneResult(resultSet: WrappedResultSet): DatabaseSchema = {
+    DatabaseSchema.apply(
+      resultSet.int(1),
+      resultSet.int(2),
+      resultSet.string(3),
+      resultSet.string(4),
+      resultSet.string(5),
+      resultSet.string(6),
+      resultSet.string(7),
+      resultSet.stringOpt(8),
+      resultSet.stringOpt(9),
+      resultSet.string(10),
+      resultSet.longOpt(11),
+      resultSet.longOpt(12),
+      resultSet.string(13),
+      resultSet.stringOpt(14)
+    )
+  }
+
+  def publisher(implicit executionContext: ExecutionContext): DatabasePublisher[DatabaseSchema] = DB.readOnlyStream {
+    sql"SELECT * FROM dg_metadata.database_schema"
+      .map(r => DatabaseSchema.getOneResult(r))
+      .iterator
+      .withDBSessionForceAdjuster(session => {
+        session.connection.setAutoCommit(false)
+        session.fetchSize(10)
+      })
   }
 
 }

@@ -25,7 +25,7 @@ object SqlColumnES {
     val sqlColumn = sqlColumnList.head._1
     SqlColumnES(
       sqlColumn.metadata_path,
-      GenerateESObject.genGenerated(sqlColumn, sqlColumnList),
+      GenerateESObject.genGeneratedFromList(sqlColumn, sqlColumnList),
       sqlColumn.id,
       sqlColumn.name,
       "PostgreSQL",

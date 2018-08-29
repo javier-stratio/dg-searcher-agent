@@ -25,7 +25,7 @@ object FileTableES {
     val fileTable = fileTableList.head._1
     FileTableES(
       GenerateESObject.genGeneratedId(s"HDFS/${fileTable.datastore_engine_id}/FileTable", fileTable.id),
-      GenerateESObject.genGenerated(fileTable, fileTableList),
+      GenerateESObject.genGeneratedFromList(fileTable, fileTableList),
       fileTable.id,
       fileTable.name,
       "PostgreSQL",

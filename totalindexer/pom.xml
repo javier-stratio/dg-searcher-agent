@@ -14,19 +14,6 @@
     <inceptionYear>2018</inceptionYear>
 
     <dependencies>
-        <!-- ScalikeJdbc -->
-        <dependency>
-            <groupId>org.scalikejdbc</groupId>
-            <artifactId>scalikejdbc_${scala.binary.version}</artifactId>
-            <version>${scalikejdbc.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.scalikejdbc</groupId>
-            <artifactId>scalikejdbc-streams_${scala.binary.version}</artifactId>
-            <version>${scalikejdbc.version}</version>
-        </dependency>
-
         <!-- Akka-http -->
         <dependency>
             <groupId>com.typesafe.akka</groupId>

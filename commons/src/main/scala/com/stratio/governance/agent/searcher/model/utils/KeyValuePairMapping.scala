@@ -25,6 +25,7 @@ object KeyValuePairMapping {
     "filecolumn" -> 5
   )
 
+  //TODO complete
   def entityFromResultSet(parenType: Int, resultSet: ResultSet): Seq[EntityRowES] = {
     parenType match {
       case 1 =>
