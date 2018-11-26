@@ -9,38 +9,27 @@
     <packaging>pom</packaging>
     <version>1.0.0-SNAPSHOT</version>
     <modules>
+	<!--
         <module>commons</module>
         <module>partialindexer</module>
         <module>totalindexer</module>
+	-->
+	    <module>dgindexer</module>
     </modules>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <encoding>UTF-8</encoding>
-        <scala.compat.version>2.11</scala.compat.version>
-        <spec2.version>3.7</spec2.version>
         <scoverage.plugin.version>1.3.0</scoverage.plugin.version>
         <scala.version>${scala.binary.version}.12</scala.version>
         <scala.binary.version>2.11</scala.binary.version>
-        <akka.version>2.5.14</akka.version>
-        <scala-logging>3.3.0</scala-logging>
-        <typesafe.config.version>1.3.0</typesafe.config.version>
-        <scalaj.version>2.3.0</scalaj.version>
+        <scalatest.version>3.0.5</scalatest.version>
         <debug.suspend>n</debug.suspend>
-        <scoverage.plugin.version>1.3.0</scoverage.plugin.version>
-        <main.class.boot>com.stratio.governance.agent.hdfs.main.Boot</main.class.boot>
-        <junit.version>4.12</junit.version>
-        <specs2.version>3.7</specs2.version>
-        <json.schema.validator.version>0.1.7</json.schema.validator.version>
-        <play-json.version>2.5.4</play-json.version>
-        <scalacheck.version>1.12.5</scalacheck.version>
-        <logback-classic.version>1.1.7</logback-classic.version>
-        <log4j-over-slf4j.version>1.7.25</log4j-over-slf4j.version>
         <http_client_version>4.5.5</http_client_version>
         <json4s_version>3.5.2</json4s_version>
-        <postgresql_version>42.1.1</postgresql_version>
-        <play-json.version>2.6.9</play-json.version>
+        <dg.commons.version>0.8.0-43a0fd6</dg.commons.version>
+        <scalikejdbc>2.2.8</scalikejdbc>
     </properties>
 
     <dependencyManagement>
@@ -49,6 +38,36 @@
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
             <version>${scala.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.json4s</groupId>
+            <artifactId>json4s-native_2.11</artifactId>
+            <version>${json4s_version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.scalikejdbc</groupId>
+            <artifactId>scalikejdbc_2.11</artifactId>
+            <version>${scalikejdbc}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>${http_client_version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.stratio.governance</groupId>
+            <artifactId>sender</artifactId>
+            <version>${dg.commons.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.stratio.governance</groupId>
+            <artifactId>service</artifactId>
+            <version>${dg.commons.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.stratio.governance</groupId>
+            <artifactId>model</artifactId>
+            <version>${dg.commons.version}</version>
         </dependency>
 
         <!-- Test -->
@@ -61,32 +80,15 @@
         <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_${scala.binary.version}</artifactId>
-            <version>3.0.5</version>
+            <version>${scalatest.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.specs2</groupId>
-            <artifactId>specs2-core_${scala.binary.version}</artifactId>
-            <version>${spec2.version}</version>
+            <groupId>com.stratio.governance</groupId>
+            <artifactId>model</artifactId>
+            <type>test-jar</type>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.specs2</groupId>
-            <artifactId>specs2-junit_${scala.binary.version}</artifactId>
-            <version>${spec2.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.scalacheck</groupId>
-            <artifactId>scalacheck_${scala.binary.version}</artifactId>
-            <version>${scalacheck.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.typesafe.scala-logging</groupId>
-            <artifactId>scala-logging_${scala.binary.version}</artifactId>
-            <version>${scala-logging}</version>
+            <version>${dg.commons.version}</version>
         </dependency>
 
     </dependencies>

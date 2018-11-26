@@ -1,0 +1,176 @@
+{
+  "name": "Governance Search V0.2",
+  "model": {
+    "id": "id",
+    "category": "categories",
+    "nested": "kvps",
+    "language": "spanish",
+    "fields": [
+      {
+        "field": "id",
+        "name": "Name",
+        "type": "text",
+        "searchable": false,
+        "sortable": false,
+        "aggregable": false
+      },
+      {
+        "field": "name",
+        "name": "Name",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "description",
+        "name": "Description",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "metadataPath",
+        "name": "Metadata Path",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": false
+      },
+      {
+        "field": "type",
+        "name": "Type",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "subtype",
+        "name": "Sub-Type",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "tenant",
+        "name": "Tenant",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "active",
+        "name": "Active",
+        "type": "boolean",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "discoveredAt",
+        "name": "Access Time",
+        "type": "date",
+        "format": "yyyy-MM-dd'T'HH:mm:ss.SSS",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "modifiedAt",
+        "name": "Access Time",
+        "type": "date",
+        "format": "yyyy-MM-dd'T'HH:mm:ss.SSS",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "categories",
+        "name": "Categories",
+        "type": "category",
+        "aggregable": true,
+        "key": {
+          "field": "id",
+          "name": "Category Id",
+          "type": "text",
+          "searchable": true,
+          "sortable": true,
+          "aggregable": true
+        },
+        "value": {
+          "field": "value",
+          "name": "Category Name",
+          "type": "text",
+          "searchable": true,
+          "sortable": true,
+          "aggregable": true
+        }
+      },
+      {
+        "field": "businessTerms",
+        "name": "Business Terms",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "kvps",
+        "name": "Key-value pairs",
+        "type": "nested",
+        "nested_id": "kvpId",
+        "nested_fields": [
+          {
+            "field": "kvpId",
+            "name": "key-value pair id",
+            "type": "number",
+            "subtype": "long",
+            "searchable": false,
+            "sortable": false
+          },
+          {
+            "field": "kvp",
+            "name": "key-value pair",
+            "type": "compound",
+            "aggregable": true,
+            "key": {
+              "field": "key",
+              "name": "Key",
+              "type": "text",
+              "searchable": true,
+              "aggregable": true
+            },
+            "value": {
+              "field": "value",
+              "name": "Value",
+              "type": "text",
+              "searchable": true,
+              "sortable": true,
+              "aggregable": true
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "search_fields": {
+    "name": 1,
+    "description": 1,
+    "metadataPath": 1,
+    "type": 1,
+    "subtype": 1,
+    "tenant": 1,
+    "active": 1,
+    "discoveredAt": 1,
+    "modifiedAt": 1,
+    "categories.id": 1,
+    "categories.value": 1,
+    "businessTerms": 1,
+    "kvps.kvp.key": 1,
+    "kvps.kvp.value": 1
+  }
+}
