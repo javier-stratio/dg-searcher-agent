@@ -4,7 +4,8 @@ import com.stratio.governance.agent.searcher.actors.indexer.dao.{SearcherDao, So
 
 trait IndexerParams {
 
-  def getSourceDbo(): SourceDao;
-  def getSearcherDbo(): SearcherDao;
+  def getPartiton(): Int
+  def getSourceDao(): SourceDao
+  def getSearcherDao(): SearcherDao
 
 }

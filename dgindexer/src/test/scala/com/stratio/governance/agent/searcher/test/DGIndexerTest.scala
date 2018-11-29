@@ -1,5 +1,6 @@
 package com.stratio.governance.agent.searcher.test
 
+import java.sql.Timestamp
 import java.util.concurrent.Semaphore
 
 import akka.actor.{Actor, ActorRef, Cancellable}
@@ -7,28 +8,27 @@ import com.stratio.governance.agent.searcher.SearcherActorSystem
 import com.stratio.governance.agent.searcher.actors.extractor.ExtractorParams
 import com.stratio.governance.agent.searcher.actors.indexer.dao.{SearcherDao, SourceDao}
 import com.stratio.governance.agent.searcher.actors.indexer.{DGIndexer, IndexerParams}
-import com.stratio.governance.agent.searcher.model._
-import com.stratio.governance.agent.searcher.model.es.EntityRowES
-import org.postgresql.PGNotification
+import com.stratio.governance.agent.searcher.model.{BusinessTerm, KeyValuePair ,EntityRow}
+import com.stratio.governance.commons.agent.domain.dao.DataAssetDao
 import org.scalatest.FlatSpec
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
-class ExtractorTestParams(s: Semaphore, chunk: Array[PGNotification]) extends ExtractorParams {
+class ExtractorTestParams(s: Semaphore, chunk: Array[DataAssetDao]) extends ExtractorParams {
 
   def getSemaphore(): Semaphore = {
     return s
   }
 
-  def getChunk(): Array[PGNotification] = {
+  def getChunk(): Array[DataAssetDao] = {
     return chunk
   }
 
 }
 
-class PartialIndexerTestParams(s: Semaphore) extends IndexerParams {
+class PartialIndexerTestParams(s: Semaphore, noAdds: Boolean) extends IndexerParams {
 
   var result: String = null
 
@@ -36,40 +36,31 @@ class PartialIndexerTestParams(s: Semaphore) extends IndexerParams {
     return s
   }
 
-  override def getSourceDbo(): SourceDao = new SourceDao {
-    override def keyValuePairProcess(keyValuePair: KeyValuePair): EntityRowES = {
-      // TODO
-      return null
+  override def getSourceDao(): SourceDao = new SourceDao {
+    override def keyValuePairProcess(ids: Array[Int]): List[EntityRow] = {
+      if (!noAdds) {
+        val rows: List[List[EntityRow]] = ids.map(i => List(new KeyValuePair(i, "OWNER", "finantial", "2018-11-29T10:27:00.000"), new KeyValuePair(i, "QUALITY", "High", "2018-09-28T20:45:00.000"))).toList
+        rows.fold[List[EntityRow]](List())((a: List[EntityRow], b: List[EntityRow]) => {
+          a ++ b
+        }).filter(a => a.getId() != 1)
+      } else {
+        List[EntityRow]()
+      }
     }
 
-    override def databaseSchemaProcess(databaseSchema: DatabaseSchema): EntityRowES = {
-      // TODO
-      return null
+    override def businessTerms(ids: Array[Int]): List[EntityRow] = {
+      if (!noAdds) {
+        val rows: List[List[EntityRow]] = ids.map(i => List(new BusinessTerm(i, "RGDP", "2018-09-28T20:45:00.000"), new BusinessTerm(i, "FINANTIAL", "2018-09-28T20:45:00.000"))).toList
+        rows.fold[List[EntityRow]](List())((a: List[EntityRow], b: List[EntityRow]) => {
+          a ++ b
+        }).filter(a => a.getId() != 1)
+      } else {
+        List[EntityRow]()
+      }
     }
-
-    override def fileTableProcess(fileTable: FileTable): EntityRowES = {
-      // TODO
-      return null
-    }
-
-    override def fileColumnProcess(fileColumn: FileColumn): EntityRowES = {
-      // TODO
-      return null
-    }
-
-    override def sqlTableProcess(sqlTable: SqlTable): EntityRowES = {
-      // TODO
-      return null
-    }
-
-    override def sqlColumnProcess(sqlColumn: SqlColumn): EntityRowES = {
-      // TODO
-      return null
-    }
-
   }
 
-  override def getSearcherDbo(): SearcherDao = new SearcherDao {
+  override def getSearcherDao(): SearcherDao = new SearcherDao {
     override def index(doc: String): Unit = {
       result = doc
       s.release()
@@ -80,6 +71,9 @@ class PartialIndexerTestParams(s: Semaphore) extends IndexerParams {
     return result
   }
 
+  override def getPartiton(): Int = {
+    return 2
+  }
 }
 
 class SASTExtractor(indexer: ActorRef, params: ExtractorTestParams) extends Actor {
@@ -101,45 +95,51 @@ class SASTExtractor(indexer: ActorRef, params: ExtractorTestParams) extends Acto
 
 }
 
-class MockPGNotification(name: String, pid: Int, parameter: String) extends PGNotification {
-
-  override def getName: String = {
-    return name
-  }
-
-  override def getPID: Int = {
-    return pid
-  }
-
-  override def getParameter: String = {
-    return parameter
-  }
-
-}
-
 class DGIndexerTestTest extends FlatSpec {
 
-  "Extractor Extracted Simulation Events" should "be processed in Indexer Mock" in {
+  "Extractor Completed Events Simulation" should "be processed in Indexer Mock" in {
 
-
-    val reference: String = "{}"
-    val chunk: Array[PGNotification] = Array(
-      new MockPGNotification("",0,""),
-      new MockPGNotification("",0,"")
+    val milis: Long = 1543424486000l
+    val reference: String = "[{\"id\":2,\"name\":\"MyDataStore\",\"description\":\"My DataStore\",\"metadataPath\":\"MyDataStore:\",\"type\":\"SQL\",\"tenant\":\"DS\",\"active\":true,\"discoveredAt\":\"2018-11-28T18:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.QUALITY\":\"High\",\"key.OWNER\":\"finantial\"},{\"id\":1,\"name\":\"EmptyStore\",\"description\":\"Empty DataStore\",\"metadataPath\":\"EmptyDatastore:\",\"type\":\"HDFS\",\"tenant\":\"DS\",\"active\":true,\"discoveredAt\":\"2018-11-28T18:01:26.000\",\"modifiedAt\":\"2018-11-28T18:01:26.000\"},{\"id\":3,\"name\":\"FinantialDB\",\"description\":\"Finantial DataBase\",\"metadataPath\":\"MyDataStore://>FinantialDB/:\",\"type\":\"SQL\",\"tenant\":\"PATH\",\"active\":true,\"discoveredAt\":\"2018-11-28T18:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.QUALITY\":\"High\",\"key.OWNER\":\"finantial\"},{\"id\":4,\"name\":\"toys-department\",\"description\":\"Toys Department\",\"metadataPath\":\"MyDataStore://>FinantialDB/:toys-department\",\"type\":\"SQL\",\"tenant\":\"RESOURCE\",\"active\":true,\"discoveredAt\":\"2018-11-28T18:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.QUALITY\":\"High\",\"key.OWNER\":\"finantial\"},{\"id\":5,\"name\":\"purchaserName\",\"description\":\"Purchaser Name\",\"metadataPath\":\"MyDataStore://>FinantialDB/:toys-department:purchaserName:\",\"type\":\"SQL\",\"tenant\":\"FIELD\",\"active\":true,\"discoveredAt\":\"2018-11-28T18:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.QUALITY\":\"High\",\"key.OWNER\":\"finantial\"},{\"id\":6,\"name\":\"purchases\",\"description\":\"Purchases\",\"metadataPath\":\"MyDataStore://>FinantialDB/:toys-department:purchases:\",\"type\":\"SQL\",\"tenant\":\"FIELD\",\"active\":true,\"discoveredAt\":\"2018-11-28T18:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.QUALITY\":\"High\",\"key.OWNER\":\"finantial\"}]"
+    val chunk: Array[DataAssetDao] = Array(
+      new DataAssetDao(1,Option("EmptyStore"),Option("Empty DataStore"),"EmptyDatastore:","HDFS","DS","stratio","",true, new Timestamp(milis), new Timestamp(milis)),
+      new DataAssetDao(2,Option("MyDataStore"),Option("My DataStore"),"MyDataStore:","SQL","DS","stratio","",true, new Timestamp(milis), new Timestamp(milis)),
+      new DataAssetDao(3,Option("FinantialDB"),Option("Finantial DataBase"),"MyDataStore://>FinantialDB/:","SQL","PATH","stratio","",true, new Timestamp(milis), new Timestamp(milis)),
+      new DataAssetDao(4,Option("toys-department"),Option("Toys Department"),"MyDataStore://>FinantialDB/:toys-department","SQL","RESOURCE","stratio","",true, new Timestamp(milis), new Timestamp(milis)),
+      new DataAssetDao(5,Option("purchaserName"),Option("Purchaser Name"),"MyDataStore://>FinantialDB/:toys-department:purchaserName:","SQL","FIELD","stratio","",true, new Timestamp(milis), new Timestamp(milis)),
+      new DataAssetDao(6,Option("purchases"),Option("Purchases"),"MyDataStore://>FinantialDB/:toys-department:purchases:","SQL","FIELD","stratio","",true, new Timestamp(milis), new Timestamp(milis))
     )
 
-    val result = process(chunk)
+    val result = process(chunk, false)
 
-    //assert(result.equals(reference), "result '" + result + "' is not '" + reference + "'")
-    assert(true)
+    assert(result.equals(reference), "result '" + result + "' is not '" + reference + "'")
 
   }
 
-  def process(chunk: Array[PGNotification]): String = {
+  "Extractor No Additionals Events Simulation" should "be processed in Indexer Mock" in {
+
+    val milis: Long = 1543424486000l
+    val reference: String = "[{\"id\":1,\"name\":\"EmptyStore\",\"description\":\"Empty DataStore\",\"metadataPath\":\"EmptyDatastore:\",\"type\":\"HDFS\",\"tenant\":\"DS\",\"active\":true,\"discoveredAt\":\"2018-11-28T18:01:26.000\",\"modifiedAt\":\"2018-11-28T18:01:26.000\"},{\"id\":2,\"name\":\"MyDataStore\",\"description\":\"My DataStore\",\"metadataPath\":\"MyDataStore:\",\"type\":\"SQL\",\"tenant\":\"DS\",\"active\":true,\"discoveredAt\":\"2018-11-28T18:01:26.000\",\"modifiedAt\":\"2018-11-28T18:01:26.000\"},{\"id\":3,\"name\":\"FinantialDB\",\"description\":\"Finantial DataBase\",\"metadataPath\":\"MyDataStore://>FinantialDB/:\",\"type\":\"SQL\",\"tenant\":\"PATH\",\"active\":true,\"discoveredAt\":\"2018-11-28T18:01:26.000\",\"modifiedAt\":\"2018-11-28T18:01:26.000\"},{\"id\":4,\"name\":\"toys-department\",\"description\":\"Toys Department\",\"metadataPath\":\"MyDataStore://>FinantialDB/:toys-department\",\"type\":\"SQL\",\"tenant\":\"RESOURCE\",\"active\":true,\"discoveredAt\":\"2018-11-28T18:01:26.000\",\"modifiedAt\":\"2018-11-28T18:01:26.000\"},{\"id\":5,\"name\":\"purchaserName\",\"description\":\"Purchaser Name\",\"metadataPath\":\"MyDataStore://>FinantialDB/:toys-department:purchaserName:\",\"type\":\"SQL\",\"tenant\":\"FIELD\",\"active\":true,\"discoveredAt\":\"2018-11-28T18:01:26.000\",\"modifiedAt\":\"2018-11-28T18:01:26.000\"},{\"id\":6,\"name\":\"purchases\",\"description\":\"Purchases\",\"metadataPath\":\"MyDataStore://>FinantialDB/:toys-department:purchases:\",\"type\":\"SQL\",\"tenant\":\"FIELD\",\"active\":true,\"discoveredAt\":\"2018-11-28T18:01:26.000\",\"modifiedAt\":\"2018-11-28T18:01:26.000\"}]"
+    val chunk: Array[DataAssetDao] = Array(
+      new DataAssetDao(1,Option("EmptyStore"),Option("Empty DataStore"),"EmptyDatastore:","HDFS","DS","stratio","",true, new Timestamp(milis), new Timestamp(milis)),
+      new DataAssetDao(2,Option("MyDataStore"),Option("My DataStore"),"MyDataStore:","SQL","DS","stratio","",true, new Timestamp(milis), new Timestamp(milis)),
+      new DataAssetDao(3,Option("FinantialDB"),Option("Finantial DataBase"),"MyDataStore://>FinantialDB/:","SQL","PATH","stratio","",true, new Timestamp(milis), new Timestamp(milis)),
+      new DataAssetDao(4,Option("toys-department"),Option("Toys Department"),"MyDataStore://>FinantialDB/:toys-department","SQL","RESOURCE","stratio","",true, new Timestamp(milis), new Timestamp(milis)),
+      new DataAssetDao(5,Option("purchaserName"),Option("Purchaser Name"),"MyDataStore://>FinantialDB/:toys-department:purchaserName:","SQL","FIELD","stratio","",true, new Timestamp(milis), new Timestamp(milis)),
+      new DataAssetDao(6,Option("purchases"),Option("Purchases"),"MyDataStore://>FinantialDB/:toys-department:purchases:","SQL","FIELD","stratio","",true, new Timestamp(milis), new Timestamp(milis))
+    )
+
+    val result = process(chunk, true)
+
+    assert(result.equals(reference), "result '" + result + "' is not '" + reference + "'")
+
+  }
+
+  def process(chunk: Array[DataAssetDao], noAdds: Boolean): String = {
     val s: Semaphore = new Semaphore(1)
     //
     val eParams: ExtractorTestParams = new ExtractorTestParams(s, chunk)
-    val piParams: PartialIndexerTestParams = new PartialIndexerTestParams(s)
+    val piParams: PartialIndexerTestParams = new PartialIndexerTestParams(s, noAdds)
 
     eParams.getSemaphore().acquire()
 

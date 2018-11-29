@@ -1,9 +1,7 @@
 {
-  "name": "Governance Search V0.2",
+  "name": "Governance Search",
   "model": {
     "id": "id",
-    "category": "categories",
-    "nested": "kvps",
     "language": "spanish",
     "fields": [
       {
@@ -20,7 +18,7 @@
         "type": "text",
         "searchable": true,
         "sortable": true,
-        "aggregable": true
+        "aggregable": false
       },
       {
         "field": "description",
@@ -28,7 +26,7 @@
         "type": "text",
         "searchable": true,
         "sortable": true,
-        "aggregable": true
+        "aggregable": false
       },
       {
         "field": "metadataPath",
@@ -40,7 +38,7 @@
       },
       {
         "field": "type",
-        "name": "Type",
+        "name": "Data Stores",
         "type": "text",
         "searchable": true,
         "sortable": true,
@@ -48,7 +46,7 @@
       },
       {
         "field": "subtype",
-        "name": "Sub-Type",
+        "name": "Type",
         "type": "text",
         "searchable": true,
         "sortable": true,
@@ -60,7 +58,7 @@
         "type": "text",
         "searchable": true,
         "sortable": true,
-        "aggregable": true
+        "aggregable": false
       },
       {
         "field": "active",
@@ -68,7 +66,7 @@
         "type": "boolean",
         "searchable": true,
         "sortable": true,
-        "aggregable": true
+        "aggregable": false
       },
       {
         "field": "discoveredAt",
@@ -77,7 +75,7 @@
         "format": "yyyy-MM-dd'T'HH:mm:ss.SSS",
         "searchable": true,
         "sortable": true,
-        "aggregable": true
+        "aggregable": false
       },
       {
         "field": "modifiedAt",
@@ -86,29 +84,7 @@
         "format": "yyyy-MM-dd'T'HH:mm:ss.SSS",
         "searchable": true,
         "sortable": true,
-        "aggregable": true
-      },
-      {
-        "field": "categories",
-        "name": "Categories",
-        "type": "category",
-        "aggregable": true,
-        "key": {
-          "field": "id",
-          "name": "Category Id",
-          "type": "text",
-          "searchable": true,
-          "sortable": true,
-          "aggregable": true
-        },
-        "value": {
-          "field": "value",
-          "name": "Category Name",
-          "type": "text",
-          "searchable": true,
-          "sortable": true,
-          "aggregable": true
-        }
+        "aggregable": false
       },
       {
         "field": "businessTerms",
@@ -119,41 +95,36 @@
         "aggregable": true
       },
       {
-        "field": "kvps",
-        "name": "Key-value pairs",
-        "type": "nested",
-        "nested_id": "kvpId",
-        "nested_fields": [
-          {
-            "field": "kvpId",
-            "name": "key-value pair id",
-            "type": "number",
-            "subtype": "long",
-            "searchable": false,
-            "sortable": false
-          },
-          {
-            "field": "kvp",
-            "name": "key-value pair",
-            "type": "compound",
-            "aggregable": true,
-            "key": {
-              "field": "key",
-              "name": "Key",
-              "type": "text",
-              "searchable": true,
-              "aggregable": true
-            },
-            "value": {
-              "field": "value",
-              "name": "Value",
-              "type": "text",
-              "searchable": true,
-              "sortable": true,
-              "aggregable": true
-            }
-          }
-        ]
+        "field": "qualityRules",
+        "name": "Quality Rules",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "keys",
+        "name": "Keys",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "key.OWNER",
+        "name": "key.OWNER",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": false
+      },
+      {
+        "field": "key.QUALITY",
+        "name": "key.QUALITY",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": false
       }
     ]
   },
@@ -167,10 +138,10 @@
     "active": 1,
     "discoveredAt": 1,
     "modifiedAt": 1,
-    "categories.id": 1,
-    "categories.value": 1,
     "businessTerms": 1,
-    "kvps.kvp.key": 1,
-    "kvps.kvp.value": 1
+    "qualityRules": 1,
+    "keys": 1,
+    "key.OWNER": 1,
+    "key.QUALITY": 1
   }
 }

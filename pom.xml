@@ -28,7 +28,7 @@
         <debug.suspend>n</debug.suspend>
         <http_client_version>4.5.5</http_client_version>
         <json4s_version>3.5.2</json4s_version>
-        <dg.commons.version>0.8.0-43a0fd6</dg.commons.version>
+        <dg.commons.version>0.9.0-SNAPSHOT</dg.commons.version>
         <scalikejdbc>2.2.8</scalikejdbc>
     </properties>
 

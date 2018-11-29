@@ -33,9 +33,10 @@ class CommonParams(s: Semaphore, reference: String) extends ExtractorParams with
     return r
   }
 
-  override def getSourceDbo(): SourceDao = ???
-  override def getSearcherDbo(): SearcherDao = ???
+  override def getSourceDao(): SourceDao = ???
+  override def getSearcherDao(): SearcherDao = ???
 
+  override def getPartiton(): Int = ???
 }
 
 case class MetaInfo(value: String);

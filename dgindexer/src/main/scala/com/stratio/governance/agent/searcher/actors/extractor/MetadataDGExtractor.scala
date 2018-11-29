@@ -98,15 +98,15 @@ class MetadataDGExtractor(indexer: ActorRef, params: ExtractorParams, override v
 
     case Chunks(list) =>
       if(list.nonEmpty){
-        (indexer ? DGIndexer.IndexerEvent(list.head)).onComplete{
-          case Success(_) => self ! Chunks(list.tail)
-          case Failure(e) => {
-            //TODO manage errors
-            println(s"Indexation failed")
-            e.printStackTrace()
-          }
-
-        }
+//        (indexer ? DGIndexer.IndexerEvent(list.head)).onComplete{
+//          case Success(_) => self ! Chunks(list.tail)
+//          case Failure(e) => {
+//            //TODO manage errors
+//            println(s"Indexation failed")
+//            e.printStackTrace()
+//          }
+//
+//        }
 
       } else {
         self ! "postgresNotification"

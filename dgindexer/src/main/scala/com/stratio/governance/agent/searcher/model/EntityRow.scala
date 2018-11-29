@@ -1,3 +1,9 @@
 package com.stratio.governance.agent.searcher.model
 
-trait EntityRow
+abstract class EntityRow(id: Long) {
+
+  def getId(): Long = {
+    return id
+  }
+
+}
