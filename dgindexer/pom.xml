@@ -3,7 +3,7 @@
     <parent>
         <artifactId>dg-searcher-agent</artifactId>
         <groupId>com.stratio.governance.agent.searcher</groupId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>0.1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.stratio.governance.agent.searcher</groupId>
@@ -12,23 +12,26 @@
     <description>Partial documents indexation from Governance Datastore</description>
     <inceptionYear>2018</inceptionYear>
 
-
     <dependencies>
         <dependency>
             <groupId>org.scalikejdbc</groupId>
             <artifactId>scalikejdbc_2.11</artifactId>
+            <version>${scalikejdbc}</version>
         </dependency>
         <dependency>
             <groupId>com.stratio.governance</groupId>
             <artifactId>sender</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.stratio.governance</groupId>
-            <artifactId>service</artifactId>
+            <version>${dg.commons.version}</version>
         </dependency>
         <dependency>
             <groupId>com.stratio.governance</groupId>
             <artifactId>model</artifactId>
+            <version>${dg.commons.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>9.4-1201-jdbc41</version>
         </dependency>
 
         <!-- Apache Http client-->
@@ -43,10 +46,34 @@
             <artifactId>json4s-native_2.11</artifactId>
         </dependency>
 
+        <!-- Akka-http -->
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-actor_${scala.binary.version}</artifactId>
+            <version>${akka.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-stream_${scala.binary.version}</artifactId>
+            <version>${akka.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-slf4j_${scala.binary.version}</artifactId>
+            <version>${akka.version}</version>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_${scala.binary.version}</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.scalamock</groupId>
+            <artifactId>scalamock_2.12</artifactId>
+            <version>${scala.mock.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

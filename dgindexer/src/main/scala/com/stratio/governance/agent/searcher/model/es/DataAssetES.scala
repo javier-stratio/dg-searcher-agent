@@ -1,6 +1,6 @@
 package com.stratio.governance.agent.searcher.model.es
 
-import java.sql.Timestamp
+import java.sql.{ResultSet, Timestamp}
 import java.text.SimpleDateFormat
 
 import com.stratio.governance.commons.agent.domain.dao.DataAssetDao
@@ -26,20 +26,20 @@ case class DataAssetES(id: Int,
   var keyValues: Option[List[(String, String)]] = None
 
   def getModifiedAt(): Long = {
-    return DataAssetES.dateStrToTimestamp(modifiedAt)
+    DataAssetES.dateStrToTimestamp(modifiedAt)
   }
 
   def setModifiedAt(modAt: String): Unit = {
     modifiedAt = modAt
   }
 
-  def addBusinessTerm(bt: String) = {
+  def addBusinessTerm(bt: String): Unit = {
     if (businessTerms.isEmpty)
       businessTerms = Some(List())
     businessTerms = Some(bt :: businessTerms.get)
   }
 
-  def addKeyValue(k: String, v: String) = {
+  def addKeyValue(k: String, v: String): Unit = {
     if (keyValues.isEmpty)
       keyValues = Some(List())
     keyValues = Some((k,v) :: keyValues.get)
@@ -47,22 +47,22 @@ case class DataAssetES(id: Int,
 
   def getJsonObject(): JValue = {
     jsonObject = jsonObject ~ ("id" -> JInt(id))
-    if (!name.isEmpty) jsonObject = jsonObject ~ ("name" -> JString(name.get))
-    if (!description.isEmpty) jsonObject = jsonObject ~ ("description" -> JString(description.get))
+    if (name.isDefined) jsonObject = jsonObject ~ ("name" -> JString(name.get))
+    if (description.isDefined) jsonObject = jsonObject ~ ("description" -> JString(description.get))
     jsonObject = jsonObject ~ ("metadataPath" -> JString(metadataPath))
     jsonObject = jsonObject ~ ("type" -> JString(tpe))
     jsonObject = jsonObject ~ ("tenant" -> JString(subtype))
     jsonObject = jsonObject ~ ("active" -> JBool(active))
     jsonObject = jsonObject ~ ("discoveredAt" -> JString(discoveredAt))
     jsonObject = jsonObject ~ ("modifiedAt" -> JString(modifiedAt))
-    if (!businessTerms.isEmpty) jsonObject = jsonObject ~ ("businessTerms" -> JArray(businessTerms.get.map(a=>JString(a))))
-    if (!keyValues.isEmpty) {
+    if (businessTerms.isDefined) jsonObject = jsonObject ~ ("businessTerms" -> JArray(businessTerms.get.map(a=>JString(a))))
+    if (keyValues.isDefined) {
       jsonObject = jsonObject ~ ("keys" -> JArray(keyValues.get.map(a=>JString(a._1))))
       keyValues.get.foreach( a => {
         jsonObject = jsonObject ~ ("key." + a._1 -> JString(a._2))
       })
     }
-    return jsonObject
+    jsonObject
   }
 
 }
@@ -86,11 +86,30 @@ object DataAssetES {
   }
 
   def dateStrToTimestamp(date: String): Long = {
-    return new SimpleDateFormat(DataAssetES.DATETIME_FORMAT).parse(date).getTime()
+    new SimpleDateFormat(DataAssetES.DATETIME_FORMAT).parse(date).getTime()
   }
 
   def timestampTodateStr(timestamp: Long): String = {
-    return new SimpleDateFormat(DATETIME_FORMAT).format(new Timestamp(timestamp))
+    new SimpleDateFormat(DATETIME_FORMAT).format(new Timestamp(timestamp))
   }
 
+  @scala.annotation.tailrec
+  def getDataAssetFromResult(resultSet: ResultSet, list: List[DataAssetDao] = Nil): List[DataAssetDao] = {
+    if (resultSet.next()) {
+      val dataAssetDao = DataAssetDao(id = resultSet.getInt(1),
+        name = Some(resultSet.getString(2)),
+        description = Some(resultSet.getString(3)),
+        metadataPath = resultSet.getString(4),
+        tpe = resultSet.getString(5),
+        subtype = resultSet.getString(6),
+        tenant = resultSet.getString(7),
+        properties = resultSet.getString(8),
+        active = resultSet.getBoolean(9),
+        discoveredAt = resultSet.getTimestamp(10),
+        modifiedAt = resultSet.getTimestamp(11))
+      getDataAssetFromResult(resultSet, dataAssetDao :: list)
+    } else {
+      list
+    }
+  }
 }

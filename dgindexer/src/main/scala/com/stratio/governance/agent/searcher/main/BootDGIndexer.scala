@@ -1,27 +1,20 @@
 package com.stratio.governance.agent.searcher.main
 
-import com.stratio.governance.agent.searcher.SearcherActorSystem
-import com.stratio.governance.agent.searcher.actors.extractor.{ExtractorParams, MetadataDGExtractor}
-import com.stratio.governance.agent.searcher.actors.indexer.DGIndexerParams
-import com.stratio.governance.agent.searcher.actors.indexer.DGIndexer
-import org.apache.commons.dbcp.PoolingDataSource
-import scalikejdbc._
+import com.stratio.governance.agent.searcher.actors.SearcherActorSystem
+import com.stratio.governance.agent.searcher.actors.dao.PostgresSourceDao
+import com.stratio.governance.agent.searcher.actors.extractor.{DGExtractor, DGExtractorParams}
+import com.stratio.governance.agent.searcher.actors.indexer.{DGIndexer, DGIndexerParams}
+import com.stratio.governance.agent.searcher.actors.indexer.dao.CustomSearcherDao
 
-object BootDGIndexer extends App with AppConf {
-
-  // initialize JDBC driver & connection pool
-  Class.forName("org.postgresql.Driver")
-  ConnectionPoolSettings.apply(initialSize = 1000, maxSize = 1000)
-  ConnectionPool.singleton("jdbc:postgresql://localhost:5432/hakama", "postgres", "######", ConnectionPoolSettings.apply(initialSize = 1000, maxSize = 1000))
-  ConnectionPool.dataSource().asInstanceOf[PoolingDataSource].setAccessToUnderlyingConnectionAllowed(true)
-  ConnectionPool.dataSource().asInstanceOf[PoolingDataSource].getConnection().setAutoCommit(false)
+object BootDGIndexer extends App {
 
   // Initialize indexer params objects
-  val dgIndexerParams: DGIndexerParams = new DGIndexerParams()
-  val dgExtractorParams: ExtractorParams = new ExtractorParams {}
+  val sourceDao= new PostgresSourceDao(AppConf.sourceConnectionUrl, AppConf.sourceConnectionUser, AppConf.sourceConnectionPassword, AppConf.sourceDatabase, AppConf.sourceConnectionInitialSize, AppConf.sourceConnectionMaxSize)
+  val searcherDao= new CustomSearcherDao()
+  val dgIndexerParams: DGIndexerParams = new DGIndexerParams(sourceDao, searcherDao)
+  val dgExtractorParams: DGExtractorParams = new DGExtractorParams(sourceDao, AppConf.extractorLimit, AppConf.extractorPeriodMs, AppConf.extractorExponentialbackoffPauseMs, AppConf.extractorExponentialbackoffMaxErrorRetry, AppConf.extractorDelayMs)
 
   // initialize the actor system
-  val actorSystem: SearcherActorSystem[MetadataDGExtractor, DGIndexer] = new SearcherActorSystem[MetadataDGExtractor, DGIndexer]("dgIndexer", classOf[MetadataDGExtractor], classOf[DGIndexer], dgExtractorParams, dgIndexerParams)
-  actorSystem.initialize()
-
+  val actorSystem: SearcherActorSystem[DGExtractor, DGIndexer] = new SearcherActorSystem[DGExtractor, DGIndexer]("dgIndexer", classOf[DGExtractor], classOf[DGIndexer], dgExtractorParams, dgIndexerParams)
+  actorSystem.initPartialIndexation()
 }

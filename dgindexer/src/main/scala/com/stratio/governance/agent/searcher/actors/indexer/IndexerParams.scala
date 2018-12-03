@@ -1,10 +1,11 @@
 package com.stratio.governance.agent.searcher.actors.indexer
 
-import com.stratio.governance.agent.searcher.actors.indexer.dao.{SearcherDao, SourceDao}
+import com.stratio.governance.agent.searcher.actors.dao.SourceDao
+import com.stratio.governance.agent.searcher.actors.indexer.dao.SearcherDao
 
 trait IndexerParams {
 
-  def getPartiton(): Int
+  def getPartition(): Int
   def getSourceDao(): SourceDao
   def getSearcherDao(): SearcherDao
 
