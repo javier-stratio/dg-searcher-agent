@@ -1,22 +1,14 @@
 package com.stratio.governance.agent.searcher.actors.indexer
 
-import com.stratio.governance.agent.searcher.actors.dao.SourceDao
+import com.stratio.governance.agent.searcher.actors
 import com.stratio.governance.agent.searcher.actors.indexer.dao.SearcherDao
-//import com.stratio.governance.agent.searcher.model.utils.KeyValuePairMapping
 
-class DGIndexerParams(sourceDao: SourceDao, searcherDao : SearcherDao) extends IndexerParams {
+class DGIndexerParams extends IndexerParams {
 
+  override def getPartition(): Int = ???
 
-  override def getSourceDao(): SourceDao = {
-    sourceDao
-  }
+  override def getSourceDao(): actors.dao.SourceDao = ???
 
-  override def getSearcherDao(): SearcherDao = {
-    searcherDao
-  }
+  override def getSearcherDao(): SearcherDao = ???
 
-  override def getPartition(): Int = {
-    // TODO CONFIG
-    10
-  }
 }

@@ -1,0 +1,8 @@
+      ,{
+        "field": "key.{{field}}",
+        "name": "Key {{name}}",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      }

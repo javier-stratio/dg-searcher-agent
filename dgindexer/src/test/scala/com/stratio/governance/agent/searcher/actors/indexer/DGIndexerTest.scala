@@ -123,7 +123,7 @@ class DGIndexerTest extends FlatSpec {
 
     val result = process(chunk, noAdds = false)
 
-    assert(result.equals(reference), "result '" + result + "' is not '" + reference + "'")
+    assertResult(reference)(result)
 
   }
 
@@ -142,7 +142,7 @@ class DGIndexerTest extends FlatSpec {
 
     val result = process(chunk, noAdds = true)
 
-    assert(result.equals(reference), "result '" + result + "' is not '" + reference + "'")
+    assertResult(reference)(result)
 
   }
 

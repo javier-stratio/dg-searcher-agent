@@ -51,7 +51,7 @@ class CustomSourceDao(chunk: Array[DataAssetDao]) extends SourceDao {
 class testCustomSearcherDao extends SearcherDao() {
   override def index(doc: String): Unit = ???
 }
-class CustomDGIndexerParams(sourceDao :SourceDao, searcherDao: SearcherDao, val limit: Int, val semaphore: Semaphore) extends DGIndexerParams(sourceDao, searcherDao) {
+class CustomDGIndexerParams(sourceDao :SourceDao, searcherDao: SearcherDao, val limit: Int, val semaphore: Semaphore) extends DGIndexerParams {
 
   var returnList: List[DataAssetDao] = List()
 
