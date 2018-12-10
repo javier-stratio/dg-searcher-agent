@@ -1,42 +1,47 @@
 package com.stratio.governance.agent.searcher.http.defimpl
 
 import com.stratio.governance.agent.searcher.http.{HttpException, HttpManager}
-import org.apache.http.client.methods.CloseableHttpResponse
+import org.apache.http.client.methods._
+import org.apache.http.entity.StringEntity
+import org.apache.http.impl.client.HttpClientBuilder
+import org.apache.http.util.EntityUtils
+import org.slf4j.{Logger, LoggerFactory}
 
-class DGHttpManager extends HttpManager {
+class DGHttpManager(managerURL: String, indexerURL: String, ssl: Boolean) extends HttpManager {
+
+  private lazy val LOG: Logger = LoggerFactory.getLogger(getClass.getName)
+  lazy val protocol: String = if (ssl) "https" else "http"
+
+  val MODEL: String = "{{model}}"
+  val GET_MANAGER_MODELS_URL: String = protocol + "://" + managerURL + "/manager/domains"
+  val PUT_MANAGER_MODEL: String = protocol + "://" + managerURL + "/manager/domains/" + MODEL
+
 
   @throws(classOf[HttpException])
-  override def partialPostRequest(json: String): CloseableHttpResponse = {
+  override def partialPostRequest(json: String): Unit = {
     // PUT http://localhost:8082/indexer/domains/governance_search_v0_4/partial
     /* in: <batch document to index>
        out: <resume>
       */
-    null
   }
 
   @throws(classOf[HttpException])
-  override def totalPostRequest(json: String, token: String): CloseableHttpResponse = {
+  override def totalPostRequest(json: String, token: String): Unit = {
     // PUT http://localhost:8082/indexer/domains/governance_search_v0_4/total TODO Check this
     /* in: <batch document to index>
        out: <resume>
       */
-    null
   }
 
+  @throws(classOf[HttpException])
   override def getManagerModels(): String = {
-    // GET http://localhost:8080/manager/domains
-    /* out:
-        {
-            "total": 1,
-            "domains": [
-                {
-                    "id": "governance_search_v0_4",
-                    "name": "Governance Search V0.4"
-                }
-            ]
-        }
-     */
-    ""
+    val get = new HttpGet(GET_MANAGER_MODELS_URL)
+    val response: HttpSearchResponse = handleHttpSearchRequest(get)
+    val responseStr: String = response match {
+      case HttpSearchResponseOK(_, message) => message
+      case HttpSearchResponseKO(code, req, resp) => throw HttpException(code.toString, req, resp)
+    }
+    responseStr
   }
 
   @throws(classOf[HttpException])
@@ -82,27 +87,57 @@ class DGHttpManager extends HttpManager {
   }
 
   @throws(classOf[HttpException])
-  override def insertOrUpdateModel(model: String, json: String): CloseableHttpResponse = {
-    // PUT http://localhost:8080/manager/domains/governance_search_v0_4
-    // in: Json Model
-    // out: Nothing. Just Code
-    null
+  override def insertOrUpdateModel(model: String, json: String): Unit = {
+    val put = new HttpPut(PUT_MANAGER_MODEL.replace(MODEL, model))
+    put.setHeader("Content-type", "application/json")
+    put.setEntity(new StringEntity(json))
+
+    val response: HttpSearchResponse = handleHttpSearchRequest(put)
+    response match {
+      case HttpSearchResponseOK(_,_) => // Nothing to do
+      case HttpSearchResponseKO(code, req, resp) => throw HttpException(code.toString, req, resp)
+
+    }
   }
 
   @throws(classOf[HttpException])
-  override def finishTotalIndexationProcess(model: String, token: String): CloseableHttpResponse = {
+  override def finishTotalIndexationProcess(model: String, token: String): Unit = {
     // PUT http://localhost:8082/indexer/domains/governance_search_v0_4/total/d8e8425c-8df6-4e2e-80c3-ee05887a5357/end
     // in: Json Model
     // out: Nothing. Just Code
-    null
   }
 
   @throws(classOf[HttpException])
-  override def cancelTotalIndexationProcess(model: String, token: String): CloseableHttpResponse = {
+  override def cancelTotalIndexationProcess(model: String, token: String): Unit = {
     // PUT http://localhost:8082/indexer/domains/governance_search_v0_4/total/d8e8425c-8df6-4e2e-80c3-ee05887a5357/end
     // in: Json Model
     // out: Nothing. Just Code
-    null
+  }
+
+  @throws(classOf[HttpException])
+  private def handleHttpSearchRequest(request: HttpRequestBase): HttpSearchResponse = {
+    try {
+      val client = HttpClientBuilder.create.build
+      val response: CloseableHttpResponse = client.execute(request)
+
+      val code: Int = response.getStatusLine.getStatusCode
+
+      if ((code >= 200) && (code < 300)) {
+        HttpSearchResponseOK(request.getURI.toString, EntityUtils.toString(response.getEntity, "UTF-8"))
+      } else {
+        HttpSearchResponseKO(code, request.getURI.toString, EntityUtils.toString(response.getEntity, "UTF-8"))
+      }
+    } catch {
+      case e: Throwable => {
+        LOG.error("Error while processing http request", e)
+        throw HttpException("000","",e.getMessage)
+      }
+    }
   }
 
 }
+
+abstract class HttpSearchResponse()
+case class HttpSearchResponseOK(request: String, response: String) extends HttpSearchResponse
+case class HttpSearchResponseKO(code: Int, request: String, response: String) extends HttpSearchResponse
+

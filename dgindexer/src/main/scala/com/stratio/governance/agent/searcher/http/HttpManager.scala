@@ -8,10 +8,10 @@ trait HttpManager {
   def getManagerModels(): String
 
   @throws(classOf[HttpException])
-  def partialPostRequest(json: String): CloseableHttpResponse
+  def partialPostRequest(json: String): Unit
 
   @throws(classOf[HttpException])
-  def totalPostRequest(json: String, token: String): CloseableHttpResponse
+  def totalPostRequest(json: String, token: String): Unit
 
   @throws(classOf[HttpException])
   def getIndexerdomains(): String
@@ -20,14 +20,14 @@ trait HttpManager {
   def initTotalIndexationProcess(model: String): String
 
   @throws(classOf[HttpException])
-  def insertOrUpdateModel(model: String, json: String): CloseableHttpResponse
+  def insertOrUpdateModel(model: String, json: String): Unit
 
   @throws(classOf[HttpException])
-  def finishTotalIndexationProcess(model: String, token: String): CloseableHttpResponse
+  def finishTotalIndexationProcess(model: String, token: String): Unit
 
   @throws(classOf[HttpException])
-  def cancelTotalIndexationProcess(model: String, token: String): CloseableHttpResponse
+  def cancelTotalIndexationProcess(model: String, token: String): Unit
 
 }
 
-case class HttpException(code: String, message: String) extends Throwable(code + ": " + message)
+case class HttpException(code: String, request: String, response: String) extends Throwable(code + ": " + response + "(request: " + request + ")")

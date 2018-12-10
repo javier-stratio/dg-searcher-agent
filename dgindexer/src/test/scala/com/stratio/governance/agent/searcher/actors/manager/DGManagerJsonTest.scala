@@ -10,7 +10,7 @@ import org.scalatest.FlatSpec
 class HttpManagerMock extends HttpManager {
 
   @throws(classOf[HttpException])
-  override def partialPostRequest(json: String): CloseableHttpResponse = ???
+  override def partialPostRequest(json: String): Unit = ???
 
   @throws(classOf[HttpException])
   override def getIndexerdomains(): String = {
@@ -36,13 +36,13 @@ class HttpManagerMock extends HttpManager {
     "{\"total\":1,\"domains\":[{\"id\":\"governance_search\",\"name\":\"Governance Search V0.4\"}]}"
   }
 
-  override def totalPostRequest(json: String, token: String): CloseableHttpResponse = ???
+  override def totalPostRequest(json: String, token: String): Unit = ???
 
-  override def insertOrUpdateModel(model: String, json: String): CloseableHttpResponse = ???
+  override def insertOrUpdateModel(model: String, json: String): Unit = ???
 
-  override def finishTotalIndexationProcess(model: String, token: String): CloseableHttpResponse = ???
+  override def finishTotalIndexationProcess(model: String, token: String): Unit = ???
 
-  override def cancelTotalIndexationProcess(model: String, token: String): CloseableHttpResponse = ???
+  override def cancelTotalIndexationProcess(model: String, token: String): Unit = ???
 }
 
 class SourceDaoMock extends SourceDao {

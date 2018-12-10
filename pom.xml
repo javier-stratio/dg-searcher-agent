@@ -15,6 +15,7 @@
         <module>totalindexer</module>
 	-->
 	    <module>dgindexer</module>
+        <module>testIT</module>
     </modules>
 
     <properties>

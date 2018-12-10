@@ -27,8 +27,8 @@ class DGSearcherDao(httpManager: HttpManager) extends
       val domains: ManagerDomains = json.extract[ManagerDomains]
       domains.domains.map( d => d.id )
     } catch {
-      case HttpException(code, message) =>
-        throw DGSearcherDaoException(code + ": " + message)
+      case HttpException(code, req, resp) =>
+        throw DGSearcherDaoException(code + ": " + resp + "(request: " + req + ")")
       case e: Throwable =>
         LOG.error("error while geting models", e)
         throw DGSearcherDaoException(e.getMessage)
@@ -52,8 +52,8 @@ class DGSearcherDao(httpManager: HttpManager) extends
           (true, dom.token)
       }
     } catch {
-      case HttpException(code, message) =>
-        throw DGSearcherDaoException(code + ": " + message)
+      case HttpException(code, req, resp) =>
+        throw DGSearcherDaoException(code + ": " + resp + "(request: " + req + ")")
       case e: Throwable =>
         LOG.error("error while checking Total Indexation", e)
         throw DGSearcherDaoException(e.getMessage)
@@ -65,8 +65,8 @@ class DGSearcherDao(httpManager: HttpManager) extends
     try {
       httpManager.insertOrUpdateModel(model, jsonModel)
     } catch {
-      case HttpException(code, message) =>
-        throw DGSearcherDaoException(code + ": " + message)
+      case HttpException(code, req, resp) =>
+        throw DGSearcherDaoException(code + ": " + resp + "(request: " + req + ")")
       case e: Throwable =>
         LOG.error("error while inserting Or updating Model", e)
         throw DGSearcherDaoException(e.getMessage)
@@ -86,8 +86,8 @@ class DGSearcherDao(httpManager: HttpManager) extends
         throw DGSearcherDaoException("status is not " + INDEXING_STATUS)
       }
     } catch {
-      case HttpException(code, message) =>
-        throw DGSearcherDaoException(code + ": " + message)
+      case HttpException(code, req, resp) =>
+        throw DGSearcherDaoException(code + ": " + resp + "(request: " + req + ")")
       case e: Throwable =>
         LOG.error("error while inserting Or updating Model", e)
         throw DGSearcherDaoException(e.getMessage)
@@ -99,8 +99,8 @@ class DGSearcherDao(httpManager: HttpManager) extends
     try {
       httpManager.finishTotalIndexationProcess(model, token)
     } catch {
-      case HttpException(code, message) =>
-        throw DGSearcherDaoException(code + ": " + message)
+      case HttpException(code, req, resp) =>
+        throw DGSearcherDaoException(code + ": " + resp + "(request: " + req + ")")
       case e: Throwable =>
         LOG.error("error while inserting Or updating Model", e)
         throw DGSearcherDaoException(e.getMessage)
@@ -112,8 +112,8 @@ class DGSearcherDao(httpManager: HttpManager) extends
     try {
       httpManager.cancelTotalIndexationProcess(model, token)
     } catch {
-      case HttpException(code, message) =>
-        throw DGSearcherDaoException(code + ": " + message)
+      case HttpException(code, req, resp) =>
+        throw DGSearcherDaoException(code + ": " + resp + "(request: " + req + ")")
       case e: Throwable =>
         LOG.error("error while inserting Or updating Model", e)
         throw DGSearcherDaoException(e.getMessage)
