@@ -8,10 +8,10 @@ trait HttpManager {
   def getManagerModels(): String
 
   @throws(classOf[HttpException])
-  def partialPostRequest(json: String): Unit
+  def partialPostRequest(model: String, json: String): String
 
   @throws(classOf[HttpException])
-  def totalPostRequest(json: String, token: String): Unit
+  def totalPostRequest(model: String, token: String, json: String): String
 
   @throws(classOf[HttpException])
   def getIndexerdomains(): String

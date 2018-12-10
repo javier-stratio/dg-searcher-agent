@@ -128,3 +128,7 @@ case class ManagerDomain(id: String, name: String)
 case class ManagerDomains(total: Int, domains: List[ManagerDomain])
 case class IndexerDomain(domain: Option[String], token: Option[String], status: Option[String], last_status_change: Option[String])
 case class IndexerDomains(total_time_elapsed: Int, domains: List[IndexerDomain])
+
+case class PartialIndexerTimeStats(total: Int, elasticsearch: Int)
+case class PartialIndexerDocStats(created: Int, updated: Int, error: Int)
+case class PartialIndexer(time_stats: PartialIndexerTimeStats, documents_stats: PartialIndexerDocStats)

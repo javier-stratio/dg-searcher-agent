@@ -10,7 +10,7 @@ import org.scalatest.FlatSpec
 class HttpManagerMock extends HttpManager {
 
   @throws(classOf[HttpException])
-  override def partialPostRequest(json: String): Unit = ???
+  override def partialPostRequest(model: String, json: String): String = ???
 
   @throws(classOf[HttpException])
   override def getIndexerdomains(): String = {
@@ -36,7 +36,7 @@ class HttpManagerMock extends HttpManager {
     "{\"total\":1,\"domains\":[{\"id\":\"governance_search\",\"name\":\"Governance Search V0.4\"}]}"
   }
 
-  override def totalPostRequest(json: String, token: String): Unit = ???
+  override def totalPostRequest(model: String, token: String, json: String): String = ???
 
   override def insertOrUpdateModel(model: String, json: String): Unit = ???
 

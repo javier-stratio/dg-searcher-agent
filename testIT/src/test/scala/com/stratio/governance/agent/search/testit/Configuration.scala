@@ -6,4 +6,6 @@ object Configuration {
   val INDEXER_URL: String = "localhost:8082"
   val SSL: Boolean = false
 
+  val MODEL: String = "governance_search_test"
+
 }

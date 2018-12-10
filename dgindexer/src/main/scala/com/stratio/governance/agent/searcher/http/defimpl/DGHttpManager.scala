@@ -13,24 +13,40 @@ class DGHttpManager(managerURL: String, indexerURL: String, ssl: Boolean) extend
   lazy val protocol: String = if (ssl) "https" else "http"
 
   val MODEL: String = "{{model}}"
+  val TOKEN: String = "{{token}}"
   val GET_MANAGER_MODELS_URL: String = protocol + "://" + managerURL + "/manager/domains"
   val PUT_MANAGER_MODEL: String = protocol + "://" + managerURL + "/manager/domains/" + MODEL
-
+  val PUT_PARTIAL_INDEXATION: String = protocol + "://" + indexerURL + "/indexer/domains/" + MODEL + "/partial"
+  val PUT_TOTAL_INDEXATION: String = protocol + "://" + indexerURL + "/indexer/domains/" + MODEL + "/total/" + TOKEN + "/index"
+  val GET_INDEXER_DOMAINS: String = protocol + "://" + indexerURL + "/indexer/domains"
+  val POST_TOTAL_INDEXATION_INIT: String = protocol + "://" + indexerURL + "/indexer/domains/" + MODEL + "/total"
+  val PUT_TOTAL_INDEXATION_FINISH: String = protocol + "://" + indexerURL + "/indexer/domains/" + MODEL + "/total/" + TOKEN + "/end"
+  val PUT_TOTAL_INDEXATION_CANCEL: String = protocol + "://" + indexerURL + "/indexer/domains/" + MODEL + "/total/" + TOKEN + "/cancel"
 
   @throws(classOf[HttpException])
-  override def partialPostRequest(json: String): Unit = {
-    // PUT http://localhost:8082/indexer/domains/governance_search_v0_4/partial
-    /* in: <batch document to index>
-       out: <resume>
-      */
+  override def partialPostRequest(model: String, json: String): String = {
+    val put = new HttpPut(PUT_PARTIAL_INDEXATION.replace(MODEL, model))
+    put.setHeader("Content-type", "application/json")
+    put.setEntity(new StringEntity(json))
+    val response: HttpSearchResponse = handleHttpSearchRequest(put)
+    val responseStr: String = response match {
+      case HttpSearchResponseOK(_, message) => message
+      case HttpSearchResponseKO(code, req, resp) => throw HttpException(code.toString, req, resp)
+    }
+    responseStr
   }
 
   @throws(classOf[HttpException])
-  override def totalPostRequest(json: String, token: String): Unit = {
-    // PUT http://localhost:8082/indexer/domains/governance_search_v0_4/total TODO Check this
-    /* in: <batch document to index>
-       out: <resume>
-      */
+  override def totalPostRequest(model: String, token: String, json: String): String = {
+    val put = new HttpPut(PUT_TOTAL_INDEXATION.replace(MODEL, model).replace(TOKEN,token))
+    put.setHeader("Content-type", "application/json")
+    put.setEntity(new StringEntity(json))
+    val response: HttpSearchResponse = handleHttpSearchRequest(put)
+    val responseStr: String = response match {
+      case HttpSearchResponseOK(_, message) => message
+      case HttpSearchResponseKO(code, req, resp) => throw HttpException(code.toString, req, resp)
+    }
+    responseStr
   }
 
   @throws(classOf[HttpException])
@@ -46,44 +62,24 @@ class DGHttpManager(managerURL: String, indexerURL: String, ssl: Boolean) extend
 
   @throws(classOf[HttpException])
   override def getIndexerdomains(): String = {
-    //GET http://se-indexer.bootstrap.spaceai.hetzner.stratio.com/indexer/domains
-   /* out:
-   {
-    "total_time_elapsed": 128,
-    "domains": [
-        {
-            "domain": "governance_search_v0_3",
-            "token": null,
-            "status": "ENDED",
-            "last_status_change": "2018-11-29T15:03:30.488+0000"
-        },
-        {
-            "domain": "movies",
-            "token": "3e33463a-2ed9-4c15-87c0-1a520e3c1cb2",
-            "status": "ENDED",
-            "last_status_change": "2018-11-29T14:58:46.240+0000"
-        }
-      ]
+    val get = new HttpGet(GET_INDEXER_DOMAINS)
+    val response: HttpSearchResponse = handleHttpSearchRequest(get)
+    val responseStr: String = response match {
+      case HttpSearchResponseOK(_, message) => message
+      case HttpSearchResponseKO(code, req, resp) => throw HttpException(code.toString, req, resp)
     }
-    */
-    ""
+    responseStr
   }
 
   @throws(classOf[HttpException])
   override def initTotalIndexationProcess(model: String): String = {
-    // POST http://localhost:8082/indexer/domains/governance_search_v0_4/total
-    /* in: Nothing
-       out:
-      {
-          "token": "dde76989-4725-4ba2-82fd-400b07d32b32",
-          "status": "INDEXING",
-          "last_status_change": "2018-12-05T07:54:12.034+0000",
-          "time_stats": {
-              "total": 218
-          }
-      }
-     */
-    ""
+    val post = new HttpPost(POST_TOTAL_INDEXATION_INIT.replace(MODEL, model))
+    val response: HttpSearchResponse = handleHttpSearchRequest(post)
+    val responseStr: String = response match {
+      case HttpSearchResponseOK(_, message) => message
+      case HttpSearchResponseKO(code, req, resp) => throw HttpException(code.toString, req, resp)
+    }
+    responseStr
   }
 
   @throws(classOf[HttpException])
@@ -102,16 +98,22 @@ class DGHttpManager(managerURL: String, indexerURL: String, ssl: Boolean) extend
 
   @throws(classOf[HttpException])
   override def finishTotalIndexationProcess(model: String, token: String): Unit = {
-    // PUT http://localhost:8082/indexer/domains/governance_search_v0_4/total/d8e8425c-8df6-4e2e-80c3-ee05887a5357/end
-    // in: Json Model
-    // out: Nothing. Just Code
+    val put = new HttpPut(PUT_TOTAL_INDEXATION_FINISH.replace(MODEL,model).replace(TOKEN,token))
+    val response: HttpSearchResponse = handleHttpSearchRequest(put)
+    response match {
+      case HttpSearchResponseOK(_, _) => // Nothing to do
+      case HttpSearchResponseKO(code, req, resp) => throw HttpException(code.toString, req, resp)
+    }
   }
 
   @throws(classOf[HttpException])
   override def cancelTotalIndexationProcess(model: String, token: String): Unit = {
-    // PUT http://localhost:8082/indexer/domains/governance_search_v0_4/total/d8e8425c-8df6-4e2e-80c3-ee05887a5357/end
-    // in: Json Model
-    // out: Nothing. Just Code
+    val put = new HttpPut(PUT_TOTAL_INDEXATION_CANCEL.replace(MODEL,model).replace(TOKEN,token))
+    val response: HttpSearchResponse = handleHttpSearchRequest(put)
+    response match {
+      case HttpSearchResponseOK(_, _) => // Nothing to do
+      case HttpSearchResponseKO(code, req, resp) => throw HttpException(code.toString, req, resp)
+    }
   }
 
   @throws(classOf[HttpException])
