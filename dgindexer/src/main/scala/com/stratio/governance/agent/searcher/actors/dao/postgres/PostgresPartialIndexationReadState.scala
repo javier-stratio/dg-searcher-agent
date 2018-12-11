@@ -2,6 +2,7 @@ package com.stratio.governance.agent.searcher.actors.dao.postgres
 
 import java.sql.{Connection, PreparedStatement, ResultSet, Timestamp}
 
+import com.stratio.governance.agent.searcher.actors.extractor.dao.SourceDao
 import com.stratio.governance.agent.searcher.main.AppConf
 import com.stratio.governance.agent.searcher.model.utils.{ExponentialBackOff, TimestampUtils}
 

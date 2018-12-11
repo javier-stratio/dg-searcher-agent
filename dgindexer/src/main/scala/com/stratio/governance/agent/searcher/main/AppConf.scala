@@ -46,7 +46,7 @@ object AppConf {
 
   lazy val sourceConnectionMaxSize: Int = envOrElseConfigOrElseDefault("source.connection.max.size",1000)
 
-  lazy val sourceConnectionUrl: String =envOrElseConfigOrElseDefault("source.connection.url","jdbc:postgresql://localhost:5432/hakama")
+  lazy val sourceConnectionUrl: String = envOrElseConfigOrElseDefault("source.connection.url","jdbc:postgresql://localhost:5432/hakama")
 
   lazy val sourceConnectionUser: String = envOrElseConfigOrElseDefault("source.connection.user","postgres")
 

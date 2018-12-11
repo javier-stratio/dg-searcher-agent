@@ -6,11 +6,13 @@ import java.util.concurrent.Semaphore
 
 import akka.actor.Actor
 import com.stratio.governance.agent.searcher.actors.SearcherActorSystem
-import com.stratio.governance.agent.searcher.actors.dao.postgres.{PostgresPartialIndexationReadState, SourceDao}
+import com.stratio.governance.agent.searcher.actors.dao.postgres.PostgresPartialIndexationReadState
+import com.stratio.governance.agent.searcher.actors.extractor.dao.{SourceDao => ExtractorSourceDao}
+import com.stratio.governance.agent.searcher.actors.indexer.dao.{SourceDao => IndexerSourceDao}
 import com.stratio.governance.agent.searcher.actors.indexer.DGIndexer.IndexerEvent
 import com.stratio.governance.agent.searcher.actors.indexer._
 import com.stratio.governance.agent.searcher.actors.indexer.dao.SearcherDao
-import com.stratio.governance.agent.searcher.model._
+import com.stratio.governance.agent.searcher.model.EntityRow
 import com.stratio.governance.agent.searcher.model.es.DataAssetES
 import com.stratio.governance.agent.searcher.model.utils.ExponentialBackOff
 import org.scalatest.FlatSpec
@@ -19,7 +21,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class CustomSourceDao(chunk: Array[DataAssetES]) extends SourceDao {
+class CustomSourceDao(chunk: Array[DataAssetES]) extends ExtractorSourceDao with IndexerSourceDao {
   val chunkList: List[(Timestamp, DataAssetES)] = chunk.toList.map(t => (t.modifiedAt, t)).sortBy(_._1.getTime)
   val byIdsList: List[(Int, DataAssetES)] = chunk.toList.map(t => (t.id, t)).sortBy(_._1)
   var lastState: PostgresPartialIndexationReadState = PostgresPartialIndexationReadState(this)
@@ -35,11 +37,6 @@ class CustomSourceDao(chunk: Array[DataAssetES]) extends SourceDao {
 //  }
 
   override def close(): Unit = {}
-
-  override def keyValuePairProcess(ids: Array[Int]): List[KeyValuePair] = ???
-
-  override def businessAssets(ids: Array[Int]): List[BusinessAsset] = ???
-
 
   override def readDataAssetsSince(timestamp: Timestamp, limit: Int): (Array[DataAssetES], Timestamp) = ???
 
@@ -62,13 +59,17 @@ class CustomSourceDao(chunk: Array[DataAssetES]) extends SourceDao {
   override def executeQuery(sql: String): ResultSet = ???
 
   override def executePreparedStatement(sql: PreparedStatement): ResultSet = ???
+
+  override def keyValuePairProcess(ids: Array[Int]): List[EntityRow] = ???
+
+  override def businessAssets(ids: Array[Int]): List[EntityRow] = ???
 }
 
 
 class testCustomSearcherDao extends SearcherDao() {
   override def index(doc: String): Unit = ???
 }
-class CustomDGIndexerParams(sourceDao :SourceDao, searcherDao: SearcherDao, val limit: Int, val semaphore: Semaphore) extends DGIndexerParams(sourceDao, searcherDao, 10) {
+class CustomDGIndexerParams(sourceDao : CustomSourceDao, searcherDao: SearcherDao, val limit: Int, val semaphore: Semaphore) extends DGIndexerParams(sourceDao, searcherDao, 10) {
 
   var returnList: List[DataAssetES] = List()
 
@@ -128,7 +129,7 @@ class DGExtractorTest extends FlatSpec {
   def process(chunk: Array[DataAssetES]): List[DataAssetES] = {
     val s: Semaphore = new Semaphore(1)
 
-    val sourceDao: SourceDao = new CustomSourceDao(chunk)
+    val sourceDao: CustomSourceDao = new CustomSourceDao(chunk)
     val searcherDao: SearcherDao = new testCustomSearcherDao()
 
     val limit: Int = 2

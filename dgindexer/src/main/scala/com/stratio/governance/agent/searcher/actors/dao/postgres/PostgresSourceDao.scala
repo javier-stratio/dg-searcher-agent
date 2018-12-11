@@ -3,6 +3,9 @@ package com.stratio.governance.agent.searcher.actors.dao.postgres
 import java.sql.{Connection, PreparedStatement, ResultSet, SQLException, Timestamp}
 
 import akka.util.Timeout
+import com.stratio.governance.agent.searcher.actors.extractor.dao.{SourceDao => ExtractorSourceDao}
+import com.stratio.governance.agent.searcher.actors.indexer.dao.{SourceDao => IndexerSourceDao}
+import com.stratio.governance.agent.searcher.actors.manager.dao.{SourceDao => ManagerSourceDao}
 import com.stratio.governance.agent.searcher.model.es.DataAssetES
 import com.stratio.governance.agent.searcher.model.utils.ExponentialBackOff
 import com.stratio.governance.agent.searcher.model.{BusinessAsset, KeyValuePair}
@@ -20,7 +23,7 @@ class PostgresSourceDao(sourceConnectionUrl: String,
                         initialSize: Int,
                         maxSize: Int,
                         var exponentialBackOff: ExponentialBackOff,
-                        allowedToCreateContext: Boolean = false) extends SourceDao {
+                        allowedToCreateContext: Boolean = false) extends ExtractorSourceDao with IndexerSourceDao with ManagerSourceDao {
 
   // initialize JDBC driver & connection pool
   Class.forName("org.postgresql.Driver")
@@ -261,6 +264,10 @@ class PostgresSourceDao(sourceConnectionUrl: String,
     (ids, state)
   }
 
+  override def getKeys(): List[String] = {
+    PostgresSourceDao.getKeysFromResult(executePreparedStatement(prepareStatement(s"SELECT DISTINCT key FROM $schema.$keyTable")))
+  }
+
   def readPartialIndexationState(): PostgresPartialIndexationReadState = status.getOrElse({
     status = Some(PostgresPartialIndexationReadState(this))
     status.get.read(connection)
@@ -271,7 +278,19 @@ class PostgresSourceDao(sourceConnectionUrl: String,
     status = Some(state)
     status.get.save(connection)
   }
-}
 
+
+}
+object PostgresSourceDao {
+
+  @scala.annotation.tailrec
+  def getKeysFromResult(resultSet: ResultSet, list: List[String] = Nil): List[String] = {
+    if (resultSet.next()) {
+      getKeysFromResult(resultSet, resultSet.getString(1) :: list)
+    } else {
+      list
+    }
+  }
+}
 
 

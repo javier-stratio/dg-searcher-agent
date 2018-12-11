@@ -1,6 +1,6 @@
 package com.stratio.governance.agent.searcher.actors.indexer
 
-import com.stratio.governance.agent.searcher.actors.dao.postgres.SourceDao
+import com.stratio.governance.agent.searcher.actors.indexer.dao.SourceDao
 import com.stratio.governance.agent.searcher.actors.indexer.dao.SearcherDao
 
 trait IndexerParams {

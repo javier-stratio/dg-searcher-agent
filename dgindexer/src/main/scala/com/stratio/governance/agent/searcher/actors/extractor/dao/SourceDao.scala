@@ -1,18 +1,13 @@
-package com.stratio.governance.agent.searcher.actors.dao.postgres
+package com.stratio.governance.agent.searcher.actors.extractor.dao
 
 import java.sql.{PreparedStatement, ResultSet, Timestamp}
 
+import com.stratio.governance.agent.searcher.actors.dao.postgres.PostgresPartialIndexationReadState
 import com.stratio.governance.agent.searcher.model.es.DataAssetES
-import com.stratio.governance.agent.searcher.model.utils.ExponentialBackOff
-import com.stratio.governance.agent.searcher.model.{BusinessAsset, KeyValuePair}
 
-abstract class SourceDao {
+trait SourceDao {
 
   def close():Unit
-
-  def keyValuePairProcess(ids: Array[Int]): List[KeyValuePair]
-
-  def businessAssets(ids: Array[Int]): List[BusinessAsset]
 
   def readDataAssetsSince(timestamp: Timestamp, limit: Int): (Array[DataAssetES], Timestamp)
 

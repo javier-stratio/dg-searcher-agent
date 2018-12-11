@@ -6,6 +6,5 @@ trait SourceDao {
 
   def keyValuePairProcess(ids: Array[Int]): List[EntityRow]
 
-  def businessTerms(ids: Array[Int]): List[EntityRow]
-
+  def businessAssets(ids: Array[Int]): List[EntityRow]
 }

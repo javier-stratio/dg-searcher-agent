@@ -1,24 +1,24 @@
 package com.stratio.governance.agent.searcher.actors.indexer
 
 import java.sql.{PreparedStatement, ResultSet, Timestamp}
-import java.time.Instant
 import java.util.concurrent.Semaphore
 
 import akka.actor.{Actor, ActorRef, Cancellable}
 import com.stratio.governance.agent.searcher.actors.SearcherActorSystem
-import com.stratio.governance.agent.searcher.actors.dao.postgres.{PostgresPartialIndexationReadState, SourceDao}
+import com.stratio.governance.agent.searcher.actors.dao.postgres.PostgresPartialIndexationReadState
 import com.stratio.governance.agent.searcher.actors.extractor.DGExtractorParams
-import com.stratio.governance.agent.searcher.actors.indexer.dao.SearcherDao
+import com.stratio.governance.agent.searcher.actors.extractor.dao.{SourceDao => ExtractorSourceDao}
+import com.stratio.governance.agent.searcher.actors.indexer.dao.{SearcherDao, SourceDao => IndexerSourceDao}
 import com.stratio.governance.agent.searcher.model.es.DataAssetES
 import com.stratio.governance.agent.searcher.model.utils.ExponentialBackOff
-import com.stratio.governance.agent.searcher.model.{BusinessAsset, EntityRow, KeyValuePair}
+import com.stratio.governance.agent.searcher.model.{BusinessAsset, KeyValuePair}
 import org.scalatest.FlatSpec
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
-class ExtractorTestParams(s: Semaphore, sourceDao: SourceDao, chunk: Array[DataAssetES]) extends DGExtractorParams(sourceDao, 10,10, ExponentialBackOff(10, 10),10) {
+class ExtractorTestParams(s: Semaphore, sourceDao: CustomTestSourceDao, chunk: Array[DataAssetES]) extends DGExtractorParams(sourceDao, 10,10, ExponentialBackOff(10, 10),10) {
 
   def getSemaphore: Semaphore = {
     s
@@ -29,7 +29,7 @@ class ExtractorTestParams(s: Semaphore, sourceDao: SourceDao, chunk: Array[DataA
   }
 
 }
-class CustomTestSourceDao(noAdds: Boolean) extends SourceDao {
+class CustomTestSourceDao(noAdds: Boolean) extends ExtractorSourceDao with IndexerSourceDao {
   override def keyValuePairProcess(ids: Array[Int]): List[KeyValuePair] = {
     if (!noAdds) {
       val rows: List[List[KeyValuePair]] = ids.map(i => List(KeyValuePair(i, "OWNER", "finantial", "2018-11-29T10:27:00.000"), KeyValuePair(i, "QUALITY", "High", "2018-09-28T20:45:00.000"))).toList
@@ -79,7 +79,7 @@ class PartialIndexerTestParams(s: Semaphore, noAdds: Boolean) extends IndexerPar
     s
   }
 
-  override def getSourceDao: SourceDao = new CustomTestSourceDao(noAdds)
+  override def getSourceDao: CustomTestSourceDao = new CustomTestSourceDao(noAdds)
 
   override def getSearcherDao: SearcherDao = new SearcherDao {
     override def index(doc: String): Unit = {
@@ -158,7 +158,7 @@ class DGIndexerTest extends FlatSpec {
   def process(chunk: Array[DataAssetES], noAdds: Boolean): String = {
     val s: Semaphore = new Semaphore(1)
     //
-    val sourceDao: SourceDao = new CustomTestSourceDao(noAdds)
+    val sourceDao: CustomTestSourceDao = new CustomTestSourceDao(noAdds)
     val eParams: ExtractorTestParams = new ExtractorTestParams(s, sourceDao, chunk)
     val piParams: PartialIndexerTestParams = new PartialIndexerTestParams(s, noAdds)
 

@@ -4,8 +4,10 @@ import java.sql.{PreparedStatement, ResultSet, Timestamp}
 import java.util.concurrent.Semaphore
 
 import akka.actor.{Actor, ActorRef, Cancellable}
-import com.stratio.governance.agent.searcher.actors.dao.postgres.{PostgresPartialIndexationReadState, SourceDao}
+import com.stratio.governance.agent.searcher.actors.dao.postgres.PostgresPartialIndexationReadState
 import com.stratio.governance.agent.searcher.actors.extractor.DGExtractorParams
+import com.stratio.governance.agent.searcher.actors.extractor.dao.{SourceDao => ExtractorSourceDao}
+import com.stratio.governance.agent.searcher.actors.indexer.dao.{SourceDao => IndexerSourceDao}
 import com.stratio.governance.agent.searcher.actors.indexer.IndexerParams
 import com.stratio.governance.agent.searcher.actors.indexer.dao.SearcherDao
 import com.stratio.governance.agent.searcher.model._
@@ -17,7 +19,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
-class CustomSourceDao extends SourceDao {
+class CustomSourceDao extends ExtractorSourceDao with IndexerSourceDao {
   override def close(): Unit = ???
 
   override def keyValuePairProcess(ids: Array[Int]): List[KeyValuePair] = ???
@@ -41,7 +43,7 @@ class CustomSourceDao extends SourceDao {
   override def executePreparedStatement(sql: PreparedStatement): ResultSet = ???
 }
 
-class CommonParams(s: Semaphore, sourceDao: SourceDao, reference: String) extends DGExtractorParams(sourceDao, 10,10, ExponentialBackOff(10, 10),10) with IndexerParams {
+class CommonParams(s: Semaphore, sourceDao: CustomSourceDao, reference: String) extends DGExtractorParams(sourceDao, 10,10, ExponentialBackOff(10, 10),10) with IndexerParams {
 
   var r: String =""
 
@@ -61,7 +63,7 @@ class CommonParams(s: Semaphore, sourceDao: SourceDao, reference: String) extend
     r
   }
 
-  override def getSourceDao: SourceDao = ???
+  override def getSourceDao: CustomSourceDao = ???
   override def getSearcherDao: SearcherDao = ???
 
   override def getPartition: Int = ???
@@ -108,7 +110,7 @@ class SearcherActorSystemTest extends FlatSpec {
 
     val s: Semaphore = new Semaphore(1)
     val reference: String = "testing"
-    val sourceDao: SourceDao = new CustomSourceDao()
+    val sourceDao: CustomSourceDao = new CustomSourceDao()
     val eParams: CommonParams = new CommonParams(s, sourceDao, reference)
 
     eParams.getSemaphore.acquire()
