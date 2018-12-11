@@ -11,7 +11,7 @@ class DGSearcherDao(httpManager: HttpManager) extends
   com.stratio.governance.agent.searcher.actors.manager.dao.SearcherDao
 {
   private lazy val LOG: Logger = LoggerFactory.getLogger(getClass.getName)
-  implicit val formats = DefaultFormats
+  implicit val formats: DefaultFormats.type = DefaultFormats
 
   val FINAL_STATUS_OK: String = "ENDED"
   val FINAL_STATUS_NOK: String = "CANCELLED"
@@ -41,12 +41,12 @@ class DGSearcherDao(httpManager: HttpManager) extends
       val result: String = httpManager.getIndexerdomains()
       val json = parse(result)
       val domains: IndexerDomains = json.extract[IndexerDomains]
-      val domain: List[IndexerDomain] = domains.domains.filter(d => d.domain == Some(model))
+      val domain: List[IndexerDomain] = domains.domains.filter(d => d.domain.contains(model))
       if (domain.isEmpty) {
         (false, None)
       } else {
         val dom: IndexerDomain = domain.head
-        if ((dom.status.isEmpty) || dom.status == Some(FINAL_STATUS_OK) || dom.status == Some(FINAL_STATUS_NOK))
+        if (dom.status.isEmpty || dom.status.contains(FINAL_STATUS_OK) || dom.status.contains(FINAL_STATUS_NOK))
           (false, None)
         else
           (true, dom.token)
@@ -80,8 +80,8 @@ class DGSearcherDao(httpManager: HttpManager) extends
       val json = parse(result)
       val domain: IndexerDomain = json.extract[IndexerDomain]
 
-      if (domain.status == Some(INDEXING_STATUS)) {
-        return domain.token.get
+      if (domain.status.contains(INDEXING_STATUS)) {
+        domain.token.get
       } else {
         throw DGSearcherDaoException("status is not " + INDEXING_STATUS)
       }

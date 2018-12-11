@@ -6,7 +6,6 @@
         <version>0.1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.stratio.governance.agent.searcher</groupId>
     <artifactId>dg-indexer</artifactId>
     <name>${project.artifactId}</name>
     <description>Partial documents indexation from Governance Datastore</description>
@@ -16,7 +15,7 @@
         <dependency>
             <groupId>org.scalikejdbc</groupId>
             <artifactId>scalikejdbc_2.11</artifactId>
-            <version>${scalikejdbc}</version>
+            <version>${scalikejdbc.version}</version>
         </dependency>
         <dependency>
             <groupId>com.stratio.governance</groupId>
@@ -138,7 +137,7 @@
                 <configuration>
                     <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
                     <junitxml>.</junitxml>
-                    <filereports>TestDyplonPlugin.txt</filereports>
+                    <filereports>FileReports.txt</filereports>
                 </configuration>
                 <executions>
                     <execution>

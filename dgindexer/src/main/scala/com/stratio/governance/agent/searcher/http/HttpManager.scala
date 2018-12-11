@@ -1,7 +1,5 @@
 package com.stratio.governance.agent.searcher.http
 
-import org.apache.http.client.methods.CloseableHttpResponse
-
 trait HttpManager {
 
   @throws(classOf[HttpException])

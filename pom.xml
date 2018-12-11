@@ -19,6 +19,7 @@
     </modules>
 
     <properties>
+        <akka-quartz.version>1.7.1-akka-2.5.x</akka-quartz.version>
         <akka.version>2.5.14</akka.version>
         <debug.suspend>n</debug.suspend>
         <dg.commons.version>0.9.0-SNAPSHOT</dg.commons.version>
@@ -27,14 +28,13 @@
         <json4s_version>3.5.2</json4s_version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <postgresql>9.4-1201-jdbc41</postgresql>
         <scala.binary.version>2.11</scala.binary.version>
         <scala.mock.version>4.1.0</scala.mock.version>
-        <scala.version>${scala.binary.version}.12</scala.version>
         <scalatest.version>3.0.5</scalatest.version>
-        <scalikejdbc>2.2.8</scalikejdbc>
-        <postgresql>9.4-1201-jdbc41</postgresql>
+        <scala.version>${scala.binary.version}.12</scala.version>
+        <scalikejdbc.version>2.2.8</scalikejdbc.version>
         <scoverage.plugin.version>1.3.0</scoverage.plugin.version>
-        <akka-quartz.version>1.7.1-akka-2.5.x</akka-quartz.version>
         <vspy.mustache>1.3</vspy.mustache>
     </properties>
 
@@ -53,7 +53,7 @@
             <dependency>
                 <groupId>org.scalikejdbc</groupId>
                 <artifactId>scalikejdbc_2.11</artifactId>
-                <version>${scalikejdbc}</version>
+                <version>${scalikejdbc.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>

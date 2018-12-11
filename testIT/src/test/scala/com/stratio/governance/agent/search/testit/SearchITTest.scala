@@ -1,19 +1,22 @@
-import com.stratio.governance.agent.search.testit.Configuration
+package com.stratio.governance.agent.search.testit
+
+
+import com.stratio.governance.agent.search.testit.utils.Configuration
 import com.stratio.governance.agent.searcher.actors.dao.searcher.{IndexerDomain, IndexerDomains, PartialIndexer}
-import com.stratio.governance.agent.searcher.http.{HttpException, HttpManager}
 import com.stratio.governance.agent.searcher.http.defimpl.DGHttpManager
+import com.stratio.governance.agent.searcher.http.{HttpException, HttpManager}
 import org.json4s.DefaultFormats
 import org.json4s.native.JsonMethods.parse
 import org.scalatest.FlatSpec
 
 class SearchITTest extends FlatSpec {
 
-  val httpManager: HttpManager = new DGHttpManager(Configuration.MANAGER_URL, Configuration.INDEXER_URL, Configuration.SSL)
-  implicit val formats = DefaultFormats
+  val httpManager: HttpManager = new DGHttpManager(Configuration.MANAGER_URL, Configuration.INDEXER_URL)
+  implicit val formats: DefaultFormats.type = DefaultFormats
 
   "Unreacheable port " should " launch an exception" in {
 
-    val httpManagerExc: HttpManager = new DGHttpManager("localhost:7070", "localhost:7070", Configuration.SSL)
+    val httpManagerExc: HttpManager = new DGHttpManager("http://localhost:7070", "http://localhost:7070")
     try {
       httpManagerExc.getManagerModels()
       assert(false,"An exception must have been thrown")
@@ -32,7 +35,7 @@ class SearchITTest extends FlatSpec {
 //  TODO this case must be reviewed. Currently, it comes into a loop
 //  "Unreacheable host " should " launch an exception" in {
 //
-//    val httpManagerExc: HttpManager = new DGHttpManager("11.11.11.11:7070", "11.11.11.11:7070", Configuration.SSL)
+//    val httpManagerExc: HttpManager = new DGHttpManager("http://11.11.11.11:7070", "http://11.11.11.11:7070")
 //    try {
 //      httpManagerExc.getManagerModels()
 //      assert(false,"An exception must have been thrown")
@@ -139,5 +142,4 @@ class SearchITTest extends FlatSpec {
     assert(true)
 
   }
-
 }

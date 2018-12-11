@@ -1,15 +1,16 @@
 package com.stratio.governance.agent.searcher.actors
 
-import java.time.Instant
+import java.sql.{PreparedStatement, ResultSet, Timestamp}
 import java.util.concurrent.Semaphore
 
 import akka.actor.{Actor, ActorRef, Cancellable}
-import com.stratio.governance.agent.searcher.actors.dao.SourceDao
+import com.stratio.governance.agent.searcher.actors.dao.postgres.{PostgresPartialIndexationReadState, SourceDao}
 import com.stratio.governance.agent.searcher.actors.extractor.DGExtractorParams
 import com.stratio.governance.agent.searcher.actors.indexer.IndexerParams
 import com.stratio.governance.agent.searcher.actors.indexer.dao.SearcherDao
 import com.stratio.governance.agent.searcher.model._
-import com.stratio.governance.commons.agent.domain.dao.DataAssetDao
+import com.stratio.governance.agent.searcher.model.es.DataAssetES
+import com.stratio.governance.agent.searcher.model.utils.ExponentialBackOff
 import org.scalatest.FlatSpec
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -17,29 +18,38 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
 class CustomSourceDao extends SourceDao {
-
   override def close(): Unit = ???
 
-  override def keyValuePairProcess(ids: Array[Int]): List[EntityRow] = ???
+  override def keyValuePairProcess(ids: Array[Int]): List[KeyValuePair] = ???
 
-  override def businessTerms(ids: Array[Int]): List[EntityRow] = ???
+  override def businessAssets(ids: Array[Int]): List[BusinessAsset] = ???
 
-  override def readDataAssetsSince(instant: Option[Instant], limit: Int): (Array[DataAssetDao], Option[Instant]) = ???
+  override def readDataAssetsSince(timestamp: Timestamp, limit: Int): (Array[DataAssetES], Timestamp) = ???
 
-  override def readLastIngestedInstant(): Option[Instant] = ???
+  override def readDataAssetsWhereIdsIn(ids: List[Int]): Array[DataAssetES] = ???
 
-  override def writeLastIngestedInstant(instant: Option[Instant]): Unit = ???
+  override def readUpdatedDataAssetsIdsSince(state: PostgresPartialIndexationReadState): (List[Int], PostgresPartialIndexationReadState) = ???
+
+  override def readPartialIndexationState(): PostgresPartialIndexationReadState = ???
+
+  override def writePartialIndexationState(state: PostgresPartialIndexationReadState): Unit = ???
+
+  override def prepareStatement(queryName: String): PreparedStatement = ???
+
+  override def executeQuery(sql: String): ResultSet = ???
+
+  override def executePreparedStatement(sql: PreparedStatement): ResultSet = ???
 }
 
-class CommonParams(s: Semaphore, sourceDao: SourceDao, reference: String) extends DGExtractorParams(sourceDao, 10,10, 10, 10,10) with IndexerParams {
+class CommonParams(s: Semaphore, sourceDao: SourceDao, reference: String) extends DGExtractorParams(sourceDao, 10,10, ExponentialBackOff(10, 10),10) with IndexerParams {
 
   var r: String =""
 
-  def getSemaphore(): Semaphore = {
+  def getSemaphore: Semaphore = {
     s
   }
 
-  def getReference(): String = {
+  def getReference: String = {
     reference
   }
 
@@ -47,14 +57,14 @@ class CommonParams(s: Semaphore, sourceDao: SourceDao, reference: String) extend
     r=result
   }
 
-  def getResult(): String = {
+  def getResult: String = {
     r
   }
 
-  override def getSourceDao(): SourceDao = ???
-  override def getSearcherDao(): SearcherDao = ???
+  override def getSourceDao: SourceDao = ???
+  override def getSearcherDao: SearcherDao = ???
 
-  override def getPartition(): Int = ???
+  override def getPartition: Int = ???
 }
 
 case class MetaInfo(value: String)
@@ -67,15 +77,13 @@ class SimpleExtractor(indexer: ActorRef, params: CommonParams) extends Actor {
 
   val notification_cancellable: Cancellable = context.system.scheduler.scheduleOnce(1 millis, self, NOTIFICATION)
 
-  override def receive = {
-    case NOTIFICATION => {
+  override def receive: PartialFunction[Any, Unit] = {
+    case NOTIFICATION =>
       println("Notification received")
-      self ! MetaInfo(params.getReference())
-    }
-    case MetaInfo(value) => {
+      self ! MetaInfo(params.getReference)
+    case MetaInfo(value) =>
       println("value (Extractor): " + value)
       indexer ! MetaInfo(value)
-    }
     case _       => LOG.info("Extractor default handle. Nothing to do.")
   }
 }
@@ -84,12 +92,11 @@ class SimpleIndexer(params: CommonParams) extends Actor {
 
   private lazy val LOG: Logger = LoggerFactory.getLogger(getClass.getName)
 
-  override def receive = {
-    case MetaInfo(value) => {
+  override def receive: PartialFunction[Any, Unit] = {
+    case MetaInfo(value) =>
       println("value (indexer): " + value)
       params.setResult(value)
-      params.getSemaphore().release()
-    }
+      params.getSemaphore.release()
     case _       => LOG.info("Indexer default handle. Nothing to do.")
   }
 
@@ -104,17 +111,17 @@ class SearcherActorSystemTest extends FlatSpec {
     val sourceDao: SourceDao = new CustomSourceDao()
     val eParams: CommonParams = new CommonParams(s, sourceDao, reference)
 
-    eParams.getSemaphore().acquire()
+    eParams.getSemaphore.acquire()
 
     val actorSystem: SearcherActorSystem[SimpleExtractor, SimpleIndexer] = new SearcherActorSystem[SimpleExtractor, SimpleIndexer]("test", classOf[SimpleExtractor], classOf[SimpleIndexer], eParams, eParams)
     actorSystem.initPartialIndexation()
 
-    eParams.getSemaphore().acquire()
-    eParams.getSemaphore().release()
+    eParams.getSemaphore.acquire()
+    eParams.getSemaphore.release()
 
     Thread.sleep(1000)
     actorSystem.stopAll()
-    assert(eParams.getResult().equals(reference), "result '" + eParams.getResult() + "' is not '" + reference + "'")
+    assert(eParams.getResult.equals(reference), "result '" + eParams.getResult + "' is not '" + reference + "'")
 
   }
 }

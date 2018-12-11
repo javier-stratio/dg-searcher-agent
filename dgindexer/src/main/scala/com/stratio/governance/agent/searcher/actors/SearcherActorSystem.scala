@@ -4,6 +4,7 @@ import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import com.stratio.governance.agent.searcher.actors.extractor.DGExtractor.{PartialIndexationMessage, TotalIndexationMessage}
 import com.stratio.governance.agent.searcher.actors.extractor.DGExtractorParams
 import com.stratio.governance.agent.searcher.actors.indexer.IndexerParams
+import com.stratio.governance.agent.searcher.model.utils.TimestampUtils
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
@@ -16,11 +17,11 @@ class SearcherActorSystem[A <: Actor,B <: Actor](name: String, extractor: Class[
   val extractorRef: ActorRef = system.actorOf(Props(extractor, indexerRef, extractorParams), name + "_extractor")
 
   def performTotalIndexation(): Unit = {
-    system.scheduler.scheduleOnce(extractorParams.delayMs millis, extractorRef,  TotalIndexationMessage(None, extractorParams.limit, extractorParams.createExponentialBackOff))
+    system.scheduler.scheduleOnce(extractorParams.delayMs millis, extractorRef,  TotalIndexationMessage(TimestampUtils.MIN, extractorParams.limit, extractorParams.exponentialBackOff))
   }
 
   def initPartialIndexation(): Unit = {
-    system.scheduler.scheduleOnce(extractorParams.delayMs millis, extractorRef, PartialIndexationMessage(None, extractorParams.limit, extractorParams.createExponentialBackOff))
+    system.scheduler.scheduleOnce(extractorParams.delayMs millis, extractorRef, PartialIndexationMessage(None, extractorParams.limit, extractorParams.exponentialBackOff))
   }
 
   def stopAll() : Unit = {

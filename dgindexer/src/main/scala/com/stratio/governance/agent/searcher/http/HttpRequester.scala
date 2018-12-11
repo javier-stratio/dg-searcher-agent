@@ -29,8 +29,6 @@ object HttpRequester {
 
     val client = HttpClientBuilder.create.build
     val responseTotal: CloseableHttpResponse = client.execute(initTotal)
-
-    import org.apache.http.HttpEntity
     val entity = responseTotal.getEntity
     val responseTotalString = EntityUtils.toString(entity, "UTF-8")
     println(s"responseString :: $responseTotalString")

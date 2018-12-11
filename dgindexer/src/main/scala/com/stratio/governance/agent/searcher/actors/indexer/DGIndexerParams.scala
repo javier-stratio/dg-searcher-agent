@@ -1,14 +1,18 @@
 package com.stratio.governance.agent.searcher.actors.indexer
 
-import com.stratio.governance.agent.searcher.actors
+import com.stratio.governance.agent.searcher.actors.dao.postgres.SourceDao
+
 import com.stratio.governance.agent.searcher.actors.indexer.dao.SearcherDao
 
-class DGIndexerParams extends IndexerParams {
+class DGIndexerParams(sourceDao: SourceDao, searcherDao: SearcherDao, partition: Int) extends IndexerParams {
 
-  override def getPartition(): Int = ???
+  override def getPartition: Int =
+    partition
 
-  override def getSourceDao(): actors.dao.SourceDao = ???
+  override def getSourceDao: SourceDao =
+    sourceDao
 
-  override def getSearcherDao(): SearcherDao = ???
-
+  override def getSearcherDao: SearcherDao =
+    searcherDao
 }
+

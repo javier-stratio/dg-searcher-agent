@@ -7,21 +7,21 @@ import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.util.EntityUtils
 import org.slf4j.{Logger, LoggerFactory}
 
-class DGHttpManager(managerURL: String, indexerURL: String, ssl: Boolean) extends HttpManager {
+class DGHttpManager(managerURL: String, indexerURL: String) extends HttpManager {
 
   private lazy val LOG: Logger = LoggerFactory.getLogger(getClass.getName)
-  lazy val protocol: String = if (ssl) "https" else "http"
 
   val MODEL: String = "{{model}}"
+
   val TOKEN: String = "{{token}}"
-  val GET_MANAGER_MODELS_URL: String = protocol + "://" + managerURL + "/manager/domains"
-  val PUT_MANAGER_MODEL: String = protocol + "://" + managerURL + "/manager/domains/" + MODEL
-  val PUT_PARTIAL_INDEXATION: String = protocol + "://" + indexerURL + "/indexer/domains/" + MODEL + "/partial"
-  val PUT_TOTAL_INDEXATION: String = protocol + "://" + indexerURL + "/indexer/domains/" + MODEL + "/total/" + TOKEN + "/index"
-  val GET_INDEXER_DOMAINS: String = protocol + "://" + indexerURL + "/indexer/domains"
-  val POST_TOTAL_INDEXATION_INIT: String = protocol + "://" + indexerURL + "/indexer/domains/" + MODEL + "/total"
-  val PUT_TOTAL_INDEXATION_FINISH: String = protocol + "://" + indexerURL + "/indexer/domains/" + MODEL + "/total/" + TOKEN + "/end"
-  val PUT_TOTAL_INDEXATION_CANCEL: String = protocol + "://" + indexerURL + "/indexer/domains/" + MODEL + "/total/" + TOKEN + "/cancel"
+  val GET_MANAGER_MODELS_URL: String = managerURL + "/manager/domains"
+  val PUT_MANAGER_MODEL: String = managerURL + "/manager/domains/" + MODEL
+  val PUT_PARTIAL_INDEXATION: String = indexerURL + "/indexer/domains/" + MODEL + "/partial"
+  val PUT_TOTAL_INDEXATION: String = indexerURL + "/indexer/domains/" + MODEL + "/total/" + TOKEN + "/index"
+  val GET_INDEXER_DOMAINS: String = indexerURL + "/indexer/domains"
+  val POST_TOTAL_INDEXATION_INIT: String = indexerURL + "/indexer/domains/" + MODEL + "/total"
+  val PUT_TOTAL_INDEXATION_FINISH: String = indexerURL + "/indexer/domains/" + MODEL + "/total/" + TOKEN + "/end"
+  val PUT_TOTAL_INDEXATION_CANCEL: String = indexerURL + "/indexer/domains/" + MODEL + "/total/" + TOKEN + "/cancel"
 
   @throws(classOf[HttpException])
   override def partialPostRequest(model: String, json: String): String = {
@@ -130,10 +130,9 @@ class DGHttpManager(managerURL: String, indexerURL: String, ssl: Boolean) extend
         HttpSearchResponseKO(code, request.getURI.toString, EntityUtils.toString(response.getEntity, "UTF-8"))
       }
     } catch {
-      case e: Throwable => {
+      case e: Throwable =>
         LOG.error("Error while processing http request", e)
         throw HttpException("000","",e.getMessage)
-      }
     }
   }
 
