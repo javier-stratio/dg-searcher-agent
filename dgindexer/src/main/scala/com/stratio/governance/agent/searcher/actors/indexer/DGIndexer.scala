@@ -2,6 +2,7 @@ package com.stratio.governance.agent.searcher.actors.indexer
 
 import akka.actor.Actor
 import com.stratio.governance.agent.searcher.actors.indexer.DGIndexer.IndexerEvent
+import com.stratio.governance.agent.searcher.actors.manager.DGManager
 import com.stratio.governance.agent.searcher.model._
 import com.stratio.governance.agent.searcher.model.es.DataAssetES
 import com.stratio.governance.agent.searcher.model.utils.TimestampUtils
@@ -19,9 +20,9 @@ class DGIndexer(params: IndexerParams) extends Actor {
 
   override def receive: Receive = {
       // The whole chunk will be send to Indexer. It must come previously partitioned
-      case IndexerEvent(chunk) =>
+      case IndexerEvent(chunk, token) =>
         try {
-
+          LOG.debug("handling Indexer Event. token: " + token)
           val batches: List[Array[DataAssetES]] = chunk.grouped(params.getPartition).toList
 
           val batchesEnriched: List[Array[DataAssetES]] = batches.map((x: Array[DataAssetES]) => {
@@ -73,8 +74,12 @@ class DGIndexer(params: IndexerParams) extends Actor {
 
           val documentsBulk: String = org.json4s.native.Serialization.write(jlist)
 
-
-          sender ! Future(params.getSearcherDao.index(documentsBulk))
+          token match {
+            case Some(tk) =>
+              sender ! Future(params.getSearcherDao.indexTotal(DGManager.MODEL_NAME, documentsBulk, tk))
+            case None =>
+              sender ! Future(params.getSearcherDao.indexPartial(DGManager.MODEL_NAME, documentsBulk))
+          }
         } catch {
           case e: Throwable =>
             LOG.error("Error while processing", e)
@@ -104,6 +109,6 @@ object DGIndexer {
   /**
     * Actor messages
     */
-  case class IndexerEvent(notificationChunks: Array[DataAssetES])
+  case class IndexerEvent(notificationChunks: Array[DataAssetES], token: Option[String])
 
 }

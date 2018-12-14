@@ -87,6 +87,14 @@
         "aggregable": false
       },
       {
+        "field": "dataStore",
+        "name": "Data Store",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
         "field": "businessTerms",
         "name": "Business Terms",
         "type": "text",
@@ -116,6 +124,7 @@
     "tenant": 1,
     "active": 1,
     "discoveredAt": 1,
+    "dataStore": 1,
     "modifiedAt": 1,
     "businessTerms": 1,
     "keys": 1

@@ -17,7 +17,7 @@ class SearcherActorSystem[A <: Actor,B <: Actor](name: String, extractor: Class[
   val extractorRef: ActorRef = system.actorOf(Props(extractor, indexerRef, extractorParams), name + "_extractor")
 
   def performTotalIndexation(): Unit = {
-    system.scheduler.scheduleOnce(extractorParams.delayMs millis, extractorRef,  TotalIndexationMessage(TimestampUtils.MIN, extractorParams.limit, extractorParams.exponentialBackOff))
+    system.scheduler.scheduleOnce(extractorParams.delayMs millis, extractorRef,  TotalIndexationMessage(TimestampUtils.MIN, extractorParams.limit, extractorParams.exponentialBackOff, ""))
   }
 
   def initPartialIndexation(): Unit = {

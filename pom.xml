@@ -26,11 +26,15 @@
         <encoding>UTF-8</encoding>
         <http_client_version>4.5.5</http_client_version>
         <json4s_version>3.5.2</json4s_version>
+        <logback.version>1.2.3</logback.version>
+        <log4j-over-slf4j.version>1.7.25</log4j-over-slf4j.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <postgresql>9.4-1201-jdbc41</postgresql>
         <scala.binary.version>2.11</scala.binary.version>
         <scala.mock.version>4.1.0</scala.mock.version>
+        <scala.version>${scala.binary.version}.12</scala.version>
+        <scala-logging>3.9.0</scala-logging>
         <scalatest.version>3.0.5</scalatest.version>
         <scala.version>${scala.binary.version}.12</scala.version>
         <scalikejdbc.version>2.2.8</scalikejdbc.version>
@@ -99,6 +103,21 @@
                 <groupId>com.vspy</groupId>
                 <artifactId>mustache_2.11</artifactId>
                 <version>${vspy.mustache}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.typesafe.scala-logging</groupId>
+                <artifactId>scala-logging_${scala.binary.version}</artifactId>
+                <version>${scala-logging}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>log4j-over-slf4j</artifactId>
+                <version>${log4j-over-slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
             </dependency>
 
             <!-- Test -->

@@ -15,21 +15,42 @@
         <dependency>
             <groupId>org.scalikejdbc</groupId>
             <artifactId>scalikejdbc_2.11</artifactId>
-            <version>${scalikejdbc.version}</version>
         </dependency>
         <dependency>
             <groupId>com.stratio.governance</groupId>
             <artifactId>sender</artifactId>
-            <version>${dg.commons.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>log4j-over-slf4j</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.stratio.governance</groupId>
             <artifactId>model</artifactId>
-            <version>${dg.commons.version}</version>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
+        </dependency>
+
+        <!-- logging -->
+        <dependency>
+            <groupId>com.typesafe.scala-logging</groupId>
+            <artifactId>scala-logging_${scala.binary.version}</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>log4j-over-slf4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
         </dependency>
 
         <!-- Apache Http client-->

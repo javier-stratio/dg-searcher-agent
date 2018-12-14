@@ -4,6 +4,7 @@ import java.util.concurrent.Semaphore
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.util.Timeout
+import com.stratio.governance.agent.searcher.actors.extractor.DGExtractor.{PartialIndexationMessageInit, TotalIndexationMessageInit}
 import com.stratio.governance.agent.searcher.actors.manager.dao.SearcherDao
 import com.stratio.governance.agent.searcher.actors.manager.scheduler.Scheduler
 import com.stratio.governance.agent.searcher.actors.manager.scheduler.defimpl.DGScheduler
@@ -49,6 +50,7 @@ class ManagerUtilsTest(scheduler: DGScheduler, s: Semaphore, testNumber: Int) ex
   override def getScheduler(): Scheduler = {
     scheduler
   }
+
 }
 
 class DGSearcherDaoMock(s: Semaphore, testNumber: Int) extends SearcherDao {
@@ -115,22 +117,22 @@ class DGSearcherDaoMock(s: Semaphore, testNumber: Int) extends SearcherDao {
 class ExtratorActorMock(s: Semaphore, name: String) extends Actor {
 
   override def receive: Receive = {
-    case "testing_total_indexation" => {
+    case TotalIndexationMessageInit(token) => {
       // Total indexation  execution simulated
       implicit val timeout: Timeout = Timeout(60000, MILLISECONDS)
       for (res <- context.actorSelection("/user/" + name).resolveOne()) {
         val managerActor = res
         println(res)
-        managerActor ! DGManager.ManagerIndexationEvent(IndexationType.TOTAL, "1234567890", IndexationStatus.SUCCESS)
+        managerActor ! DGManager.ManagerTotalIndexationEvent(token, IndexationStatus.SUCCESS)
       }
     }
-    case "testing_partial_indexation" => {
+    case PartialIndexationMessageInit() => {
       // Total indexation  execution simulated
       implicit val timeout: Timeout = Timeout(60000, MILLISECONDS)
       for (res <- context.actorSelection("/user/" + name).resolveOne()) {
         val managerActor = res
         println(res)
-        managerActor ! DGManager.ManagerIndexationEvent(IndexationType.PARTIAL, "1234567890", IndexationStatus.SUCCESS)
+        managerActor ! DGManager.ManagerPartialIndexationEvent(IndexationStatus.SUCCESS)
         s.release()
       }
     }
@@ -219,7 +221,7 @@ class DGManagerTest extends FlatSpec {
 
     // Getting here is working. Otherwise will be blocked
     assert(managerUtils.isModelGenerated(), "Model has not been generated!")
-    assertResult(4)(searcherDao.getTotalIndexationSteps())
+    assertResult(5)(searcherDao.getTotalIndexationSteps())
 
   }
 

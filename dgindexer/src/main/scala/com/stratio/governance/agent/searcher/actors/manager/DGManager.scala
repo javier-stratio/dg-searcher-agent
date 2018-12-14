@@ -5,6 +5,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import java.util.UUID.randomUUID
 
+import com.stratio.governance.agent.searcher.actors.extractor.DGExtractor.{PartialIndexationMessageInit, TotalIndexationMessageInit}
 import com.stratio.governance.agent.searcher.actors.manager.dao.SearcherDao
 import com.stratio.governance.agent.searcher.actors.manager.utils.ManagerUtils
 import org.slf4j.{Logger, LoggerFactory}
@@ -17,7 +18,7 @@ import scala.util.{Failure, Success}
 class DGManager(extractor: ActorRef, managerUtils: ManagerUtils, searcherDao: SearcherDao) extends Actor {
 
   private lazy val LOG: Logger = LoggerFactory.getLogger(getClass.getName)
-  implicit val timeout: Timeout = Timeout(60000, MILLISECONDS)
+  implicit val timeout: Timeout = Timeout(3600, SECONDS) // Just an hour of waiting
 
   val BOOT: String = "boot"
   val FIRST_TOTAL_INDEXATION: String = "first_total_indexation"
@@ -37,13 +38,22 @@ class DGManager(extractor: ActorRef, managerUtils: ManagerUtils, searcherDao: Se
       if (modelList.isEmpty) {
         self ! FIRST_TOTAL_INDEXATION
       } else {
-        launchTemporizations()
+        // Let's check if any total indexation is in progress. This must be an error
+        val check: (Boolean, Option[String]) = searcherDao.checkTotalIndexation(DGManager.MODEL_NAME)
+        if (check._1) {
+          // Such case, let's cancel launch total indexation and start another one new again
+          searcherDao.cancelTotalIndexationProcess(DGManager.MODEL_NAME, check._2.get)
+          launchTemporizations()
+          self ! TOTAL_INDEXATION
+        } else {
+          launchTemporizations()
+        }
       }
 
     }
 
     case PARTIAL_INDEXATION => {
-      LOG.debug("PARTIAL_INDEXATION INIT event received")
+      LOG.info("PARTIAL_INDEXATION INIT event received")
       val check: (Boolean, Option[String]) = searcherDao.checkTotalIndexation(DGManager.MODEL_NAME)
       if (!partialIndexationInProgress() && !check._1 ) {
         val token: String = getRandomToken()
@@ -72,7 +82,7 @@ class DGManager(extractor: ActorRef, managerUtils: ManagerUtils, searcherDao: Se
     }
 
     case TOTAL_INDEXATION => {
-      LOG.debug("TOTAL_INDEXATION INIT event received")
+      LOG.info("TOTAL_INDEXATION INIT event received")
       if (partialIndexationInProgress()) {
         totalIndexationPending = true
       } else {
@@ -96,26 +106,25 @@ class DGManager(extractor: ActorRef, managerUtils: ManagerUtils, searcherDao: Se
       }
     }
 
-    case DGManager.ManagerIndexationEvent(typ,token,status) => {
-      typ match {
-        case IndexationType.PARTIAL => {
-          LOG.debug("PARTIAL_INDEXATION END event received")
-          active_partial_indexations = None
-          if (totalIndexationPending) {
-            totalIndexationPending = false
-            self ! TOTAL_INDEXATION
-          }
+    case DGManager.ManagerPartialIndexationEvent(status) => {
+      LOG.info("PARTIAL_INDEXATION END event received")
+      active_partial_indexations = None
+      if (totalIndexationPending) {
+        totalIndexationPending = false
+        self ! TOTAL_INDEXATION
+      }
+    }
+
+    case DGManager.ManagerTotalIndexationEvent(token, status) => {
+      LOG.info("TOTAL_INDEXATION END event received")
+      status match {
+        case IndexationStatus.SUCCESS => {
+          searcherDao.finishTotalIndexationProcess(DGManager.MODEL_NAME, token)
+          LOG.debug("TOTAL_INDEXATION END. SUCCESS")
         }
-        case IndexationType.TOTAL => {
-          LOG.debug("TOTAL_INDEXATION END event received")
-          status match {
-            case IndexationStatus.SUCCESS => {
-              searcherDao.finishTotalIndexationProcess(DGManager.MODEL_NAME, token)
-            }
-            case IndexationStatus.ERROR => {
-              searcherDao.cancelTotalIndexationProcess(DGManager.MODEL_NAME, token)
-            }
-          }
+        case IndexationStatus.ERROR => {
+          searcherDao.cancelTotalIndexationProcess(DGManager.MODEL_NAME, token)
+          LOG.debug("TOTAL_INDEXATION END. ERROR")
         }
       }
     }
@@ -133,21 +142,21 @@ class DGManager(extractor: ActorRef, managerUtils: ManagerUtils, searcherDao: Se
   }
 
   private def launchTotalIndexation(token: String): Unit = {
-      // TODO at integration use the rigth objetc
-      (extractor ? "testing_total_indexation").onComplete {
+      LOG.debug("Launching total indexation")
+      (extractor ? TotalIndexationMessageInit(token)).onComplete {
         case Success(_) => {
           // Nothing to do. Wait for response
         }
         case Failure(e) => {
           LOG.warn("Error while launching total indexation", e)
-          searcherDao.finishTotalIndexationProcess(DGManager.MODEL_NAME,token)
+          searcherDao.cancelTotalIndexationProcess(DGManager.MODEL_NAME,token)
         }
       }
   }
 
   private def launchPartialIndexation(token: String): Unit = {
-    // TODO at integration use the rigth objetc
-    (extractor ? "testing_partial_indexation").onComplete {
+    LOG.debug("Launching Partial indexation")
+    (extractor ? PartialIndexationMessageInit()).onComplete {
       case Success(_) => {
         active_partial_indexations = Some(token)
       }
@@ -159,6 +168,7 @@ class DGManager(extractor: ActorRef, managerUtils: ManagerUtils, searcherDao: Se
   }
 
   private def launchTemporizations(): Unit = {
+    LOG.info("Initiating Partial/Total timing")
     // Timer initialization for both total and partial indexation
     managerUtils.getScheduler().schedulePartialIndexation(self, PARTIAL_INDEXATION)
     managerUtils.getScheduler().scheduleTotalIndexation(self,TOTAL_INDEXATION)
@@ -168,10 +178,6 @@ class DGManager(extractor: ActorRef, managerUtils: ManagerUtils, searcherDao: Se
 
 object IndexationStatus extends Enumeration {
   val SUCCESS, ERROR = Value
-}
-
-object IndexationType extends Enumeration {
-  val PARTIAL, TOTAL = Value
 }
 
 object DGManager {
@@ -186,6 +192,7 @@ object DGManager {
   /**
     * Actor messages
     */
-  case class ManagerIndexationEvent(typ: IndexationType.Value, token: String, status: IndexationStatus.Value)
+  case class ManagerTotalIndexationEvent(token: String, status: IndexationStatus.Value)
+  case class ManagerPartialIndexationEvent(status: IndexationStatus.Value)
 
 }

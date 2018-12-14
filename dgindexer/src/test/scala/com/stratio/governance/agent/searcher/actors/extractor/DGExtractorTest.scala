@@ -67,7 +67,10 @@ class CustomSourceDao(chunk: Array[DataAssetES]) extends ExtractorSourceDao with
 
 
 class testCustomSearcherDao extends SearcherDao() {
-  override def index(doc: String): Unit = ???
+
+  override def indexPartial(model: String, doc: String): Unit = ???
+  override def indexTotal(model: String, doc: String, token: String): Unit = ???
+
 }
 class CustomDGIndexerParams(sourceDao : CustomSourceDao, searcherDao: SearcherDao, val limit: Int, val semaphore: Semaphore) extends DGIndexerParams(sourceDao, searcherDao, 10) {
 
@@ -83,7 +86,7 @@ class CustomDGIndexer(params: CustomDGIndexerParams) extends Actor {
   var list: ArrayBuffer[DataAssetES]= ArrayBuffer()
 
   override def receive: Receive = {
-    case IndexerEvent(chunk: Array[DataAssetES]) =>
+    case IndexerEvent(chunk: Array[DataAssetES], _) =>
       list ++= chunk
       if (chunk.length < params.limit) {
         params.semaphore.release()
@@ -137,7 +140,7 @@ class DGExtractorTest extends FlatSpec {
     val pauseMs: Long = 2
     val maxErrorRetry: Int= 5
     val delayMs: Long = 1000
-    val eParams: DGExtractorParams = new DGExtractorParams(sourceDao, limit, periodMs, ExponentialBackOff(pauseMs, maxErrorRetry), delayMs)
+    val eParams: DGExtractorParams = new DGExtractorParams(sourceDao, limit, periodMs, ExponentialBackOff(pauseMs, maxErrorRetry), delayMs,"test")
     val piParams: CustomDGIndexerParams = new CustomDGIndexerParams(sourceDao, searcherDao, limit, s)
 
     s.acquire()

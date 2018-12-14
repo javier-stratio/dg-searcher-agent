@@ -17,7 +17,7 @@ class DGScheduler(system: ActorSystem, interval: Int, cronExpression: String) ex
   }
 
   override def schedulePartialIndexation(actor: ActorRef, reference: String): Unit = {
-    system.scheduler.schedule(100 millis, interval millis, actor, reference)
+    system.scheduler.schedule(interval seconds, interval seconds, actor, reference)
   }
 
   override def scheduleTotalIndexation(actor: ActorRef, reference: String): Unit = {

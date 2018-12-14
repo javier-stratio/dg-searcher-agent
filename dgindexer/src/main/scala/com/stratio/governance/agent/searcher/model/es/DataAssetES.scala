@@ -5,6 +5,7 @@ import java.sql.{ResultSet, Timestamp}
 import com.stratio.governance.agent.searcher.model.utils.TimestampUtils
 import org.json4s.JsonAST._
 import org.json4s.JsonDSL._
+import org.slf4j.{Logger, LoggerFactory}
 
 case class DataAssetES(id: Int,
                        name: Option[String],
@@ -16,6 +17,8 @@ case class DataAssetES(id: Int,
                        active: Boolean,
                        discoveredAt: Timestamp,
                        var modifiedAt: Timestamp) extends EntityRowES {
+
+  private lazy val LOG: Logger = LoggerFactory.getLogger(getClass.getName)
 
   var jsonObject: JObject = JObject(List())
 
@@ -33,6 +36,17 @@ case class DataAssetES(id: Int,
 
   def getModifiedAtAsString: String = {
     TimestampUtils.toString(modifiedAt)
+  }
+
+  def getDataStore: String = {
+    try {
+      metadataPath.substring(0, metadataPath.indexOf(":"))
+    } catch {
+      case e: Throwable => {
+        LOG.warn("Data Store could not be extracted from metadataPath " + metadataPath)
+        ""
+      }
+    }
   }
 
   def setModifiedAt(modAt: Timestamp): Unit = {
@@ -57,10 +71,12 @@ case class DataAssetES(id: Int,
     if (description.isDefined) jsonObject = jsonObject ~ ("description" -> JString(description.get))
     jsonObject = jsonObject ~ ("metadataPath" -> JString(metadataPath))
     jsonObject = jsonObject ~ ("type" -> JString(tpe))
-    jsonObject = jsonObject ~ ("tenant" -> JString(subtype))
+    jsonObject = jsonObject ~ ("subtype" -> JString(subtype))
+    jsonObject = jsonObject ~ ("tenant" -> JString(tenant))
     jsonObject = jsonObject ~ ("active" -> JBool(active))
     jsonObject = jsonObject ~ ("discoveredAt" -> JString(getDiscoveredAtAsString))
     jsonObject = jsonObject ~ ("modifiedAt" -> JString(getModifiedAtAsString))
+    jsonObject = jsonObject ~ ("dataStore" -> JString(getDataStore))
     if (businessTerms.isDefined) jsonObject = jsonObject ~ ("businessTerms" -> JArray(businessTerms.get.map(a=>JString(a))))
     if (keyValues.isDefined) {
       jsonObject = jsonObject ~ ("keys" -> JArray(keyValues.get.map(a=>JString(a._1))))

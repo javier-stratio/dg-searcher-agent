@@ -21,3 +21,10 @@ DOCKER_ID=$(docker ps | grep postgres | awk '{print $1}')
 docker exec -it $DOCKER_ID psql -d governance -U user -W
 ```
 
+## How to run a Search Engine
+
+```
+git clone https://github.com/Stratio/search-engine-core.git
+cd search-engine-core/local-env
+docker-compose -f docker-compose-all.yml up 
+```
