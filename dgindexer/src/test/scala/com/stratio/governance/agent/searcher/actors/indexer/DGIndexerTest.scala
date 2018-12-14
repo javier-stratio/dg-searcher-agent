@@ -54,7 +54,7 @@ class CustomTestSourceDao(noAdds: Boolean) extends ExtractorSourceDao with Index
 
   override def close(): Unit = ???
 
-  override def readDataAssetsSince(timestamp: Timestamp, limit: Int): (Array[DataAssetES], Timestamp) = ???
+  override def readDataAssetsSince(offset: Int, limit: Int): (Array[DataAssetES], Int) = ???
 
   override def readDataAssetsWhereIdsIn(ids: List[Int]): Array[DataAssetES] = ???
 

@@ -9,7 +9,7 @@ trait SourceDao {
 
   def close():Unit
 
-  def readDataAssetsSince(timestamp: Timestamp, limit: Int): (Array[DataAssetES], Timestamp)
+  def readDataAssetsSince(offset: Int, limit: Int): (Array[DataAssetES], Int)
 
   def readDataAssetsWhereIdsIn(ids: List[Int]): Array[DataAssetES]
 

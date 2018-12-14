@@ -26,7 +26,7 @@ class CustomSourceDao extends ExtractorSourceDao with IndexerSourceDao {
 
   override def businessAssets(ids: Array[Int]): List[BusinessAsset] = ???
 
-  override def readDataAssetsSince(timestamp: Timestamp, limit: Int): (Array[DataAssetES], Timestamp) = ???
+  override def readDataAssetsSince(offset: Int, limit: Int): (Array[DataAssetES], Int) = ???
 
   override def readDataAssetsWhereIdsIn(ids: List[Int]): Array[DataAssetES] = ???
 

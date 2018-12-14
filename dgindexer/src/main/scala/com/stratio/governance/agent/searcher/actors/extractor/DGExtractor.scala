@@ -25,8 +25,8 @@ object DGExtractor {
 
   case class TotalIndexationMessageInit(token: String) extends Message
   case class TotalIndexationMessageEnd(token: String) extends Message
-  case class TotalIndexationMessage(timestamp: Timestamp, limit: Int, exponentialBackOff: ExponentialBackOff, token: String) extends Message
-  case class SendTotalBatchToIndexerMessage(t: (Array[DataAssetES], Timestamp), continue: Option[Message], exponentialBackOff: ExponentialBackOff, token: String)
+  case class TotalIndexationMessage(offset: Int, limit: Int, exponentialBackOff: ExponentialBackOff, token: String) extends Message
+  case class SendTotalBatchToIndexerMessage(t: (Array[DataAssetES], Int), continue: Option[Message], exponentialBackOff: ExponentialBackOff, token: String)
 
   case class PartialIndexationMessageInit() extends Message
   case class PartialIndexationMessageEnd() extends Message
@@ -53,18 +53,18 @@ class DGExtractor(indexer: ActorRef, params: DGExtractorParams) extends Actor {
 
     case TotalIndexationMessageInit(token) =>
       LOG.debug("Initiating Total Indexation, token: " + token)
-      self ! TotalIndexationMessage(TimestampUtils.MIN, params.limit, params.exponentialBackOff, token)
+      self ! TotalIndexationMessage(0, params.limit, params.exponentialBackOff, token)
 
-    case TotalIndexationMessage(timestamp, limit, exponentialBackOff: ExponentialBackOff, token) =>
+    case TotalIndexationMessage(offset, limit, exponentialBackOff: ExponentialBackOff, token) =>
       LOG.debug("Handling total Indexation messages. limit: " + limit + ", token: " + token)
-      val results: (Array[DataAssetES], Timestamp) = params.sourceDao.readDataAssetsSince(timestamp, limit)
+      val results: (Array[DataAssetES], Int) = params.sourceDao.readDataAssetsSince(offset, limit)
       if (results._1.length == limit) {
         self ! SendTotalBatchToIndexerMessage(results, Some(DGExtractor.TotalIndexationMessage(results._2, limit, exponentialBackOff, token)), exponentialBackOff, token)
       } else {
         self ! SendTotalBatchToIndexerMessage(results, Some(DGExtractor.TotalIndexationMessageEnd(token)), exponentialBackOff, token)
       }
 
-    case SendTotalBatchToIndexerMessage(tuple: (Array[DataAssetES], Timestamp), continue: Option[Message], exponentialBackOff: ExponentialBackOff, token: String) =>
+    case SendTotalBatchToIndexerMessage(tuple: (Array[DataAssetES], Int), continue: Option[Message], exponentialBackOff: ExponentialBackOff, token: String) =>
       LOG.debug("Sending total Indexation messages. token: " + token)
       (indexer ? DGIndexer.IndexerEvent(tuple._1, Some(token))).onComplete {
         case Success(_) =>

@@ -253,14 +253,13 @@ class PostgresSourceDao(sourceConnectionUrl: String,
     }
   }
 
-  def readDataAssetsSince(timestamp: Timestamp, limit: Int): (Array[DataAssetES], Timestamp) = {
-    val selectFromDataAssetWithWhereStatement: PreparedStatement = prepareStatement(s"SELECT * FROM $schema.$dataAssetTable WHERE active = ? and modified_at >= ? LIMIT ?")
+  def readDataAssetsSince(offset: Int, limit: Int): (Array[DataAssetES], Int) = {
+    val selectFromDataAssetWithWhereStatement: PreparedStatement = prepareStatement(s"SELECT * FROM $schema.$dataAssetTable WHERE active = ? order by id asc limit ? offset ?")
     selectFromDataAssetWithWhereStatement.setBoolean(1, true)
-    selectFromDataAssetWithWhereStatement.setTimestamp(2, timestamp)
-    selectFromDataAssetWithWhereStatement.setInt(3, limit)
+    selectFromDataAssetWithWhereStatement.setInt(2, limit)
+    selectFromDataAssetWithWhereStatement.setInt(3, offset)
     val lista = DataAssetES.getValuesFromResult(executePreparedStatement(selectFromDataAssetWithWhereStatement))
-    //TODO asumimos que nos da la lista ordenada por fecha hacer test
-    (lista.toArray, lista.last.modifiedAt)
+    (lista.toArray, offset + limit)
   }
 
   def readDataAssetsWhereIdsIn(ids: List[Int]): Array[DataAssetES] = {

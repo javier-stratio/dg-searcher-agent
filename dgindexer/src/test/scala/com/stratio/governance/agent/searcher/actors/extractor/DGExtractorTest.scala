@@ -38,7 +38,7 @@ class CustomSourceDao(chunk: Array[DataAssetES]) extends ExtractorSourceDao with
 
   override def close(): Unit = {}
 
-  override def readDataAssetsSince(timestamp: Timestamp, limit: Int): (Array[DataAssetES], Timestamp) = ???
+  override def readDataAssetsSince(offset: Int, limit: Int): (Array[DataAssetES], Int) = ???
 
   override def readDataAssetsWhereIdsIn(param: List[Int]): Array[DataAssetES] = {
     byIdsList.filter { ids: (Int, DataAssetES) => param.contains(ids._1) }.map(_._2).toArray
