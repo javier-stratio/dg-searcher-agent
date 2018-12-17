@@ -90,7 +90,7 @@
                     <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
                     <junitxml>.</junitxml>
                     <filereports>FileReports.txt</filereports>
-                    <skipTests>${skipITs}</skipTests>
+                    <skipTests>true</skipTests>
                 </configuration>
                 <executions>
                     <execution>

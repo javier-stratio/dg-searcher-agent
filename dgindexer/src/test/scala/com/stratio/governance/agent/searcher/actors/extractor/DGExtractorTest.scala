@@ -89,8 +89,8 @@ class CustomDGIndexer(params: CustomDGIndexerParams) extends Actor {
     case IndexerEvent(chunk: Array[DataAssetES], _) =>
       list ++= chunk
       if (chunk.length < params.limit) {
-        params.semaphore.release()
         params.setReturnList(list.toList)
+        params.semaphore.release()
       }
       sender ! Future()
   }

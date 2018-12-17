@@ -2,6 +2,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>com.stratio</groupId>
+        <artifactId>parent</artifactId>
+        <version>0.11.0</version>
+    </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.stratio.governance.agent.searcher</groupId>
@@ -14,7 +19,7 @@
         <module>partialindexer</module>
         <module>totalindexer</module>
 	-->
-	    <module>dgindexer</module>
+        <module>dgindexer</module>
         <module>testIT</module>
     </modules>
 
