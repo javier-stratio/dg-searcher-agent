@@ -254,7 +254,7 @@ class PostgresSourceDao(sourceConnectionUrl: String,
   }
 
   def readDataAssetsSince(offset: Int, limit: Int): (Array[DataAssetES], Int) = {
-    val selectFromDataAssetWithWhereStatement: PreparedStatement = prepareStatement(s"SELECT * FROM $schema.$dataAssetTable WHERE active = ? order by id asc limit ? offset ?")
+    val selectFromDataAssetWithWhereStatement: PreparedStatement = prepareStatement(s"SELECT id,name,description,metadata_path,type,subtype,tenant,properties,active,discovered_at,modified_at FROM $schema.$dataAssetTable WHERE active = ? order by id asc limit ? offset ?")
     selectFromDataAssetWithWhereStatement.setBoolean(1, true)
     selectFromDataAssetWithWhereStatement.setInt(2, limit)
     selectFromDataAssetWithWhereStatement.setInt(3, offset)
@@ -264,7 +264,7 @@ class PostgresSourceDao(sourceConnectionUrl: String,
 
   def readDataAssetsWhereIdsIn(ids: List[Int]): Array[DataAssetES] = {
     if (ids.isEmpty) Array() else {
-      val selectFromDataAssetWithIdsInStatement: PreparedStatement = prepareStatement(s"SELECT * FROM $schema.$dataAssetTable WHERE ids IN(?)")
+      val selectFromDataAssetWithIdsInStatement: PreparedStatement = prepareStatement(s"SELECT id,name,description,metadata_path,type,subtype,tenant,properties,active,discovered_at,modified_at FROM $schema.$dataAssetTable WHERE ids IN(?)")
       selectFromDataAssetWithIdsInStatement.setString(1, ids.map(s => s"'$s'").mkString(", "))
       DataAssetES.getValuesFromResult(executePreparedStatement(selectFromDataAssetWithIdsInStatement)).toArray
     }

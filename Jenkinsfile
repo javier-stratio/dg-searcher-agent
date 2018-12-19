@@ -21,7 +21,7 @@ hose {
 
             parallel(QC: {doStaticAnalysis(config)},
                      DEPLOY: {doDeploy(config)},
+                     DOCKER: {doDocker(config)},
                      failFast: config.FAILFAST)
-
     }
 }
