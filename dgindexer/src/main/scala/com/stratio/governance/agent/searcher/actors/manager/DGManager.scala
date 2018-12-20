@@ -1,8 +1,6 @@
 package com.stratio.governance.agent.searcher.actors.manager
 
 import akka.actor.{Actor, ActorRef}
-import akka.pattern.ask
-import akka.util.Timeout
 import java.util.UUID.randomUUID
 
 import com.stratio.governance.agent.searcher.actors.extractor.DGExtractor.{PartialIndexationMessageInit, TotalIndexationMessageInit}
@@ -12,13 +10,11 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
 
 
 class DGManager(extractor: ActorRef, managerUtils: ManagerUtils, searcherDao: SearcherDao) extends Actor {
 
   private lazy val LOG: Logger = LoggerFactory.getLogger(getClass.getName)
-  implicit val timeout: Timeout = Timeout(3600, SECONDS) // Just an hour of waiting
 
   val BOOT: String = "boot"
   val FIRST_TOTAL_INDEXATION: String = "first_total_indexation"
@@ -142,29 +138,13 @@ class DGManager(extractor: ActorRef, managerUtils: ManagerUtils, searcherDao: Se
   }
 
   private def launchTotalIndexation(token: String): Unit = {
-      LOG.debug("Launching total indexation")
-      (extractor ? TotalIndexationMessageInit(token)).onComplete {
-        case Success(_) => {
-          // Nothing to do. Wait for response
-        }
-        case Failure(e) => {
-          LOG.warn("Error while launching total indexation", e)
-          searcherDao.cancelTotalIndexationProcess(DGManager.MODEL_NAME,token)
-        }
-      }
+      LOG.debug("Launching Total Indexation")
+      extractor ! TotalIndexationMessageInit(token)
   }
 
   private def launchPartialIndexation(token: String): Unit = {
-    LOG.debug("Launching Partial indexation")
-    (extractor ? PartialIndexationMessageInit()).onComplete {
-      case Success(_) => {
-        active_partial_indexations = Some(token)
-      }
-      case Failure(e) => {
-        LOG.warn("Error while launching partial indexation", e)
-        active_partial_indexations = None
-      }
-    }
+    LOG.debug("Launching Partial Indexation")
+    extractor ! PartialIndexationMessageInit()
   }
 
   private def launchTemporizations(): Unit = {

@@ -37,7 +37,7 @@ object BootDGIndexer extends App with LazyLogging {
     val sourceDao = new PostgresSourceDao(AppConf.sourceConnectionUrl, AppConf.sourceConnectionUser, AppConf.sourceConnectionPassword, AppConf.sourceDatabase, AppConf.sourceSchema, AppConf.sourceConnectionInitialSize, AppConf.sourceConnectionMaxSize, exponentialBackOff)
     val httpManager = new DGHttpManager(AppConf.managerUrl, AppConf.indexerURL)
     val searcherDao = new DGSearcherDao(httpManager)
-    val scheduler = new DGScheduler(system, AppConf.schedulerPartialInterval, AppConf.schedulerTotalCronExpresion)
+    val scheduler = new DGScheduler(system, AppConf.schedulerPartialEnabled, AppConf.schedulerPartialInterval, AppConf.schedulerTotalEnabled, AppConf.schedulerTotalCronExpresion)
     scheduler.createTotalIndexerScheduling()
 
     val dgManagerParams: DGManagerUtils = new DGManagerUtils(scheduler, sourceDao)

@@ -10,9 +10,6 @@ import org.json4s.DefaultFormats
 import org.json4s.JsonAST.JArray
 import org.slf4j.{Logger, LoggerFactory}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-
 class DGIndexer(params: IndexerParams) extends Actor {
 
   private lazy val LOG: Logger = LoggerFactory.getLogger(getClass.getName)
@@ -76,9 +73,9 @@ class DGIndexer(params: IndexerParams) extends Actor {
 
           token match {
             case Some(tk) =>
-              sender ! Future(params.getSearcherDao.indexTotal(DGManager.MODEL_NAME, documentsBulk, tk))
+              sender ! params.getSearcherDao.indexTotal(DGManager.MODEL_NAME, documentsBulk, tk)
             case None =>
-              sender ! Future(params.getSearcherDao.indexPartial(DGManager.MODEL_NAME, documentsBulk))
+              sender ! params.getSearcherDao.indexPartial(DGManager.MODEL_NAME, documentsBulk)
           }
         } catch {
           case e: Throwable =>

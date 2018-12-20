@@ -58,7 +58,11 @@ object AppConf {
 
   lazy val indexerURL: String = envOrElseConfigOrElseDefault("manager.indexer.url","http://localhost:8082")
 
+  lazy val schedulerPartialEnabled: Boolean = envOrElseConfigOrElseDefault("scheduler.partialIndexation.enabled",true)
+
   lazy val schedulerPartialInterval: Int = envOrElseConfigOrElseDefault("scheduler.partialIndexation.interval.s",10)
+
+  lazy val schedulerTotalEnabled: Boolean = envOrElseConfigOrElseDefault("scheduler.totalIndexation.enabled",true)
 
   lazy val schedulerTotalCronExpresion: String = envOrElseConfigOrElseDefault("scheduler.totalIndexation.cron","*/30 * * ? * *")
 

@@ -1,7 +1,5 @@
 package com.stratio.governance.agent.searcher.actors.extractor
 
-import java.sql.Timestamp
-
 import akka.actor.{Actor, ActorRef}
 import akka.pattern.ask
 import akka.util.Timeout
@@ -10,10 +8,11 @@ import com.stratio.governance.agent.searcher.actors.extractor.DGExtractor.{Messa
 import com.stratio.governance.agent.searcher.actors.indexer.DGIndexer
 import com.stratio.governance.agent.searcher.actors.manager.{DGManager, IndexationStatus}
 import com.stratio.governance.agent.searcher.model.es.DataAssetES
-import com.stratio.governance.agent.searcher.model.utils.{ExponentialBackOff, TimestampUtils}
+import com.stratio.governance.agent.searcher.model.utils.ExponentialBackOff
 import org.json4s.DefaultFormats
 import org.slf4j.{Logger, LoggerFactory}
 
+import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
@@ -38,7 +37,7 @@ object DGExtractor {
 class DGExtractor(indexer: ActorRef, params: DGExtractorParams) extends Actor {
 
   private lazy val LOG: Logger = LoggerFactory.getLogger(getClass.getName)
-  implicit val timeout: Timeout = Timeout(3600, SECONDS)
+  implicit val timeout: Timeout = Timeout(60, SECONDS)
   implicit val formats: DefaultFormats.type = DefaultFormats
 
   override def preStart(): Unit = {
@@ -66,7 +65,8 @@ class DGExtractor(indexer: ActorRef, params: DGExtractorParams) extends Actor {
 
     case SendTotalBatchToIndexerMessage(tuple: (Array[DataAssetES], Int), continue: Option[Message], exponentialBackOff: ExponentialBackOff, token: String) =>
       LOG.debug("Sending total Indexation messages. token: " + token)
-      (indexer ? DGIndexer.IndexerEvent(tuple._1, Some(token))).onComplete {
+      val future = indexer ? DGIndexer.IndexerEvent(tuple._1, Some(token))
+      future.onComplete {
         case Success(_) =>
           continue match {
             case Some(message) => self ! message
@@ -78,6 +78,7 @@ class DGExtractor(indexer: ActorRef, params: DGExtractorParams) extends Actor {
           Thread.sleep(exponentialBackOff.getPause)
           self ! SendTotalBatchToIndexerMessage(tuple, continue, exponentialBackOff.next, token)
       }
+      Await.result(future, timeout.duration)
 
     case TotalIndexationMessageEnd(token) =>
       LOG.debug("Ending Total Indexation, token: " + token)
@@ -108,7 +109,8 @@ class DGExtractor(indexer: ActorRef, params: DGExtractorParams) extends Actor {
 
     case SendPartialBatchToIndexerMessage(dataAssets: Array[DataAssetES], state: Option[PostgresPartialIndexationReadState], continue: Option[Message], exponentialBackOff: ExponentialBackOff) =>
       LOG.debug("Sending Partial Indexation messages")
-      (indexer ? DGIndexer.IndexerEvent(dataAssets, None)).onComplete{
+      val future = (indexer ? DGIndexer.IndexerEvent(dataAssets, None))
+      future.onComplete{
         case Success(_) =>
           state match {
             case Some(s) => params.sourceDao.writePartialIndexationState(s)
@@ -124,6 +126,7 @@ class DGExtractor(indexer: ActorRef, params: DGExtractorParams) extends Actor {
           Thread.sleep(exponentialBackOff.getPause)
           self ! SendPartialBatchToIndexerMessage(dataAssets, state, continue, exponentialBackOff.next)
       }
+      Await.result(future, timeout.duration)
 
     case PartialIndexationMessageEnd =>
       LOG.debug("Ending Partial Indexation")

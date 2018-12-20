@@ -14,7 +14,7 @@ import org.scalatest.FlatSpec
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
-class DGSchedulerTest(system: ActorSystem, interval: Int, cronExpression: String, testNumber: Int) extends DGScheduler(system, interval, cronExpression) {
+class DGSchedulerTest(system: ActorSystem, interval: Int, cronExpression: String, testNumber: Int) extends DGScheduler(system, true, interval, true, cronExpression) {
 
   override def schedulePartialIndexation(actor: ActorRef, reference: String): Unit = {
     testNumber match {
