@@ -40,7 +40,11 @@ class CustomSourceDao extends ExtractorSourceDao with IndexerSourceDao {
 
   override def executeQuery(sql: String): ResultSet = ???
 
-  override def executePreparedStatement(sql: PreparedStatement): ResultSet = ???
+  override def execute(sql: String): Unit = ???
+
+  override def executePreparedStatement(sql: PreparedStatement): Unit = ???
+
+  override def executeQueryPreparedStatement(sql: PreparedStatement): ResultSet = ???
 }
 
 class CommonParams(s: Semaphore, sourceDao: CustomSourceDao, reference: String) extends DGExtractorParams(sourceDao, 10,10, ExponentialBackOff(10, 10),10, "test") with IndexerParams {

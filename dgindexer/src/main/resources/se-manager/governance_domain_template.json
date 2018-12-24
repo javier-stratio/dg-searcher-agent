@@ -21,6 +21,14 @@
         "aggregable": false
       },
       {
+        "field": "alias",
+        "name": "Alias",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": false
+      },
+      {
         "field": "description",
         "name": "Description",
         "type": "text",
@@ -117,6 +125,7 @@
   },
   "search_fields": {
     "name": 1,
+    "alias": 1,
     "description": 1,
     "metadataPath": 1,
     "type": 1,

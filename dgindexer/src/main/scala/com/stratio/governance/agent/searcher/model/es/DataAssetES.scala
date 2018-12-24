@@ -9,6 +9,7 @@ import org.slf4j.{Logger, LoggerFactory}
 
 case class DataAssetES(id: Int,
                        name: Option[String],
+                       alias: Option[String],
                        description: Option[String],
                        metadataPath: String,
                        tpe: String,
@@ -67,8 +68,9 @@ case class DataAssetES(id: Int,
 
   def getJsonObject: JValue = {
     jsonObject = jsonObject ~ ("id" -> JInt(id))
-    if (name.isDefined) jsonObject = jsonObject ~ ("name" -> JString(name.get))
-    if (description.isDefined) jsonObject = jsonObject ~ ("description" -> JString(description.get))
+    if (name.isDefined && (name.get != null)) jsonObject = jsonObject ~ ("name" -> JString(name.get))
+    if (alias.isDefined && (alias.get != null)) jsonObject = jsonObject ~ ("alias" -> JString(alias.get))
+    if (description.isDefined && (description != null)) jsonObject = jsonObject ~ ("description" -> JString(description.get))
     jsonObject = jsonObject ~ ("metadataPath" -> JString(metadataPath))
     jsonObject = jsonObject ~ ("type" -> JString(tpe))
     jsonObject = jsonObject ~ ("subtype" -> JString(subtype))
@@ -97,13 +99,14 @@ object DataAssetES {
       getValuesFromResult(resultSet, DataAssetES( resultSet.getInt(1),
                                                   Some(resultSet.getString(2)),
                                                   Some(resultSet.getString(3)),
-                                                  resultSet.getString(4),
+                                                  Some(resultSet.getString(4)),
                                                   resultSet.getString(5),
                                                   resultSet.getString(6),
                                                   resultSet.getString(7),
-                                                  resultSet.getBoolean(9),
-                                                  resultSet.getTimestamp(10),
-                                                  resultSet.getTimestamp(11)) :: list)
+                                                  resultSet.getString(8),
+                                                  resultSet.getBoolean(10),
+                                                  resultSet.getTimestamp(11),
+                                                  resultSet.getTimestamp(12)) :: list)
     } else {
       list
     }

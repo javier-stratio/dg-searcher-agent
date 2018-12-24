@@ -67,15 +67,21 @@ class DGIndexer(params: IndexerParams) extends Actor {
           val list: Array[DataAssetES] = batchesEnriched.fold[Array[DataAssetES]](Array())((a: Array[DataAssetES], b: Array[DataAssetES]) => {
             a ++ b
           })
-          val jlist: JArray = JArray(list.map(a => a.getJsonObject).toList)
 
-          val documentsBulk: String = org.json4s.native.Serialization.write(jlist)
+          if (!list.isEmpty) {
+            val jlist: JArray = JArray( list.map( a => a.getJsonObject ).toList )
 
-          token match {
-            case Some(tk) =>
-              sender ! params.getSearcherDao.indexTotal(DGManager.MODEL_NAME, documentsBulk, tk)
-            case None =>
-              sender ! params.getSearcherDao.indexPartial(DGManager.MODEL_NAME, documentsBulk)
+            val documentsBulk: String = org.json4s.native.Serialization.write( jlist )
+
+            token match {
+              case Some( tk ) =>
+                sender ! params.getSearcherDao.indexTotal( DGManager.MODEL_NAME, documentsBulk, tk )
+              case None =>
+                sender ! params.getSearcherDao.indexPartial( DGManager.MODEL_NAME, documentsBulk )
+            }
+          } else {
+            LOG.debug("No documents to index")
+            sender ! "Nothing to send"
           }
         } catch {
           case e: Throwable =>

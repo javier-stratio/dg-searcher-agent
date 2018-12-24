@@ -23,7 +23,7 @@ class DGManager(extractor: ActorRef, managerUtils: ManagerUtils, searcherDao: Se
 
   context.system.scheduler.scheduleOnce(1000 millis, self, BOOT)
 
-  var active_partial_indexations: Option[String]= None
+  var active_partial_indexation: Boolean = false
   var totalIndexationPending: Boolean = false
 
   override def receive: Receive = {
@@ -51,9 +51,8 @@ class DGManager(extractor: ActorRef, managerUtils: ManagerUtils, searcherDao: Se
     case PARTIAL_INDEXATION => {
       LOG.info("PARTIAL_INDEXATION INIT event received")
       val check: (Boolean, Option[String]) = searcherDao.checkTotalIndexation(DGManager.MODEL_NAME)
-      if (!partialIndexationInProgress() && !check._1 ) {
-        val token: String = getRandomToken()
-        launchPartialIndexation(token)
+      if (!active_partial_indexation && !check._1 ) {
+        launchPartialIndexation
       } else {
         LOG.warn("partial indexation can not be executed because there is another indexation (total or partial) on course")
       }
@@ -79,7 +78,7 @@ class DGManager(extractor: ActorRef, managerUtils: ManagerUtils, searcherDao: Se
 
     case TOTAL_INDEXATION => {
       LOG.info("TOTAL_INDEXATION INIT event received")
-      if (partialIndexationInProgress()) {
+      if (active_partial_indexation) {
         totalIndexationPending = true
       } else {
         val check: (Boolean, Option[String]) = searcherDao.checkTotalIndexation(DGManager.MODEL_NAME)
@@ -104,7 +103,7 @@ class DGManager(extractor: ActorRef, managerUtils: ManagerUtils, searcherDao: Se
 
     case DGManager.ManagerPartialIndexationEvent(status) => {
       LOG.info("PARTIAL_INDEXATION END event received")
-      active_partial_indexations = None
+      active_partial_indexation = false
       if (totalIndexationPending) {
         totalIndexationPending = false
         self ! TOTAL_INDEXATION
@@ -127,22 +126,16 @@ class DGManager(extractor: ActorRef, managerUtils: ManagerUtils, searcherDao: Se
 
   }
 
-  private def partialIndexationInProgress(): Boolean = {
-    val res = active_partial_indexations.isDefined
-    LOG.debug("partial indexation in progress: " + res)
-    res
-  }
-
   private def getRandomToken(): String = {
     randomUUID().toString
   }
 
   private def launchTotalIndexation(token: String): Unit = {
-      LOG.debug("Launching Total Indexation")
-      extractor ! TotalIndexationMessageInit(token)
+    LOG.debug("Launching Total Indexation")
+    extractor ! TotalIndexationMessageInit(token)
   }
 
-  private def launchPartialIndexation(token: String): Unit = {
+  private def launchPartialIndexation: Unit = {
     LOG.debug("Launching Partial Indexation")
     extractor ! PartialIndexationMessageInit()
   }

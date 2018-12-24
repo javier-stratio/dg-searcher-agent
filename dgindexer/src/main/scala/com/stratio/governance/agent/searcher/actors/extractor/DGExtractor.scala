@@ -87,7 +87,7 @@ class DGExtractor(indexer: ActorRef, params: DGExtractorParams) extends Actor {
         managerActor ! DGManager.ManagerTotalIndexationEvent(token, IndexationStatus.SUCCESS)
       }
 
-    case PartialIndexationMessageInit =>
+    case PartialIndexationMessageInit() =>
       LOG.debug("Initiating Partial Indexation")
       self ! PartialIndexationMessage(None, params.limit, params.exponentialBackOff)
 
@@ -128,7 +128,7 @@ class DGExtractor(indexer: ActorRef, params: DGExtractorParams) extends Actor {
       }
       Await.result(future, timeout.duration)
 
-    case PartialIndexationMessageEnd =>
+    case PartialIndexationMessageEnd() =>
       LOG.debug("Ending Partial Indexation")
       for (res <- context.actorSelection("/user/" + params.managerName).resolveOne()) {
         val managerActor: ActorRef = res

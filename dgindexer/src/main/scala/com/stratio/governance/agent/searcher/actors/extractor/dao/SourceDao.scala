@@ -21,8 +21,12 @@ trait SourceDao {
 
   def prepareStatement(queryName: String): PreparedStatement
 
+  def execute(sql: String): Unit
+
+  def executePreparedStatement(sql: PreparedStatement): Unit
+
   def executeQuery(sql: String): ResultSet
 
-  def executePreparedStatement(sql: PreparedStatement): ResultSet
+  def executeQueryPreparedStatement(sql: PreparedStatement): ResultSet
 
 }

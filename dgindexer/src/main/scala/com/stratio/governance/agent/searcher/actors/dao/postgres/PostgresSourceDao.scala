@@ -93,6 +93,7 @@ class PostgresSourceDao(sourceConnectionUrl: String,
     } catch {
       case exception: SQLException =>
         // See https://www.postgresql.org/docs/current/errcodes-appendix.html
+        LOG.error("executeQuery - Exponential BackOff in progress ... . " + sql + ", " + exception.getMessage)
         Thread.sleep(exponentialBackOff.actualPause)
         if (exception.getSQLState.startsWith("08")) { // Problems with Connection
           restartConnection()
@@ -102,7 +103,41 @@ class PostgresSourceDao(sourceConnectionUrl: String,
     }
   }
 
-  def executePreparedStatement(sql: PreparedStatement): ResultSet = {
+  def execute(sql: String): Unit = {
+    try{
+      val rs = connection.createStatement().execute(sql)
+      exponentialBackOff = initialExponentialBackOff
+    } catch {
+      case exception: SQLException =>
+        // See https://www.postgresql.org/docs/current/errcodes-appendix.html
+        LOG.error("executeQuery - Exponential BackOff in progress ... . " + sql + ", " + exception.getMessage)
+        Thread.sleep(exponentialBackOff.actualPause)
+        if (exception.getSQLState.startsWith("08")) { // Problems with Connection
+          restartConnection()
+        }
+        exponentialBackOff = exponentialBackOff.next
+        execute(sql)
+    }
+  }
+
+  def executePreparedStatement(sql: PreparedStatement): Unit = {
+    try{
+      val rs = sql.execute()
+      exponentialBackOff = initialExponentialBackOff
+    } catch {
+      case exception: SQLException =>
+        // See https://www.postgresql.org/docs/current/errcodes-appendix.html
+        LOG.error("executePreparedStatement - Exponential BackOff in progress ... . " + sql + ", " + exception.getMessage)
+        Thread.sleep(exponentialBackOff.actualPause)
+        if (exception.getSQLState.startsWith("08")) { // Problems with Connection
+          restartConnection()
+        }
+        exponentialBackOff = exponentialBackOff.next
+        executePreparedStatement(sql)
+    }
+  }
+
+  def executeQueryPreparedStatement(sql: PreparedStatement): ResultSet = {
     try{
       val rs = sql.executeQuery()
       exponentialBackOff = initialExponentialBackOff
@@ -110,12 +145,31 @@ class PostgresSourceDao(sourceConnectionUrl: String,
     } catch {
       case exception: SQLException =>
         // See https://www.postgresql.org/docs/current/errcodes-appendix.html
+        LOG.error("executePreparedStatement - Exponential BackOff in progress ... . " + sql + ", " + exception.getMessage)
         Thread.sleep(exponentialBackOff.actualPause)
         if (exception.getSQLState.startsWith("08")) { // Problems with Connection
           restartConnection()
         }
         exponentialBackOff = exponentialBackOff.next
-        executePreparedStatement(sql)
+        executeQueryPreparedStatement(sql)
+    }
+  }
+
+
+  def executeUpdatePreparedStatement(sql: PreparedStatement): Unit = {
+    try{
+      val rs = sql.executeUpdate()
+      exponentialBackOff = initialExponentialBackOff
+    } catch {
+      case exception: SQLException =>
+        // See https://www.postgresql.org/docs/current/errcodes-appendix.html
+        LOG.error("executePreparedStatement - Exponential BackOff in progress ... . " + sql + ", " + exception.getMessage)
+        Thread.sleep(exponentialBackOff.actualPause)
+        if (exception.getSQLState.startsWith("08")) { // Problems with Connection
+          restartConnection()
+        }
+        exponentialBackOff = exponentialBackOff.next
+        executeUpdatePreparedStatement(sql)
     }
   }
 
@@ -135,9 +189,9 @@ class PostgresSourceDao(sourceConnectionUrl: String,
 
     if (!isDataAssetTableCreated)
       if (allowedToCreateContext) createDataAssetTable() else throw new IllegalStateException(s"Table $schema.$dataAssetTable is not created")
+    */
 
     if (!isDataAssetMetadataTableCreated) createDataAssetMetadataTable()
-    */
   }
 
   def close():Unit = {
@@ -177,12 +231,14 @@ class PostgresSourceDao(sourceConnectionUrl: String,
   }
 
   private def isDataAssetMetadataTableCreated: Boolean = {
-    executeQuery(s"SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema = '$schema' AND table_name = '$partialIndexationStateTable')").getBoolean("exists")
+    val result = executeQuery(s"SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema = '$schema' AND table_name = '$partialIndexationStateTable')")
+    result.next()
+    result.getBoolean("exists")
   }
 
   private def createDataAssetMetadataTable() : Unit = {
-    executeQuery(s"CREATE TABLE IF NOT EXISTS $schema.$partialIndexationStateTable (id SMALLINT NOT NULL UNIQUE," +
-      s"modified_at TIMESTAMP NOT NULL,CONSTRAINT pk_$partialIndexationStateTable PRIMARY KEY (id))")
+    execute(s"CREATE TABLE IF NOT EXISTS $schema.$partialIndexationStateTable (id SMALLINT NOT NULL UNIQUE," +
+      s"last_read_data_asset TIMESTAMP,last_read_key_data_asset TIMESTAMP,last_read_key TIMESTAMP,last_read_business_assets_data_asset TIMESTAMP, last_read_business_assets TIMESTAMP, CONSTRAINT pk_$partialIndexationStateTable PRIMARY KEY (id))")
   }
 
   def keyValuePairProcess(ids: Array[Int]): List[KeyValuePair] = {
@@ -245,7 +301,7 @@ class PostgresSourceDao(sourceConnectionUrl: String,
         index+=1
         selectBusinessTermsStatement.setInt(index, id)
       })
-      BusinessAsset.getValueFromResult(executePreparedStatement(selectBusinessTermsStatement))
+      BusinessAsset.getValueFromResult(executeQueryPreparedStatement(selectBusinessTermsStatement))
     } catch {
       case e: Throwable =>
         LOG.error("error while getting Business Assets", e)
@@ -254,19 +310,33 @@ class PostgresSourceDao(sourceConnectionUrl: String,
   }
 
   def readDataAssetsSince(offset: Int, limit: Int): (Array[DataAssetES], Int) = {
-    val selectFromDataAssetWithWhereStatement: PreparedStatement = prepareStatement(s"SELECT id,name,description,metadata_path,type,subtype,tenant,properties,active,discovered_at,modified_at FROM $schema.$dataAssetTable WHERE active = ? order by id asc limit ? offset ?")
+    val selectFromDataAssetWithWhereStatement: PreparedStatement = prepareStatement(s"SELECT id,name,alias,description,metadata_path,type,subtype,tenant,properties,active,discovered_at,modified_at FROM $schema.$dataAssetTable WHERE active = ? order by id asc limit ? offset ?")
     selectFromDataAssetWithWhereStatement.setBoolean(1, true)
     selectFromDataAssetWithWhereStatement.setInt(2, limit)
     selectFromDataAssetWithWhereStatement.setInt(3, offset)
-    val lista = DataAssetES.getValuesFromResult(executePreparedStatement(selectFromDataAssetWithWhereStatement))
+    val lista = DataAssetES.getValuesFromResult(executeQueryPreparedStatement(selectFromDataAssetWithWhereStatement))
     (lista.toArray, offset + limit)
   }
 
   def readDataAssetsWhereIdsIn(ids: List[Int]): Array[DataAssetES] = {
     if (ids.isEmpty) Array() else {
-      val selectFromDataAssetWithIdsInStatement: PreparedStatement = prepareStatement(s"SELECT id,name,description,metadata_path,type,subtype,tenant,properties,active,discovered_at,modified_at FROM $schema.$dataAssetTable WHERE ids IN(?)")
-      selectFromDataAssetWithIdsInStatement.setString(1, ids.map(s => s"'$s'").mkString(", "))
-      DataAssetES.getValuesFromResult(executePreparedStatement(selectFromDataAssetWithIdsInStatement)).toArray
+      // TODO This query has a problem with java-scala array conversion
+//      val selectFromDataAssetWithIdsInStatement: PreparedStatement = prepareStatement(s"SELECT id,name,description,metadata_path,type,subtype,tenant,properties,active,discovered_at,modified_at FROM $schema.$dataAssetTable WHERE id IN(?)")
+//      val pgIds = connection.createArrayOf("int4", ids.toList.asJava.toArray)
+//      selectFromDataAssetWithIdsInStatement.setArray(1, pgIds)
+
+      // Alternative Option
+      val repl:  String = ids.map( id => "?") match {
+        case q: List[String] => q.mkString(",")
+      }
+      val selectFromDataAssetWithIdsInStatement: PreparedStatement = prepareStatement(s"SELECT id,name,alias,description,metadata_path,type,subtype,tenant,properties,active,discovered_at,modified_at FROM $schema.$dataAssetTable WHERE id IN({{ids}})".replace("{{ids}}",repl))
+      var index: Int = 0
+      ids.foreach(id => {
+        index+=1
+        selectFromDataAssetWithIdsInStatement.setInt(index, id)
+      })
+
+      DataAssetES.getValuesFromResult(executeQueryPreparedStatement(selectFromDataAssetWithIdsInStatement)).toArray
     }
   }
 
@@ -274,45 +344,47 @@ class PostgresSourceDao(sourceConnectionUrl: String,
 
   def readUpdatedDataAssetsIdsSince(state: PostgresPartialIndexationReadState): (List[Int], PostgresPartialIndexationReadState) = {
     val unionSelectUpdatedStatement: PreparedStatement =
-        prepareStatement(s"SELECT id,modified_at,1 FROM $schema.$dataAssetTable WHERE modified_at >= ? ORDER BY modified_at DESC" +
+        prepareStatement(s"(" +
+                                 s" SELECT id,modified_at,1 FROM $schema.$dataAssetTable WHERE modified_at > ? " +
                                    "UNION " +
-                                 s"SELECT data_asset_id,modified_at,2 FROM $schema.$keyDataAssetTable WHERE modified_at >= ? ORDER BY modified_at DESC" +
+                                 s"SELECT data_asset_id,modified_at,2 FROM $schema.$keyDataAssetTable WHERE modified_at > ? " +
                                    "UNION " +
                                  s"SELECT key_data_asset.data_asset_id, key.modified_at,3 FROM $schema.$keyDataAssetTable AS key_data_asset, " +
-                                    s"$schema.$keyTable AS key WHERE key.modified_at >= ? ORDER BY key.modified_at DESC" +
+                                    s"$schema.$keyTable AS key WHERE key.modified_at > ? " +
                                    "UNION " +
-                                 s"SELECT data_asset_id,modified_at,4 FROM $schema.$businessAssetsDataAssetsTable WHERE modified_at >= ? ORDER BY modified_at DESC" +
+                                 s"SELECT data_asset_id,modified_at,4 FROM $schema.$businessAssetsDataAssetsTable WHERE modified_at > ? " +
                                    "UNION " +
                                  s"SELECT bus_assets_data_assets.data_asset_id, bus_assets.modified_at,5 FROM $schema.$businessAssetsDataAssetsTable AS bus_assets_data_assets, " +
-                                    s"$schema.$businessAssetsTable AS bus_assets WHERE bus_assets.modified_at >= ? ORDER BY bus_assets.modified_at DESC;")
+                                    s"$schema.$businessAssetsTable AS bus_assets WHERE bus_assets.modified_at > ? " +
+                                s") ORDER BY modified_at DESC;")
     unionSelectUpdatedStatement.setTimestamp(1,state.readDataAsset)
     unionSelectUpdatedStatement.setTimestamp(2,state.readKeyDataAsset)
     unionSelectUpdatedStatement.setTimestamp(3,state.readKey)
     unionSelectUpdatedStatement.setTimestamp(4,state.readBusinessAssetsDataAsset)
     unionSelectUpdatedStatement.setTimestamp(5,state.readBusinessAssets)
-    val resultSet: ResultSet = executePreparedStatement(unionSelectUpdatedStatement)
+    val resultSet: ResultSet = executeQueryPreparedStatement(unionSelectUpdatedStatement)
     var list : List[Result] = List()
     while (resultSet.next()) {
       list = Result(resultSet.getInt(1), resultSet.getTimestamp(2), resultSet.getShort(3)) :: list
     }
-    val ids = list.map(_.id)
-    list.filter(_.literal == 1).map(_.timestamp).headOption match {
+    val ids = list.map(_.id).distinct
+    list.filter(_.literal == 1).map(_.timestamp).sortWith(_.getTime > _.getTime).headOption match {
       case Some(t) => state.readDataAsset = t
       case None =>
     }
-    list.filter(_.literal == 2).map(_.timestamp).headOption match {
+    list.filter(_.literal == 2).map(_.timestamp).sortWith(_.getTime > _.getTime).headOption match {
       case Some(t) => state.readKeyDataAsset = t
       case None =>
     }
-    list.filter(_.literal == 3).map(_.timestamp).headOption match {
+    list.filter(_.literal == 3).map(_.timestamp).sortWith(_.getTime > _.getTime).headOption match {
       case Some(t) => state.readKey = t
       case None =>
     }
-    list.filter(_.literal == 4).map(_.timestamp).headOption match {
+    list.filter(_.literal == 4).map(_.timestamp).sortWith(_.getTime > _.getTime).headOption match {
       case Some(t) => state.readBusinessAssetsDataAsset = t
       case None =>
     }
-    list.filter(_.literal == 5).map(_.timestamp).headOption match {
+    list.filter(_.literal == 5).map(_.timestamp).sortWith(_.getTime > _.getTime).headOption match {
       case Some(t) => state.readBusinessAssets = t
       case None =>
     }
@@ -320,7 +392,7 @@ class PostgresSourceDao(sourceConnectionUrl: String,
   }
 
   override def getKeys(): List[String] = {
-    PostgresSourceDao.getKeysFromResult(executePreparedStatement(prepareStatement(s"SELECT DISTINCT key FROM $schema.$keyTable")))
+    PostgresSourceDao.getKeysFromResult(executeQueryPreparedStatement(prepareStatement(s"SELECT DISTINCT key FROM $schema.$keyTable")))
   }
 
   def readPartialIndexationState(): PostgresPartialIndexationReadState = status.getOrElse({
@@ -331,7 +403,7 @@ class PostgresSourceDao(sourceConnectionUrl: String,
 
   def writePartialIndexationState(state: PostgresPartialIndexationReadState): Unit = {
     status = Some(state)
-    status.get.save(connection)
+    status.get.update(connection)
   }
 
 
