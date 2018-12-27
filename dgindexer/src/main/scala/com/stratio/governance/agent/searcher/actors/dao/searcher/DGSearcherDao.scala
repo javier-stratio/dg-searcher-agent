@@ -17,37 +17,41 @@ class DGSearcherDao(httpManager: HttpManager) extends
   val FINAL_STATUS_NOK: String = "CANCELLED"
   val INDEXING_STATUS: String = "INDEXING"
 
-  @throws(classOf[DGSearcherDaoException])
-  def indexPartial(model:  String, doc: String): Unit = {
+  def indexPartial(model:  String, doc: String): Option[DGSearcherDaoException] = {
     try {
       LOG.debug("indexing partial ...")
       val result: String = httpManager.partialPostRequest(model, doc)
       val json = parse(result)
       val resp: Indexer  = json.extract[Indexer]
       LOG.debug("partial indexed report: " + resp.documents_stats.created + " created, " + resp.documents_stats.updated + " updated, " + resp.documents_stats.error + " errors. time: " + resp.time_stats.total + "/" + resp.time_stats.elasticsearch)
+      None
     } catch {
       case HttpException(code, req, resp) =>
-        throw DGSearcherDaoException(code + ": " + resp + "(request: " + req + ")")
+        val errMessage: String = code + ": " + resp + "(request: " + req + ")"
+        LOG.error(errMessage)
+        Option(DGSearcherDaoException(errMessage))
       case e: Throwable =>
         LOG.error("error while indexPartial models", e)
-        throw DGSearcherDaoException(e.getMessage)
+        Option(DGSearcherDaoException(e.getMessage))
     }
   }
 
-  @throws(classOf[DGSearcherDaoException])
-  def indexTotal(model:  String, doc: String, token: String): Unit = {
+  def indexTotal(model:  String, doc: String, token: String): Option[DGSearcherDaoException] = {
     try {
       LOG.debug("indexing total ...")
       val result: String = httpManager.totalPostRequest(model, token, doc)
       val json = parse(result)
       val resp: Indexer  = json.extract[Indexer]
       LOG.debug("total indexed report: " + resp.documents_stats.created + " created, " + resp.documents_stats.updated + " updated, , " + resp.documents_stats.error + " errors. time: " + resp.time_stats.total + "/" + resp.time_stats.elasticsearch)
+      None
     } catch {
       case HttpException(code, req, resp) =>
-        throw DGSearcherDaoException(code + ": " + resp + "(request: " + req + ")")
+        val errMessage: String = code + ": " + resp + "(request: " + req + ")"
+        LOG.error(errMessage)
+        Option(DGSearcherDaoException(errMessage))
       case e: Throwable =>
         LOG.error("error while indexTotal models", e)
-        throw DGSearcherDaoException(e.getMessage)
+        Option(DGSearcherDaoException(e.getMessage))
     }
   }
 

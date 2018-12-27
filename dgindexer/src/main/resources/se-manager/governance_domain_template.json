@@ -46,7 +46,7 @@
       },
       {
         "field": "type",
-        "name": "Data Stores",
+        "name": "Data Store Type",
         "type": "text",
         "searchable": true,
         "sortable": true,
@@ -127,13 +127,11 @@
     "name": 1,
     "alias": 1,
     "description": 1,
-    "metadataPath": 1,
     "type": 1,
     "subtype": 1,
     "tenant": 1,
     "active": 1,
     "discoveredAt": 1,
-    "dataStore": 1,
     "modifiedAt": 1,
     "businessTerms": 1,
     "keys": 1

@@ -2,6 +2,8 @@ package com.stratio.governance.agent.searcher.actors.dao.postgres
 
 import java.sql.{Connection, PreparedStatement, ResultSet, SQLException, Timestamp}
 
+import com.stratio.governance.agent.searcher.actors.utils.AdditionalBusiness
+
 //import collection.JavaConverters._
 
 import akka.util.Timeout
@@ -26,6 +28,7 @@ class PostgresSourceDao(sourceConnectionUrl: String,
                         initialSize: Int,
                         maxSize: Int,
                         var exponentialBackOff: ExponentialBackOff,
+                        additionalBusiness: AdditionalBusiness,
                         allowedToCreateContext: Boolean = false) extends ExtractorSourceDao with IndexerSourceDao with ManagerSourceDao {
 
   private lazy val LOG: Logger = LoggerFactory.getLogger(getClass.getName)
@@ -242,79 +245,89 @@ class PostgresSourceDao(sourceConnectionUrl: String,
   }
 
   def keyValuePairProcess(ids: Array[Int]): List[KeyValuePair] = {
-    try {
-      // TODO This query has a problem with java-scala array conversion
-//      val selectKeyValuePairStatement: PreparedStatement = prepareStatement(s"SELECT key_asset.data_asset_id, key.key, key_asset.value, key.modified_at, key_asset.modified_at FROM $schema.$keyDataAssetTable AS key_asset, $schema.$keyTable AS key WHERE key.id=key_asset.key_id AND key_asset.data_asset_id IN (?)")
-//      val pgIds = connection.createArrayOf("int4", ids.toList.asJava.toArray)
-//      selectKeyValuePairStatement.setArray(1, pgIds)
+    if (!ids.isEmpty) {
+      try {
+        // TODO This query has a problem with java-scala array conversion
+        //      val selectKeyValuePairStatement: PreparedStatement = prepareStatement(s"SELECT key_asset.data_asset_id, key.key, key_asset.value, key.modified_at, key_asset.modified_at FROM $schema.$keyDataAssetTable AS key_asset, $schema.$keyTable AS key WHERE key.id=key_asset.key_id AND key_asset.data_asset_id IN (?)")
+        //      val pgIds = connection.createArrayOf("int4", ids.toList.asJava.toArray)
+        //      selectKeyValuePairStatement.setArray(1, pgIds)
 
-      // Alternative Option
-      val repl:  String = ids.map( id => "?") match {
-        case q: Array[String] => q.mkString(",")
+        // Alternative Option
+        val repl: String = ids.map( id => "?" ) match {
+          case q: Array[String] => q.mkString( "," )
+        }
+        val selectKeyValuePairStatement: PreparedStatement = prepareStatement( s"SELECT key_asset.data_asset_id, key.key, key_asset.value, key.modified_at, key_asset.modified_at FROM $schema.$keyDataAssetTable AS key_asset, $schema.$keyTable AS key WHERE key.id=key_asset.key_id AND key_asset.data_asset_id IN ({{ids}})".replace( "{{ids}}", repl ) )
+        var index: Int = 0
+        ids.foreach( id => {
+          index += 1
+          selectKeyValuePairStatement.setInt( index, id )
+        } )
+
+        KeyValuePair.getValueFromResult( selectKeyValuePairStatement.executeQuery() )
+      } catch {
+        case e: Throwable =>
+          LOG.error( "error while getting key-Value Pairs", e )
+          List[KeyValuePair]()
       }
-      val selectKeyValuePairStatement: PreparedStatement = prepareStatement(s"SELECT key_asset.data_asset_id, key.key, key_asset.value, key.modified_at, key_asset.modified_at FROM $schema.$keyDataAssetTable AS key_asset, $schema.$keyTable AS key WHERE key.id=key_asset.key_id AND key_asset.data_asset_id IN ({{ids}})".replace("{{ids}}",repl))
-      var index: Int = 0
-      ids.foreach(id => {
-        index+=1
-        selectKeyValuePairStatement.setInt(index, id)
-      })
-
-      KeyValuePair.getValueFromResult(selectKeyValuePairStatement.executeQuery())
-    } catch {
-      case e: Throwable =>
-        LOG.error("error while getting key-Value Pairs", e)
-        List[KeyValuePair]()
+    } else {
+      LOG.debug("There is no ids to get key-Value Pairs")
+      List[KeyValuePair]()
     }
   }
 
   def businessAssets(ids: Array[Int]): List[BusinessAsset] = {
-    try {
-      // TODO This query has a problem with java-scala array conversion
-//      val selectBusinessTermsStatement: PreparedStatement = prepareStatement(s"SELECT bus_assets.data_asset_id, bus_assets.name, bus_assets.description, bus_assets_status.name, " +
-//        s"bus_assets_type.name, bus_assets_data_assets.modified_at, bus_assets.modified_at " +
-//        s"FROM $schema.$businessAssetsDataAssetsTable AS bus_assets_data_assets, " +
-//        s"$schema.$businessAssetsTable AS bus_assets, " +
-//        s"$schema.$businessAssetsTypeTable AS bus_assets_type, " +
-//        s"$schema.$businessAssetsStatusTable AS bus_assets_status " +
-//        s"WHERE bus_assets_data_assets.data_asset_id IN(?)" +
-//        "AND bus_assets.id=bus_assets_data_assets.business_assets_id " +
-//        "AND bus_assets_type.id=bus_assets.business_assets_type_id " +
-//        "AND bus_assets_status.id=bus_assets.business_assets_status_id")
-//      selectBusinessTermsStatement.setString(1, ids.map(s => s"'$s'").toList.mkString(","))
+    if (!ids.isEmpty) {
+      try {
+        // TODO This query has a problem with java-scala array conversion
+        //      val selectBusinessTermsStatement: PreparedStatement = prepareStatement(s"SELECT bus_assets.data_asset_id, bus_assets.name, bus_assets.description, bus_assets_status.name, " +
+        //        s"bus_assets_type.name, bus_assets_data_assets.modified_at, bus_assets.modified_at " +
+        //        s"FROM $schema.$businessAssetsDataAssetsTable AS bus_assets_data_assets, " +
+        //        s"$schema.$businessAssetsTable AS bus_assets, " +
+        //        s"$schema.$businessAssetsTypeTable AS bus_assets_type, " +
+        //        s"$schema.$businessAssetsStatusTable AS bus_assets_status " +
+        //        s"WHERE bus_assets_data_assets.data_asset_id IN(?)" +
+        //        "AND bus_assets.id=bus_assets_data_assets.business_assets_id " +
+        //        "AND bus_assets_type.id=bus_assets.business_assets_type_id " +
+        //        "AND bus_assets_status.id=bus_assets.business_assets_status_id")
+        //      selectBusinessTermsStatement.setString(1, ids.map(s => s"'$s'").toList.mkString(","))
 
-      // Alternative Option
-      val repl:  String = ids.map( id => "?") match {
-        case q: Array[String] => q.mkString(",")
+        // Alternative Option
+        val repl: String = ids.map( id => "?" ) match {
+          case q: Array[String] => q.mkString( "," )
+        }
+        val selectBusinessTermsStatement: PreparedStatement = prepareStatement( s"SELECT bus_assets_data_assets.data_asset_id, bus_assets.name, bus_assets.description, bus_assets_status.name, " +
+          s"bus_assets_type.name, bus_assets_data_assets.modified_at, bus_assets.modified_at " +
+          s"FROM $schema.$businessAssetsDataAssetsTable AS bus_assets_data_assets, " +
+          s"$schema.$businessAssetsTable AS bus_assets, " +
+          s"$schema.$businessAssetsTypeTable AS bus_assets_type, " +
+          s"$schema.$businessAssetsStatusTable AS bus_assets_status " +
+          s"WHERE bus_assets_data_assets.data_asset_id IN({{ids}})".replace( "{{ids}}", repl ) +
+          "AND bus_assets.id=bus_assets_data_assets.business_assets_id " +
+          "AND bus_assets_type.id=bus_assets.business_assets_type_id " +
+          "AND bus_assets_status.id=bus_assets.business_assets_status_id" )
+        var index: Int = 0
+        ids.foreach( id => {
+          index += 1
+          selectBusinessTermsStatement.setInt( index, id )
+        } )
+        BusinessAsset.getValueFromResult( executeQueryPreparedStatement( selectBusinessTermsStatement ) )
+      } catch {
+        case e: Throwable =>
+          LOG.error( "error while getting Business Assets", e )
+          List[BusinessAsset]()
       }
-      val selectBusinessTermsStatement: PreparedStatement = prepareStatement(s"SELECT bus_assets_data_assets.data_asset_id, bus_assets.name, bus_assets.description, bus_assets_status.name, " +
-        s"bus_assets_type.name, bus_assets_data_assets.modified_at, bus_assets.modified_at " +
-        s"FROM $schema.$businessAssetsDataAssetsTable AS bus_assets_data_assets, " +
-        s"$schema.$businessAssetsTable AS bus_assets, " +
-        s"$schema.$businessAssetsTypeTable AS bus_assets_type, " +
-        s"$schema.$businessAssetsStatusTable AS bus_assets_status " +
-        s"WHERE bus_assets_data_assets.data_asset_id IN({{ids}})".replace("{{ids}}",repl) +
-        "AND bus_assets.id=bus_assets_data_assets.business_assets_id " +
-        "AND bus_assets_type.id=bus_assets.business_assets_type_id " +
-        "AND bus_assets_status.id=bus_assets.business_assets_status_id")
-      var index: Int = 0
-      ids.foreach(id => {
-        index+=1
-        selectBusinessTermsStatement.setInt(index, id)
-      })
-      BusinessAsset.getValueFromResult(executeQueryPreparedStatement(selectBusinessTermsStatement))
-    } catch {
-      case e: Throwable =>
-        LOG.error("error while getting Business Assets", e)
-        List[BusinessAsset]()
+    } else {
+      LOG.debug("There is no ids to get Business Asset")
+      List[BusinessAsset]()
     }
   }
 
   def readDataAssetsSince(offset: Int, limit: Int): (Array[DataAssetES], Int) = {
-    val selectFromDataAssetWithWhereStatement: PreparedStatement = prepareStatement(s"SELECT id,name,alias,description,metadata_path,type,subtype,tenant,properties,active,discovered_at,modified_at FROM $schema.$dataAssetTable WHERE active = ? order by id asc limit ? offset ?")
+    val selectFromDataAssetWithWhereStatement: PreparedStatement = prepareStatement(s"((SELECT id,name,alias,description,metadata_path,type,subtype,tenant,properties,active,discovered_at,modified_at FROM $schema.$dataAssetTable WHERE active = ?) union " + additionalBusiness.getBTTotalIndexationsubquery(schema, businessAssetsTable, businessAssetsTypeTable) + ") order by id asc, name asc limit ? offset ?")
     selectFromDataAssetWithWhereStatement.setBoolean(1, true)
     selectFromDataAssetWithWhereStatement.setInt(2, limit)
     selectFromDataAssetWithWhereStatement.setInt(3, offset)
-    val lista = DataAssetES.getValuesFromResult(executeQueryPreparedStatement(selectFromDataAssetWithWhereStatement))
+    val lista = DataAssetES.getValuesFromResult(additionalBusiness.adaptInfo, executeQueryPreparedStatement(selectFromDataAssetWithWhereStatement))
     (lista.toArray, offset + limit)
   }
 
@@ -336,13 +349,30 @@ class PostgresSourceDao(sourceConnectionUrl: String,
         selectFromDataAssetWithIdsInStatement.setInt(index, id)
       })
 
-      DataAssetES.getValuesFromResult(executeQueryPreparedStatement(selectFromDataAssetWithIdsInStatement)).toArray
+      DataAssetES.getValuesFromResult(additionalBusiness.adaptInfo, executeQueryPreparedStatement(selectFromDataAssetWithIdsInStatement)).toArray
+    }
+  }
+
+  def readBusinessTermsWhereIdsIn(ids: List[Int]): Array[DataAssetES] = {
+    if (ids.isEmpty) Array() else {
+      // Alternative Option without list object
+      val repl:  String = ids.map( id => "?") match {
+        case q: List[String] => q.mkString(",")
+      }
+      val selectFromBusinessTermWithIdsInStatement: PreparedStatement = prepareStatement(additionalBusiness.getBTPartialIndexationSubquery2(schema, businessAssetsTable, businessAssetsTypeTable).replace("{{ids}}",repl))
+      var index: Int = 0
+      ids.foreach(id => {
+        index+=1
+        selectFromBusinessTermWithIdsInStatement.setInt(index, id)
+      })
+
+      DataAssetES.getValuesFromResult(additionalBusiness.adaptInfo, executeQueryPreparedStatement(selectFromBusinessTermWithIdsInStatement)).toArray
     }
   }
 
   private case class Result (id: Int, timestamp: Timestamp, literal: Short)
 
-  def readUpdatedDataAssetsIdsSince(state: PostgresPartialIndexationReadState): (List[Int], PostgresPartialIndexationReadState) = {
+  def readUpdatedDataAssetsIdsSince(state: PostgresPartialIndexationReadState): (List[Int], List[Int], PostgresPartialIndexationReadState) = {
     val unionSelectUpdatedStatement: PreparedStatement =
         prepareStatement(s"(" +
                                  s" SELECT id,modified_at,1 FROM $schema.$dataAssetTable WHERE modified_at > ? " +
@@ -355,19 +385,28 @@ class PostgresSourceDao(sourceConnectionUrl: String,
                                  s"SELECT data_asset_id,modified_at,4 FROM $schema.$businessAssetsDataAssetsTable WHERE modified_at > ? " +
                                    "UNION " +
                                  s"SELECT bus_assets_data_assets.data_asset_id, bus_assets.modified_at,5 FROM $schema.$businessAssetsDataAssetsTable AS bus_assets_data_assets, " +
-                                    s"$schema.$businessAssetsTable AS bus_assets WHERE bus_assets.modified_at > ? " +
-                                s") ORDER BY modified_at DESC;")
+                                    s"$schema.$businessAssetsTable AS bus_assets WHERE bus_assets_data_assets.business_assets_id = bus_assets.id and bus_assets.modified_at > ? " +
+                                   "UNION " +
+                                 additionalBusiness.getBTPartialIndexationSubquery1(schema, businessAssetsTable, businessAssetsTypeTable) +
+                                s")")
     unionSelectUpdatedStatement.setTimestamp(1,state.readDataAsset)
     unionSelectUpdatedStatement.setTimestamp(2,state.readKeyDataAsset)
     unionSelectUpdatedStatement.setTimestamp(3,state.readKey)
     unionSelectUpdatedStatement.setTimestamp(4,state.readBusinessAssetsDataAsset)
     unionSelectUpdatedStatement.setTimestamp(5,state.readBusinessAssets)
+
+    // Additional queries conditions for business Terms
+    unionSelectUpdatedStatement.setInt(6, 6)
+    unionSelectUpdatedStatement.setTimestamp(7,state.readBusinessAssets)
+
     val resultSet: ResultSet = executeQueryPreparedStatement(unionSelectUpdatedStatement)
     var list : List[Result] = List()
     while (resultSet.next()) {
       list = Result(resultSet.getInt(1), resultSet.getTimestamp(2), resultSet.getShort(3)) :: list
     }
-    val ids = list.map(_.id).distinct
+    val ids = list.filter(_.literal < 6).map(_.id).distinct
+    val idsBusinessTerms = list.filter(_.literal == 6).map(_.id)
+
     list.filter(_.literal == 1).map(_.timestamp).sortWith(_.getTime > _.getTime).headOption match {
       case Some(t) => state.readDataAsset = t
       case None =>
@@ -388,7 +427,11 @@ class PostgresSourceDao(sourceConnectionUrl: String,
       case Some(t) => state.readBusinessAssets = t
       case None =>
     }
-    (ids, state)
+    list.filter(_.literal == 6).map(_.timestamp).sortWith(_.getTime > _.getTime).headOption match {
+      case Some(t) => state.readBusinessAssets = t
+      case None =>
+    }
+    (ids, idsBusinessTerms, state)
   }
 
   override def getKeys(): List[String] = {

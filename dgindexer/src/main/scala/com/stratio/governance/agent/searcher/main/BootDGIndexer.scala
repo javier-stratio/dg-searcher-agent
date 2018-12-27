@@ -8,6 +8,7 @@ import com.stratio.governance.agent.searcher.actors.extractor.{DGExtractor, DGEx
 import com.stratio.governance.agent.searcher.actors.indexer.{DGIndexer, DGIndexerParams}
 import com.stratio.governance.agent.searcher.actors.manager.scheduler.defimpl.DGScheduler
 import com.stratio.governance.agent.searcher.actors.manager.utils.defimpl.DGManagerUtils
+import com.stratio.governance.agent.searcher.actors.utils.AdditionalBusiness
 import com.stratio.governance.agent.searcher.http.defimpl.DGHttpManager
 import com.stratio.governance.agent.searcher.model.utils.ExponentialBackOff
 import com.typesafe.scalalogging.LazyLogging
@@ -34,7 +35,8 @@ object BootDGIndexer extends App with LazyLogging {
 
     // Initialize indexer params objects
     val exponentialBackOff: ExponentialBackOff = ExponentialBackOff(AppConf.extractorExponentialbackoffPauseMs, AppConf.extractorExponentialbackoffMaxErrorRetry)
-    val sourceDao = new PostgresSourceDao(AppConf.sourceConnectionUrl, AppConf.sourceConnectionUser, AppConf.sourceConnectionPassword, AppConf.sourceDatabase, AppConf.sourceSchema, AppConf.sourceConnectionInitialSize, AppConf.sourceConnectionMaxSize, exponentialBackOff)
+    val additionalBusiness: AdditionalBusiness = new AdditionalBusiness(AppConf.additionalBusinessDataAssetPrefix, AppConf.additionalBusinessBusinessTermPrefix, AppConf.additionalBusinessBusinessTermType, AppConf.additionalBusinessBusinessTermSubtype)
+    val sourceDao = new PostgresSourceDao(AppConf.sourceConnectionUrl, AppConf.sourceConnectionUser, AppConf.sourceConnectionPassword, AppConf.sourceDatabase, AppConf.sourceSchema, AppConf.sourceConnectionInitialSize, AppConf.sourceConnectionMaxSize, exponentialBackOff, additionalBusiness)
     val httpManager = new DGHttpManager(AppConf.managerUrl, AppConf.indexerURL)
     val searcherDao = new DGSearcherDao(httpManager)
     val scheduler = new DGScheduler(system, AppConf.schedulerPartialEnabled, AppConf.schedulerPartialInterval, AppConf.schedulerTotalEnabled, AppConf.schedulerTotalCronExpresion)
@@ -42,7 +44,7 @@ object BootDGIndexer extends App with LazyLogging {
 
     val dgManagerParams: DGManagerUtils = new DGManagerUtils(scheduler, sourceDao)
     val dgExtractorParams: DGExtractorParams = DGExtractorParams(sourceDao, AppConf.extractorLimit, AppConf.extractorPeriodMs, exponentialBackOff, AppConf.extractorDelayMs, manager_name)
-    val dgIndexerParams: DGIndexerParams = new DGIndexerParams(sourceDao, searcherDao, AppConf.indexerPartition)
+    val dgIndexerParams: DGIndexerParams = new DGIndexerParams(sourceDao, searcherDao, AppConf.indexerPartition, additionalBusiness)
 
     // initialize the actor system
     indexerRef = Some(system.actorOf(Props(classOf[DGIndexer], dgIndexerParams), indexer_name))

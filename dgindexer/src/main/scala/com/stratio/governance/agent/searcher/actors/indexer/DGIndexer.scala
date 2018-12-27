@@ -24,7 +24,7 @@ class DGIndexer(params: IndexerParams) extends Actor {
 
           val batchesEnriched: List[Array[DataAssetES]] = batches.map((x: Array[DataAssetES]) => {
 
-            val ids: Array[Int] = x.map((dadao: DataAssetES) => dadao.id)
+            val ids: Array[Int] = x.filter( dadao => !params.getAdditionalBusiness.isAdaptable(dadao.tpe)).map((dadao: DataAssetES) => dataAssetIdtoInt(dadao.id))
 
             val functionList: List[Array[Int] => List[EntityRow]] = List(params.getSourceDao.keyValuePairProcess, params.getSourceDao.businessAssets)
 
@@ -36,11 +36,11 @@ class DGIndexer(params: IndexerParams) extends Actor {
             val additionals: Array[(Long, List[EntityRow])] = pivotRelatedInfo(relatedInfo)
             val ids_adds = additionals.map(a => a._1).toList
 
-            val x_adds = x.filter(a => ids_adds.contains(a.id))
-            val x_noAdds = x.filter(a => !ids_adds.contains(a.id))
+            val x_adds = x.filter(a => ids_adds.contains(dataAssetIdtoInt(a.id)))
+            val x_noAdds = x.filter(a => !ids_adds.contains(dataAssetIdtoInt(a.id)))
 
             // x_adds management
-            val ordered_x = x_adds.sortWith((a, b) => a.id < b.id)
+            val ordered_x = x_adds.sortWith((a, b) => dataAssetIdtoInt(a.id) < dataAssetIdtoInt(b.id))
             val ordered_additionales = additionals.sortWith((a, b) => a._1 < b._1)
             val batchEnriched_adds: Array[DataAssetES] = for ((x, a) <- ordered_x zip ordered_additionales) yield {
               var maxTime: Long = x.getModifiedAt
@@ -58,7 +58,7 @@ class DGIndexer(params: IndexerParams) extends Actor {
                     maxTime = upatedTs
                   }
               }
-              x.setModifiedAt(TimestampUtils.fromLong(maxTime))
+              x.modifiedAt = TimestampUtils.fromLong(maxTime)
               x
             }
             batchEnriched_adds ++ x_noAdds
@@ -99,6 +99,11 @@ class DGIndexer(params: IndexerParams) extends Actor {
 
     list_completed_by_id.toArray[(Long, List[EntityRow])]
   }
+
+  private def dataAssetIdtoInt(identifier: String): Int = {
+    identifier.split("/").last.toInt
+  }
+
 }
 
 

@@ -10,6 +10,7 @@ import com.stratio.governance.agent.searcher.actors.extractor.dao.{SourceDao => 
 import com.stratio.governance.agent.searcher.actors.indexer.dao.{SourceDao => IndexerSourceDao}
 import com.stratio.governance.agent.searcher.actors.indexer.IndexerParams
 import com.stratio.governance.agent.searcher.actors.indexer.dao.SearcherDao
+import com.stratio.governance.agent.searcher.actors.utils.AdditionalBusiness
 import com.stratio.governance.agent.searcher.model._
 import com.stratio.governance.agent.searcher.model.es.DataAssetES
 import com.stratio.governance.agent.searcher.model.utils.ExponentialBackOff
@@ -30,7 +31,7 @@ class CustomSourceDao extends ExtractorSourceDao with IndexerSourceDao {
 
   override def readDataAssetsWhereIdsIn(ids: List[Int]): Array[DataAssetES] = ???
 
-  override def readUpdatedDataAssetsIdsSince(state: PostgresPartialIndexationReadState): (List[Int], PostgresPartialIndexationReadState) = ???
+  override def readUpdatedDataAssetsIdsSince(state: PostgresPartialIndexationReadState): (List[Int], List[Int], PostgresPartialIndexationReadState) = ???
 
   override def readPartialIndexationState(): PostgresPartialIndexationReadState = ???
 
@@ -45,6 +46,8 @@ class CustomSourceDao extends ExtractorSourceDao with IndexerSourceDao {
   override def executePreparedStatement(sql: PreparedStatement): Unit = ???
 
   override def executeQueryPreparedStatement(sql: PreparedStatement): ResultSet = ???
+
+  override def readBusinessTermsWhereIdsIn(ids: List[Int]): Array[DataAssetES] = ???
 }
 
 class CommonParams(s: Semaphore, sourceDao: CustomSourceDao, reference: String) extends DGExtractorParams(sourceDao, 10,10, ExponentialBackOff(10, 10),10, "test") with IndexerParams {
@@ -71,6 +74,8 @@ class CommonParams(s: Semaphore, sourceDao: CustomSourceDao, reference: String) 
   override def getSearcherDao: SearcherDao = ???
 
   override def getPartition: Int = ???
+
+  override def getAdditionalBusiness: AdditionalBusiness = new AdditionalBusiness("","bt/", "GLOSSARY", "BUSSINESS_TERMS")
 }
 
 case class MetaInfo(value: String)

@@ -66,4 +66,13 @@ object AppConf {
 
   lazy val schedulerTotalCronExpresion: String = envOrElseConfigOrElseDefault("scheduler.totalIndexation.cron","*/30 * * ? * *")
 
+  lazy val additionalBusinessDataAssetPrefix: String = envOrElseConfigOrElseDefault("additionalBusiness.dataAsset.prefix","catalog/dataAsset/")
+
+  lazy val additionalBusinessBusinessTermPrefix: String = envOrElseConfigOrElseDefault("additionalBusiness.businessTerm.prefix","glossary/businessAssets/")
+
+  lazy val additionalBusinessBusinessTermType: String = envOrElseConfigOrElseDefault("additionalBusiness.businessTerm.type","GLOSSARY")
+
+  lazy val additionalBusinessBusinessTermSubtype: String = envOrElseConfigOrElseDefault("additionalBusiness.businessTerm.subtype","BUSINESS_TERM")
+
+
 }

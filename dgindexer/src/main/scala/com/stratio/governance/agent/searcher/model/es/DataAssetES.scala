@@ -7,7 +7,7 @@ import org.json4s.JsonAST._
 import org.json4s.JsonDSL._
 import org.slf4j.{Logger, LoggerFactory}
 
-case class DataAssetES(id: Int,
+case class DataAssetES(id: String,
                        name: Option[String],
                        alias: Option[String],
                        description: Option[String],
@@ -27,6 +27,8 @@ case class DataAssetES(id: Int,
 
   var keyValues: Option[List[(String, String)]] = None
 
+  var dataStore: String = ""
+
   def getModifiedAt: Long = {
     modifiedAt.getTime
   }
@@ -37,21 +39,6 @@ case class DataAssetES(id: Int,
 
   def getModifiedAtAsString: String = {
     TimestampUtils.toString(modifiedAt)
-  }
-
-  def getDataStore: String = {
-    try {
-      metadataPath.substring(0, metadataPath.indexOf(":"))
-    } catch {
-      case e: Throwable => {
-        LOG.warn("Data Store could not be extracted from metadataPath " + metadataPath)
-        ""
-      }
-    }
-  }
-
-  def setModifiedAt(modAt: Timestamp): Unit = {
-    modifiedAt = modAt
   }
 
   def addBusinessTerm(bt: String): Unit = {
@@ -67,7 +54,7 @@ case class DataAssetES(id: Int,
   }
 
   def getJsonObject: JValue = {
-    jsonObject = jsonObject ~ ("id" -> JInt(id))
+    jsonObject = jsonObject ~ ("id" -> JString(id))
     if (name.isDefined && (name.get != null)) jsonObject = jsonObject ~ ("name" -> JString(name.get))
     if (alias.isDefined && (alias.get != null)) jsonObject = jsonObject ~ ("alias" -> JString(alias.get))
     if (description.isDefined && (description != null)) jsonObject = jsonObject ~ ("description" -> JString(description.get))
@@ -78,7 +65,7 @@ case class DataAssetES(id: Int,
     jsonObject = jsonObject ~ ("active" -> JBool(active))
     jsonObject = jsonObject ~ ("discoveredAt" -> JString(getDiscoveredAtAsString))
     jsonObject = jsonObject ~ ("modifiedAt" -> JString(getModifiedAtAsString))
-    jsonObject = jsonObject ~ ("dataStore" -> JString(getDataStore))
+    jsonObject = jsonObject ~ ("dataStore" -> JString(dataStore))
     if (businessTerms.isDefined) jsonObject = jsonObject ~ ("businessTerms" -> JArray(businessTerms.get.map(a=>JString(a))))
     if (keyValues.isDefined) {
       jsonObject = jsonObject ~ ("keys" -> JArray(keyValues.get.map(a=>JString(a._1))))
@@ -94,19 +81,26 @@ case class DataAssetES(id: Int,
 object DataAssetES {
 
   @scala.annotation.tailrec
-  def getValuesFromResult(resultSet: ResultSet, list: List[DataAssetES] = Nil): List[DataAssetES] = {
+  def getValuesFromResult(f: (Int, String, String, String) => (String, String, String, String), resultSet: ResultSet, list: List[DataAssetES] = Nil): List[DataAssetES] = {
     if (resultSet.next()) {
-      getValuesFromResult(resultSet, DataAssetES( resultSet.getInt(1),
-                                                  Some(resultSet.getString(2)),
-                                                  Some(resultSet.getString(3)),
-                                                  Some(resultSet.getString(4)),
-                                                  resultSet.getString(5),
-                                                  resultSet.getString(6),
-                                                  resultSet.getString(7),
-                                                  resultSet.getString(8),
-                                                  resultSet.getBoolean(10),
-                                                  resultSet.getTimestamp(11),
-                                                  resultSet.getTimestamp(12)) :: list)
+      val id = resultSet.getInt(1)
+      val metadataPath = resultSet.getString(5)
+      val typ = resultSet.getString(6)
+      val subType = resultSet.getString(7)
+      val calculated_values: (String, String, String, String) = f(id, typ, subType, metadataPath)
+      val daEs = DataAssetES( calculated_values._1,
+        Some(resultSet.getString(2)),
+        Some(resultSet.getString(3)),
+        Some(resultSet.getString(4)),
+        metadataPath,
+        calculated_values._3,
+        calculated_values._4,
+        resultSet.getString(8),
+        resultSet.getBoolean(10),
+        resultSet.getTimestamp(11),
+        resultSet.getTimestamp(12))
+      daEs.dataStore = calculated_values._2
+      getValuesFromResult(f, resultSet, daEs :: list)
     } else {
       list
     }
