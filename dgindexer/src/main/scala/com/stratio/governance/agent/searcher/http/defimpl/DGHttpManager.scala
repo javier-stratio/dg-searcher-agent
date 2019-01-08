@@ -2,7 +2,6 @@ package com.stratio.governance.agent.searcher.http.defimpl
 
 import com.stratio.governance.agent.searcher.http.{HttpException, HttpManager}
 import org.apache.http.client.methods._
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.util.EntityUtils
@@ -23,9 +22,6 @@ class DGHttpManager(managerURL: String, indexerURL: String) extends HttpManager 
   val POST_TOTAL_INDEXATION_INIT: String = indexerURL + "/indexer/domains/" + MODEL + "/total"
   val PUT_TOTAL_INDEXATION_FINISH: String = indexerURL + "/indexer/domains/" + MODEL + "/total/" + TOKEN + "/end"
   val PUT_TOTAL_INDEXATION_CANCEL: String = indexerURL + "/indexer/domains/" + MODEL + "/total/" + TOKEN + "/cancel"
-
-  // TODO This "SSL Skiper" must be removed after demo purposes
-  val skipSSLcf: SSLConnectionSocketFactory = skipSecurity()
 
   @throws(classOf[HttpException])
   override def partialPostRequest(model: String, json: String): String = {
@@ -123,7 +119,7 @@ class DGHttpManager(managerURL: String, indexerURL: String) extends HttpManager 
   @throws(classOf[HttpException])
   private def handleHttpSearchRequest(request: HttpRequestBase): HttpSearchResponse = {
     try {
-      val client = HttpClientBuilder.create.setSSLSocketFactory(skipSSLcf).build
+      val client = HttpClientBuilder.create.build
       val response: CloseableHttpResponse = client.execute(request)
 
       val code: Int = response.getStatusLine.getStatusCode
@@ -139,30 +135,6 @@ class DGHttpManager(managerURL: String, indexerURL: String) extends HttpManager 
         throw HttpException("000","",e.getMessage)
     }
   }
-
-  // TODO This "SSL Skiper" must be removed after demo purposes
-  private def skipSecurity(): SSLConnectionSocketFactory = {
-    import org.apache.http.conn.ssl.NoopHostnameVerifier
-    import org.apache.http.conn.ssl.SSLConnectionSocketFactory
-    import org.apache.http.conn.ssl.TrustStrategy
-    import org.apache.http.ssl.SSLContextBuilder
-    import java.security.cert.X509Certificate
-
-    // use a custom TrustStrategy to allow all certificates
-    val sslContext = SSLContextBuilder.create.loadTrustMaterial(new TrustStrategy {
-      override def isTrusted(x509Certificates: Array[X509Certificate], s: String): Boolean = true
-    }).build
-
-    // we can optionally disable hostname verification.
-    // if you don't want to further weaken the security, you don't have to include this.
-    val allowAllHosts = new NoopHostnameVerifier
-
-    // create an SSL Socket Factory to use the SSLContext with the trust self signed certificate strategy
-    // and allow all hosts verifier.
-    val connectionFactory = new SSLConnectionSocketFactory(sslContext, allowAllHosts)
-    connectionFactory
-  }
-
 
 }
 

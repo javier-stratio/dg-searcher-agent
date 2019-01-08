@@ -2,6 +2,7 @@
 
 ## 0.1.0 (upcoming)
 
+* [DGPB-1659] SearchEngine interface securization
 * [DGPB-1693] Add Glossary Business Terms to the search space
 * [DGPB-1660] Partial indexation Validation. And Alias Inclusion
 * [DGPB-1636] Integration/Testing DC/OS. fixings issues observed in DC/OS
