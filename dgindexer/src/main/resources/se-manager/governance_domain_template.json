@@ -46,7 +46,7 @@
       },
       {
         "field": "type",
-        "name": "Data Store Type",
+        "name": "Source Type",
         "type": "text",
         "searchable": true,
         "sortable": true,
@@ -96,7 +96,7 @@
       },
       {
         "field": "dataStore",
-        "name": "Data Store",
+        "name": "Source",
         "type": "text",
         "searchable": true,
         "sortable": true,
