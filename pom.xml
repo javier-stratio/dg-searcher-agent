@@ -12,7 +12,7 @@
     <groupId>com.stratio.governance.agent.searcher</groupId>
     <artifactId>dg-searcher-agent</artifactId>
     <packaging>pom</packaging>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0-${revision}</version>
     <modules>
         <module>dgindexer</module>
         <module>testIT</module>

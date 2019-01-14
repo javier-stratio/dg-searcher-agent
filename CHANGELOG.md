@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 (upcoming)
+## 0.1.0 (January 14, 2019)
 
 * [DGPB-1659] SearchEngine interface securization
 * [DGPB-1693] Add Glossary Business Terms to the search space
