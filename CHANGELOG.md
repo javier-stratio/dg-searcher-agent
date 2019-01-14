@@ -1,6 +1,10 @@
 # Changelog
 
-## 0.1.0 (upcoming)
+## 0.2.0 (upcoming)
+
+* Pending changelog
+
+## 0.1.0-05620aa (Built: January 14, 2019 | Pre-release)
 
 * [DGPB-1659] SearchEngine interface securization
 * [DGPB-1693] Add Glossary Business Terms to the search space
@@ -16,3 +20,4 @@
 * [DGPB-1632] testIT environment setted
 * [DGPB-1631] "Main Manager" Implementation
 * [DGPB-1628] Logic Implementation of Extractor
+
