@@ -23,6 +23,7 @@
         <akka.version>2.5.14</akka.version>
         <debug.suspend>n</debug.suspend>
         <dg.commons.version>0.9.0-f4eecd5</dg.commons.version>
+        <dg.business.glossary>0.2.0-9d51a74</dg.business.glossary>
         <encoding>UTF-8</encoding>
         <http_client_version>4.5.5</http_client_version>
         <json4s_version>3.5.2</json4s_version>
@@ -139,6 +140,12 @@
                 <type>test-jar</type>
                 <scope>test</scope>
                 <version>${dg.commons.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.stratio.governance.bussinesglossary</groupId>
+                <artifactId>dg-businessglossary-api</artifactId>
+                <version>${dg.business.glossary}</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

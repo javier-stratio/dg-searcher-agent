@@ -179,7 +179,7 @@ class PostgresSourceDao(sourceConnectionUrl: String,
   private var status : Option[PostgresPartialIndexationReadState] = None
   start()
 
-  private def start(): Unit = {
+  protected def start(): Unit = {
     // TODO Check this. We do not want to create de schema
     /*
     if (!isDatabaseCreated)
@@ -327,8 +327,8 @@ class PostgresSourceDao(sourceConnectionUrl: String,
     selectFromDataAssetWithWhereStatement.setBoolean(1, true)
     selectFromDataAssetWithWhereStatement.setInt(2, limit)
     selectFromDataAssetWithWhereStatement.setInt(3, offset)
-    val lista = DataAssetES.getValuesFromResult(additionalBusiness.adaptInfo, executeQueryPreparedStatement(selectFromDataAssetWithWhereStatement))
-    (lista.toArray, offset + limit)
+    val list = DataAssetES.getValuesFromResult(additionalBusiness.adaptInfo, executeQueryPreparedStatement(selectFromDataAssetWithWhereStatement))
+    (list.toArray, offset + limit)
   }
 
   def readDataAssetsWhereIdsIn(ids: List[Int]): Array[DataAssetES] = {

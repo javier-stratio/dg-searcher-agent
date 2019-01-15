@@ -41,6 +41,11 @@
             <version>${scalikejdbc.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.stratio.governance.bussinesglossary</groupId>
+            <artifactId>dg-businessglossary-api</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

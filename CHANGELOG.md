@@ -2,7 +2,7 @@
 
 ## 0.2.0 (upcoming)
 
-* Pending changelog
+* [DGPB-1629] Integration PostgreSQL Test
 
 ## 0.1.0-05620aa (Built: January 14, 2019 | Pre-release)
 

@@ -1,17 +1,17 @@
 package com.stratio.governance.agent.search.testit
 
-
-import com.stratio.governance.agent.search.testit.utils.Configuration
-import com.stratio.governance.agent.searcher.actors.dao.searcher.{IndexerDomain, IndexerDomains, Indexer}
+import com.stratio.governance.agent.searcher.actors.dao.searcher.{Indexer, IndexerDomain, IndexerDomains}
+import com.stratio.governance.agent.searcher.actors.manager.DGManager
 import com.stratio.governance.agent.searcher.http.defimpl.DGHttpManager
 import com.stratio.governance.agent.searcher.http.{HttpException, HttpManager}
+import com.stratio.governance.agent.searcher.main.AppConf
 import org.json4s.DefaultFormats
 import org.json4s.native.JsonMethods.parse
 import org.scalatest.FlatSpec
 
 class SearchITTest extends FlatSpec {
 
-  val httpManager: HttpManager = new DGHttpManager(Configuration.MANAGER_URL, Configuration.INDEXER_URL)
+  val httpManager: HttpManager = new DGHttpManager(AppConf.managerUrl, AppConf.indexerURL)
   implicit val formats: DefaultFormats.type = DefaultFormats
 
   "Unreacheable port " should " launch an exception" in {
@@ -64,7 +64,7 @@ class SearchITTest extends FlatSpec {
 
   "Create model " should " work without errors" in {
 
-    val res = httpManager.insertOrUpdateModel(Configuration.MODEL,"{\"name\":\"Governance Search Test\",\"model\":{\"id\":\"id\",\"language\":\"spanish\",\"fields\":[{\"field\":\"id\",\"name\":\"Name\",\"type\":\"text\",\"searchable\":false,\"sortable\":false,\"aggregable\":false},{\"field\":\"name\",\"name\":\"Name\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":false},{\"field\":\"description\",\"name\":\"Description\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":false},{\"field\":\"metadataPath\",\"name\":\"Metadata Path\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":false},{\"field\":\"type\",\"name\":\"Data Stores\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":true},{\"field\":\"subtype\",\"name\":\"Type\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":true},{\"field\":\"tenant\",\"name\":\"Tenant\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":false},{\"field\":\"active\",\"name\":\"Active\",\"type\":\"boolean\",\"searchable\":true,\"sortable\":true,\"aggregable\":false},{\"field\":\"discoveredAt\",\"name\":\"Access Time\",\"type\":\"date\",\"format\":\"yyyy-MM-dd'T'HH:mm:ss.SSS\",\"searchable\":true,\"sortable\":true,\"aggregable\":false},{\"field\":\"modifiedAt\",\"name\":\"Access Time\",\"type\":\"date\",\"format\":\"yyyy-MM-dd'T'HH:mm:ss.SSS\",\"searchable\":true,\"sortable\":true,\"aggregable\":false},{\"field\":\"businessTerms\",\"name\":\"Business Terms\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":true},{\"field\":\"qualityRules\",\"name\":\"Quality Rules\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":true},{\"field\":\"keys\",\"name\":\"Keys\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":true},{\"field\":\"key.OWNER\",\"name\":\"key.OWNER\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":true},{\"field\":\"key.QUALITY\",\"name\":\"key.QUALITY\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":false}]},\"search_fields\":{\"name\":1,\"description\":1,\"metadataPath\":1,\"type\":1,\"subtype\":1,\"tenant\":1,\"active\":1,\"discoveredAt\":1,\"modifiedAt\":1,\"businessTerms\":1,\"qualityRules\":1,\"keys\":1,\"key.OWNER\":1,\"key.QUALITY\":1}}")
+    val res = httpManager.insertOrUpdateModel(DGManager.MODEL_NAME,"{\"name\":\"Governance Search Test\",\"model\":{\"id\":\"id\",\"language\":\"spanish\",\"fields\":[{\"field\":\"id\",\"name\":\"Name\",\"type\":\"text\",\"searchable\":false,\"sortable\":false,\"aggregable\":false},{\"field\":\"name\",\"name\":\"Name\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":false},{\"field\":\"description\",\"name\":\"Description\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":false},{\"field\":\"metadataPath\",\"name\":\"Metadata Path\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":false},{\"field\":\"type\",\"name\":\"Data Stores\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":true},{\"field\":\"subtype\",\"name\":\"Type\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":true},{\"field\":\"tenant\",\"name\":\"Tenant\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":false},{\"field\":\"active\",\"name\":\"Active\",\"type\":\"boolean\",\"searchable\":true,\"sortable\":true,\"aggregable\":false},{\"field\":\"discoveredAt\",\"name\":\"Access Time\",\"type\":\"date\",\"format\":\"yyyy-MM-dd'T'HH:mm:ss.SSS\",\"searchable\":true,\"sortable\":true,\"aggregable\":false},{\"field\":\"modifiedAt\",\"name\":\"Access Time\",\"type\":\"date\",\"format\":\"yyyy-MM-dd'T'HH:mm:ss.SSS\",\"searchable\":true,\"sortable\":true,\"aggregable\":false},{\"field\":\"businessTerms\",\"name\":\"Business Terms\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":true},{\"field\":\"qualityRules\",\"name\":\"Quality Rules\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":true},{\"field\":\"keys\",\"name\":\"Keys\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":true},{\"field\":\"key.OWNER\",\"name\":\"key.OWNER\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":true},{\"field\":\"key.QUALITY\",\"name\":\"key.QUALITY\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":false}]},\"search_fields\":{\"name\":1,\"description\":1,\"metadataPath\":1,\"type\":1,\"subtype\":1,\"tenant\":1,\"active\":1,\"discoveredAt\":1,\"modifiedAt\":1,\"businessTerms\":1,\"qualityRules\":1,\"keys\":1,\"key.OWNER\":1,\"key.QUALITY\":1}}")
 
     // Getting here is to work well
     assert(true)
@@ -75,7 +75,7 @@ class SearchITTest extends FlatSpec {
 
     val data = "[{\"id\":1,\"name\":\"HdfsStore\",\"description\":\"Empty DataStore\",\"metadataPath\":\"emptyDatastore:\",\"type\":\"HDFS\",\"subtype\":\"Table\",\"tenant\":\"stratio\",\"dicoveredAt\":\"2018-09-28T20:45:00.000\",\"modifiedAt\":\"2018-09-28T20:45:00.000\"}]";
 
-    val res = httpManager.partialPostRequest(Configuration.MODEL, data)
+    val res = httpManager.partialPostRequest(DGManager.MODEL_NAME, data)
     val json = parse(res)
     val stats: Indexer  = json.extract[Indexer]
 
@@ -98,7 +98,7 @@ class SearchITTest extends FlatSpec {
 
   "Total Indexation Error case " should " abort total indexation process" in {
 
-    val init = httpManager.initTotalIndexationProcess(Configuration.MODEL)
+    val init = httpManager.initTotalIndexationProcess(DGManager.MODEL_NAME)
     val jsonInit = parse(init)
     val domain: IndexerDomain  = jsonInit.extract[IndexerDomain]
 
@@ -107,7 +107,7 @@ class SearchITTest extends FlatSpec {
     val token = domain.token
     assert(token.isDefined)
 
-    httpManager.cancelTotalIndexationProcess(Configuration.MODEL, token.get)
+    httpManager.cancelTotalIndexationProcess(DGManager.MODEL_NAME, token.get)
 
     // Getting here is to work well
     assert(true)
@@ -117,7 +117,7 @@ class SearchITTest extends FlatSpec {
   "Total Indexation Succeed case " should " persist three registers" in {
 
     // Init process
-    val init = httpManager.initTotalIndexationProcess(Configuration.MODEL)
+    val init = httpManager.initTotalIndexationProcess(DGManager.MODEL_NAME)
     val jsonInit = parse(init)
     val domain: IndexerDomain  = jsonInit.extract[IndexerDomain]
 
@@ -126,11 +126,11 @@ class SearchITTest extends FlatSpec {
     val token = domain.token
     assert(token.isDefined)
 
-    httpManager.insertOrUpdateModel(Configuration.MODEL,"{\"name\":\"Governance Search Test\",\"model\":{\"id\":\"id\",\"language\":\"spanish\",\"fields\":[{\"field\":\"id\",\"name\":\"Name\",\"type\":\"text\",\"searchable\":false,\"sortable\":false,\"aggregable\":false},{\"field\":\"name\",\"name\":\"Name\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":false},{\"field\":\"description\",\"name\":\"Description\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":false},{\"field\":\"metadataPath\",\"name\":\"Metadata Path\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":false},{\"field\":\"type\",\"name\":\"Data Stores\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":true},{\"field\":\"subtype\",\"name\":\"Type\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":true},{\"field\":\"tenant\",\"name\":\"Tenant\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":false},{\"field\":\"active\",\"name\":\"Active\",\"type\":\"boolean\",\"searchable\":true,\"sortable\":true,\"aggregable\":false},{\"field\":\"discoveredAt\",\"name\":\"Access Time\",\"type\":\"date\",\"format\":\"yyyy-MM-dd'T'HH:mm:ss.SSS\",\"searchable\":true,\"sortable\":true,\"aggregable\":false},{\"field\":\"modifiedAt\",\"name\":\"Access Time\",\"type\":\"date\",\"format\":\"yyyy-MM-dd'T'HH:mm:ss.SSS\",\"searchable\":true,\"sortable\":true,\"aggregable\":false},{\"field\":\"businessTerms\",\"name\":\"Business Terms\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":true},{\"field\":\"qualityRules\",\"name\":\"Quality Rules\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":true},{\"field\":\"keys\",\"name\":\"Keys\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":true},{\"field\":\"key.OWNER\",\"name\":\"key.OWNER\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":true},{\"field\":\"key.QUALITY\",\"name\":\"key.QUALITY\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":true}]},\"search_fields\":{\"name\":1,\"description\":1,\"metadataPath\":1,\"type\":1,\"subtype\":1,\"tenant\":1,\"active\":1,\"discoveredAt\":1,\"modifiedAt\":1,\"businessTerms\":1,\"qualityRules\":1,\"keys\":1,\"key.OWNER\":3,\"key.QUALITY\":3}}")
+    httpManager.insertOrUpdateModel(DGManager.MODEL_NAME,"{\"name\":\"Governance Search Test\",\"model\":{\"id\":\"id\",\"language\":\"spanish\",\"fields\":[{\"field\":\"id\",\"name\":\"Name\",\"type\":\"text\",\"searchable\":false,\"sortable\":false,\"aggregable\":false},{\"field\":\"name\",\"name\":\"Name\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":false},{\"field\":\"description\",\"name\":\"Description\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":false},{\"field\":\"metadataPath\",\"name\":\"Metadata Path\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":false},{\"field\":\"type\",\"name\":\"Data Stores\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":true},{\"field\":\"subtype\",\"name\":\"Type\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":true},{\"field\":\"tenant\",\"name\":\"Tenant\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":false},{\"field\":\"active\",\"name\":\"Active\",\"type\":\"boolean\",\"searchable\":true,\"sortable\":true,\"aggregable\":false},{\"field\":\"discoveredAt\",\"name\":\"Access Time\",\"type\":\"date\",\"format\":\"yyyy-MM-dd'T'HH:mm:ss.SSS\",\"searchable\":true,\"sortable\":true,\"aggregable\":false},{\"field\":\"modifiedAt\",\"name\":\"Access Time\",\"type\":\"date\",\"format\":\"yyyy-MM-dd'T'HH:mm:ss.SSS\",\"searchable\":true,\"sortable\":true,\"aggregable\":false},{\"field\":\"businessTerms\",\"name\":\"Business Terms\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":true},{\"field\":\"qualityRules\",\"name\":\"Quality Rules\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":true},{\"field\":\"keys\",\"name\":\"Keys\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":true},{\"field\":\"key.OWNER\",\"name\":\"key.OWNER\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":true},{\"field\":\"key.QUALITY\",\"name\":\"key.QUALITY\",\"type\":\"text\",\"searchable\":true,\"sortable\":true,\"aggregable\":true}]},\"search_fields\":{\"name\":1,\"description\":1,\"metadataPath\":1,\"type\":1,\"subtype\":1,\"tenant\":1,\"active\":1,\"discoveredAt\":1,\"modifiedAt\":1,\"businessTerms\":1,\"qualityRules\":1,\"keys\":1,\"key.OWNER\":3,\"key.QUALITY\":3}}")
 
     // Inject data
     val data: String = "[{\"id\":192,\"name\":\"R_REGIONKEY\",\"description\":\"Hdfs parquet column\",\"metadataPath\":\"hdfsFinance:///department/finance/2018>/:region.parquet:R_REGIONKEY:\",\"type\":\"HDFS\",\"subtype\":\"Column\",\"tenant\":\"NONE\",\"dicoveredAt\":\"2018-09-28T20:45:00.000\",\"modifiedAt\":\"2018-09-28T20:45:00.000\"},{\"id\":194,\"name\":\"finance\",\"description\":\"finance Hdfs directory\",\"metadataPath\":\"hdfsFinance://department>/finance:\",\"type\":\"HDFS\",\"subtype\":\"Path\",\"tenant\":\"NONE\",\"dicoveredAt\":\"2018-09-28T20:45:00.000\",\"modifiedAt\":\"2018-09-28T20:45:00.000\",\"keys\":[\"OWNER\"],\"key.OWNER\":\"audit\"},{\"id\":195,\"name\":\"R_REGIONKEY\",\"description\":\"Hdfs parquet column\",\"metadataPath\":\"hdfsFinance:///department/finance/2017>/:region.parquet:R_REGIONKEY\",\"type\":\"HDFS\",\"subtype\":\"Column\",\"tenant\":\"NONE\",\"dicoveredAt\":\"2018-09-28T20:45:00.000\",\"modifiedAt\":\"2018-09-28T20:45:00.000\",\"businessTerms\":[\"Financial\"],\"keys\":[\"OWNER\"],\"key.OWNER\":\"audit\"}]"
-    val res = httpManager.totalPostRequest(Configuration.MODEL, token.get, data)
+    val res = httpManager.totalPostRequest(DGManager.MODEL_NAME, token.get, data)
     val json = parse(res)
     val stats: Indexer  = json.extract[Indexer]
 
@@ -138,7 +138,7 @@ class SearchITTest extends FlatSpec {
     assertResult(3)(stats.documents_stats.created)
 
     // Finish process
-    httpManager.finishTotalIndexationProcess(Configuration.MODEL, token.get)
+    httpManager.finishTotalIndexationProcess(DGManager.MODEL_NAME, token.get)
 
     // Getting here is to work well
     assert(true)
