@@ -2,6 +2,7 @@
 
 ## 0.2.0 (upcoming)
 
+* [DGPD-1661] Jenkins Integration II
 * [DGPB-1629] Integration PostgreSQL Test
 
 ## 0.1.0-05620aa (Built: January 14, 2019 | Pre-release)

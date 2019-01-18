@@ -2,17 +2,25 @@ package com.stratio.governance.agent.searcher.model.utils
 
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
+import java.util.TimeZone
 
 object TimestampUtils {
 
   val DEFAULT_PATTERN: String = "yyyy-MM-dd'T'HH:mm:ss.SSS"
+  val TIME_ZONE: String = "GMT"
   val MIN: Timestamp = TimestampUtils.fromString("1970-01-01T00:00:00.000")
 
-  def fromString(date: String): Timestamp =
-    new Timestamp(new SimpleDateFormat(DEFAULT_PATTERN).parse(date).getTime)
+  def fromString(date: String): Timestamp = {
+    val sdf = new SimpleDateFormat( DEFAULT_PATTERN )
+    sdf.setTimeZone(TimeZone.getTimeZone(TIME_ZONE))
+    new Timestamp(sdf.parse(date).getTime)
+  }
 
-  def toString(timestamp: Timestamp): String =
-    new SimpleDateFormat(DEFAULT_PATTERN).format(timestamp)
+  def toString(timestamp: Timestamp): String = {
+    val sdf = new SimpleDateFormat(DEFAULT_PATTERN)
+    sdf.setTimeZone(TimeZone.getTimeZone(TIME_ZONE))
+    sdf.format(timestamp)
+  }
 
   def toSQLString(timestamp: Timestamp): String =
       s"'${toString(timestamp)}'"

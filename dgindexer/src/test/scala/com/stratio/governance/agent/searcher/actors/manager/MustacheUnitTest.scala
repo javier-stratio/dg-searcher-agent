@@ -3,7 +3,7 @@ package com.stratio.governance.agent.searcher.actors.manager
 import com.vspy.mustache.Mustache
 import org.scalatest.FlatSpec
 
-class MustacheTest extends FlatSpec {
+class MustacheUnitTest extends FlatSpec {
 
   "Simple example " should " work" in {
 
