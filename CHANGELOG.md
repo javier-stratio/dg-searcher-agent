@@ -5,7 +5,7 @@
 * [DGPD-1661] Jenkins Integration II
 * [DGPB-1629] Integration PostgreSQL Test
 
-## 0.1.0-05620aa (Built: January 14, 2019 | Pre-release)
+## 0.1.0-05620aa (Built: January 14, 2019 | Released: January 23, 2019)
 
 * [DGPB-1659] SearchEngine interface securization
 * [DGPB-1693] Add Glossary Business Terms to the search space
