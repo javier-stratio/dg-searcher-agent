@@ -5,6 +5,7 @@ import java.sql.{ResultSet, Timestamp}
 import com.stratio.governance.agent.searcher.model.utils.TimestampUtils
 import org.json4s.JsonAST._
 import org.json4s.JsonDSL._
+import org.json4s.native.JsonMethods._
 import org.slf4j.{Logger, LoggerFactory}
 
 case class DataAssetES(id: String,
@@ -81,13 +82,14 @@ case class DataAssetES(id: String,
 object DataAssetES {
 
   @scala.annotation.tailrec
-  def getValuesFromResult(f: (Int, String, String, String) => (String, String, String, String), resultSet: ResultSet, list: List[DataAssetES] = Nil): List[DataAssetES] = {
+  def getValuesFromResult(f: (Int, String, String, String, JValue) => (String, String, String, String), resultSet: ResultSet, list: List[DataAssetES] = Nil): List[DataAssetES] = {
     if (resultSet.next()) {
       val id = resultSet.getInt(1)
       val metadataPath = resultSet.getString(5)
       val typ = resultSet.getString(6)
       val subType = resultSet.getString(7)
-      val calculated_values: (String, String, String, String) = f(id, typ, subType, metadataPath)
+      val jValue = parseProperties(resultSet.getString(9))
+      val calculated_values: (String, String, String, String) = f(id, typ, subType, metadataPath, jValue)
       val daEs = DataAssetES( calculated_values._1,
         Some(resultSet.getString(2)),
         Some(resultSet.getString(3)),
@@ -105,4 +107,16 @@ object DataAssetES {
       list
     }
   }
+
+  private def parseProperties(properties: String): JValue = {
+    properties match {
+      case null =>
+        parse("{}")
+      case "" =>
+        parse("{}")
+      case _ =>
+        parse(properties)
+    }
+  }
+
 }

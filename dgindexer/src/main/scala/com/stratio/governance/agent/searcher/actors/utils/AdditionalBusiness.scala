@@ -1,11 +1,18 @@
 package com.stratio.governance.agent.searcher.actors.utils
 
+import org.json4s.JsonAST._
 import org.slf4j.{Logger, LoggerFactory}
 
 class AdditionalBusiness(dataAssetPrefix: String, businessTermPrefix: String, btType: String, btSubType: String) {
 
   private lazy val LOG: Logger = LoggerFactory.getLogger(getClass.getName)
-  private val subtypeMap = Map("DS" -> "Data Store", "PATH" -> "Path", "RESOURCE" -> "Table", "FIELD" -> "Column")
+
+  private val STORE_WITH_FILES: String = "HDFS"
+  private val EXTRA_RESOURCE_FOR_FILES: String = "RESOURCE_FILE"
+  private val FILE_DEFINITION_KEY: String = "schema"
+  private val FILE_DEFINITION_VALUE: String = "na"
+
+  private val subtypeMap = Map("DS" -> "Data Store", "PATH" -> "Path", "RESOURCE" -> "Table", EXTRA_RESOURCE_FOR_FILES -> "File", "FIELD" -> "Column")
 
   // Additional union/Query to obtain Business Terms for Total indexation
   def getBTTotalIndexationsubquery(schema: String, businessAsset: String, businessAssetType: String): String = {
@@ -23,7 +30,7 @@ class AdditionalBusiness(dataAssetPrefix: String, businessTermPrefix: String, bt
   }
 
   // Retrieve the enriched (id_extended and dataStore) information given certain parameters of a Search Document
-  def adaptInfo(id: Int, typ: String, subtype: String, metadataPath: String): (String, String, String, String) = {
+  def adaptInfo(id: Int, typ: String, subtype: String, metadataPath: String, properties: JValue): (String, String, String, String) = {
     val idExtended: String = subtype match {
       case `btSubType` =>
         businessTermPrefix + id.toString
@@ -44,7 +51,24 @@ class AdditionalBusiness(dataAssetPrefix: String, businessTermPrefix: String, bt
         }
     }
     val typeFormatted: String = typ.toLowerCase.capitalize
-    val subTypeMapped: Option[String] = subtypeMap.get(subtype)
+    val subTypeMapped: Option[String] = subtype match {
+      case "RESOURCE" =>
+        if (typ == STORE_WITH_FILES) {
+          val schema: List[String] = for {
+            JObject(child) <- properties
+            JField(FILE_DEFINITION_KEY, JString(sch)) <- child
+          } yield sch
+          if ( !schema.isEmpty && (schema(0) == FILE_DEFINITION_VALUE) ) {
+            subtypeMap.get( EXTRA_RESOURCE_FOR_FILES )
+          } else {
+            subtypeMap.get( subtype )
+          }
+        } else {
+          subtypeMap.get( subtype )
+        }
+      case _ =>
+        subtypeMap.get(subtype)
+    }
     (idExtended, dataStore, typeFormatted, if (subTypeMapped.isDefined) subTypeMapped.get else subtype)
   }
 

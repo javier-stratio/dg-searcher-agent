@@ -2,6 +2,7 @@
 
 ## 0.2.0 (upcoming)
 
+* [DGPD-1774] Sync Resources with properties: schema=na to File
 * [DGPD-1661] Jenkins Integration II
 * [DGPB-1629] Integration PostgreSQL Test
 
