@@ -2,7 +2,7 @@
   "name": "Governance Search",
   "model": {
     "id": "id",
-    "language": "spanish",
+    "language": "english",
     "fields": [
       {
         "field": "id",
