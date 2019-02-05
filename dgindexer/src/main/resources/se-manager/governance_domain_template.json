@@ -38,7 +38,7 @@
       },
       {
         "field": "metadataPath",
-        "name": "Metadata Path",
+        "name": "Metadata path",
         "type": "text",
         "searchable": true,
         "sortable": true,
@@ -46,7 +46,7 @@
       },
       {
         "field": "type",
-        "name": "Source Type",
+        "name": "Source type",
         "type": "text",
         "searchable": true,
         "sortable": true,
@@ -54,7 +54,7 @@
       },
       {
         "field": "subtype",
-        "name": "Type",
+        "name": "Asset type",
         "type": "text",
         "searchable": true,
         "sortable": true,
@@ -78,7 +78,7 @@
       },
       {
         "field": "discoveredAt",
-        "name": "Access Time",
+        "name": "Access time",
         "type": "date",
         "format": "yyyy-MM-dd'T'HH:mm:ss.SSS",
         "searchable": true,
@@ -87,7 +87,7 @@
       },
       {
         "field": "modifiedAt",
-        "name": "Access Time",
+        "name": "Access time",
         "type": "date",
         "format": "yyyy-MM-dd'T'HH:mm:ss.SSS",
         "searchable": true,
@@ -104,7 +104,7 @@
       },
       {
         "field": "businessTerms",
-        "name": "Business Terms",
+        "name": "Business terms",
         "type": "text",
         "searchable": true,
         "sortable": true,

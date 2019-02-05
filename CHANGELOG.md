@@ -2,6 +2,7 @@
 
 ## 0.2.0 (upcoming)
 
+* [DGPB-1793] Change 'Type' facet for 'Asset type'
 * [DGPB-1779] Healthchecks: Add pending services 
 * [DGPB-1778] dg-agent-searcher: Sync index by relevance
 * [DGPD-1774] Sync Resources with properties: schema=na to File
