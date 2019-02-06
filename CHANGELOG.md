@@ -1,6 +1,10 @@
 # Changelog
 
-## 0.2.0 (upcoming)
+## 0.3.0 (upcoming)
+
+* Pending changelog
+
+## 0.2.0-5ce9323 (Built: February 06, 2019 | Pre-release)
 
 * [DGPB-1818] Logs to indicate 'cancelling' state
 * [DGPB-1797] Error starting Agent after error
