@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorRef}
 import java.util.UUID.randomUUID
 
 import com.stratio.governance.agent.searcher.actors.extractor.DGExtractor.{PartialIndexationMessageInit, TotalIndexationMessageInit}
-import com.stratio.governance.agent.searcher.actors.manager.dao.SearcherDao
+import com.stratio.governance.agent.searcher.actors.manager.dao.{Available, Busy, Error, SearcherDao, TotalIndexationState}
 import com.stratio.governance.agent.searcher.actors.manager.utils.ManagerUtils
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -21,6 +21,8 @@ class DGManager(extractor: ActorRef, managerUtils: ManagerUtils, searcherDao: Se
   val TOTAL_INDEXATION: String = "total_indexation"
   val PARTIAL_INDEXATION: String = "partial_indexation"
 
+  private val UNRECOVER_ERROR: String = "Governance Search domain is in an unrecoverable Error State. Total indexation can not be done!!. Contact your administrator."
+
   context.system.scheduler.scheduleOnce(1000 millis, self, BOOT)
 
   var active_partial_indexation: Boolean = false
@@ -35,14 +37,18 @@ class DGManager(extractor: ActorRef, managerUtils: ManagerUtils, searcherDao: Se
         self ! FIRST_TOTAL_INDEXATION
       } else {
         // Let's check if any total indexation is in progress. This must be an error
-        val check: (Boolean, Option[String]) = searcherDao.checkTotalIndexation(DGManager.MODEL_NAME)
-        if (check._1) {
-          // Such case, let's cancel launch total indexation and start another one new again
-          searcherDao.cancelTotalIndexationProcess(DGManager.MODEL_NAME, check._2.get)
-          launchTemporizations()
-          self ! TOTAL_INDEXATION
-        } else {
-          launchTemporizations()
+        val check: (TotalIndexationState, Option[String]) = searcherDao.checkTotalIndexation(DGManager.MODEL_NAME)
+        check._1 match {
+          case Busy =>
+            // Such case, let's cancel launch total indexation and start another one new again
+            searcherDao.cancelTotalIndexationProcess (DGManager.MODEL_NAME, check._2.get)
+            launchTemporizations
+            self ! TOTAL_INDEXATION
+          case Available =>
+            launchTemporizations
+          case Error =>
+            LOG.error(UNRECOVER_ERROR)
+            launchTemporizations
         }
       }
 
@@ -50,11 +56,19 @@ class DGManager(extractor: ActorRef, managerUtils: ManagerUtils, searcherDao: Se
 
     case PARTIAL_INDEXATION => {
       LOG.info("PARTIAL_INDEXATION INIT event received")
-      val check: (Boolean, Option[String]) = searcherDao.checkTotalIndexation(DGManager.MODEL_NAME)
-      if (!active_partial_indexation && !check._1 ) {
-        launchPartialIndexation
+      if (active_partial_indexation) {
+        LOG.warn("partial indexation can not be executed because there is another partial indexation")
       } else {
-        LOG.warn("partial indexation can not be executed because there is another indexation (total or partial) on course")
+        val check: (TotalIndexationState, Option[String]) = searcherDao.checkTotalIndexation(DGManager.MODEL_NAME)
+        check._1 match {
+          case Busy =>
+            LOG.warn("partial indexation can not be executed because there is a total indexation on course")
+          case Available =>
+            launchPartialIndexation
+          case Error =>
+            LOG.warn("partial indexation will be executed but there have been an error in last total indexation")
+            launchPartialIndexation
+        }
       }
     }
 
@@ -81,22 +95,24 @@ class DGManager(extractor: ActorRef, managerUtils: ManagerUtils, searcherDao: Se
       if (active_partial_indexation) {
         totalIndexationPending = true
       } else {
-        val check: (Boolean, Option[String]) = searcherDao.checkTotalIndexation(DGManager.MODEL_NAME)
-        if (!check._1) {
-
-          val token: String = searcherDao.initTotalIndexationProcess(DGManager.MODEL_NAME)
-          try {
-            val model = managerUtils.getGeneratedModel()
-            searcherDao.insertModel(DGManager.MODEL_NAME, model)
-            launchTotalIndexation(token)
-          } catch {
-            case e: Throwable => {
-              LOG.error("Error while inserting model. token " + token, e)
-              searcherDao.cancelTotalIndexationProcess(DGManager.MODEL_NAME, token)
+        val check: (TotalIndexationState, Option[String]) = searcherDao.checkTotalIndexation(DGManager.MODEL_NAME)
+        check._1 match {
+          case Available =>
+            val token: String = searcherDao.initTotalIndexationProcess(DGManager.MODEL_NAME)
+            try {
+              val model = managerUtils.getGeneratedModel()
+              searcherDao.insertModel(DGManager.MODEL_NAME, model)
+              launchTotalIndexation(token)
+            } catch {
+              case e: Throwable => {
+                LOG.error("Error while inserting model. token " + token, e)
+                searcherDao.cancelTotalIndexationProcess(DGManager.MODEL_NAME, token)
+              }
             }
-          }
-        } else {
-          LOG.warn("total indexation can not be executed because there is another one on course (" + check._2.get + ")")
+          case Busy =>
+            LOG.warn("total indexation can not be executed because there is another one on course (" + check._2.get + ")")
+          case Error =>
+            LOG.error(UNRECOVER_ERROR)
         }
       }
     }

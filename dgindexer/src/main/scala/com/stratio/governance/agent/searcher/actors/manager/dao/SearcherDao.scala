@@ -2,13 +2,18 @@ package com.stratio.governance.agent.searcher.actors.manager.dao
 
 import com.stratio.governance.agent.searcher.actors.manager.utils.ManagerUtilsException
 
+sealed trait TotalIndexationState
+case object Busy extends TotalIndexationState
+case object Available extends TotalIndexationState
+case object Error extends TotalIndexationState
+
 trait SearcherDao {
 
   @throws(classOf[ManagerUtilsException])
   def getModels(): List[String]
 
   @throws(classOf[ManagerUtilsException])
-  def checkTotalIndexation(model: String): (Boolean, Option[String])
+  def checkTotalIndexation(model: String): (TotalIndexationState, Option[String])
 
   @throws(classOf[ManagerUtilsException])
   def insertModel(model: String, jsonModel: String): Unit

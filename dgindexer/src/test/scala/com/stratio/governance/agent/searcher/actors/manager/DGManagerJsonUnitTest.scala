@@ -1,7 +1,7 @@
 package com.stratio.governance.agent.searcher.actors.manager
 
 import com.stratio.governance.agent.searcher.actors.dao.searcher.{DGSearcherDao, DGSearcherDaoException}
-import com.stratio.governance.agent.searcher.actors.manager.dao.SourceDao
+import com.stratio.governance.agent.searcher.actors.manager.dao.{Available, Busy, SourceDao}
 import com.stratio.governance.agent.searcher.actors.manager.utils.defimpl.DGManagerUtils
 import com.stratio.governance.agent.searcher.http.{HttpException, HttpManager}
 import org.apache.http.client.methods.CloseableHttpResponse
@@ -53,7 +53,7 @@ class SourceDaoMock extends SourceDao {
 
 }
 
-class DGManagerJsonTest extends FlatSpec {
+class DGManagerJsonUnitTest extends FlatSpec {
 
   val httpManager: HttpManager = new HttpManagerMock()
   val sourceDao: SourceDao = new SourceDaoMock()
@@ -62,19 +62,19 @@ class DGManagerJsonTest extends FlatSpec {
 
   "First checkTotalIndexation " should " parse true case" in {
     val res = searchDao.checkTotalIndexation("movies")
-    assertResult(true)(res._1)
+    assertResult(Busy)(res._1)
     assertResult(Some("3e33463a-2ed9-4c15-87c0-1a520e3c1cb2"))(res._2)
   }
 
   "Second checkTotalIndexation " should " parse false case" in {
     val res = searchDao.checkTotalIndexation("governance_search")
-    assertResult(false)(res._1)
+    assertResult(Available)(res._1)
     assertResult(None)(res._2)
   }
 
   "Third checkTotalIndexation " should " parse null case" in {
     val res = searchDao.checkTotalIndexation("otherthing")
-    assertResult(false)(res._1)
+    assertResult(Available)(res._1)
     assertResult(None)(res._2)
   }
 

@@ -2,6 +2,8 @@
 
 ## 0.2.0 (upcoming)
 
+* [DGPB-1818] Logs to indicate 'cancelling' state
+* [DGPB-1797] Error starting Agent after error
 * [DGPB-1793] Change 'Type' facet for 'Asset type'
 * [DGPB-1779] Healthchecks: Add pending services 
 * [DGPB-1778] dg-agent-searcher: Sync index by relevance

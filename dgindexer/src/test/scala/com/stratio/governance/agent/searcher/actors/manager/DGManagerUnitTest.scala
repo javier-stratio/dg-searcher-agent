@@ -5,7 +5,7 @@ import java.util.concurrent.Semaphore
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.util.Timeout
 import com.stratio.governance.agent.searcher.actors.extractor.DGExtractor.{PartialIndexationMessageInit, TotalIndexationMessageInit}
-import com.stratio.governance.agent.searcher.actors.manager.dao.SearcherDao
+import com.stratio.governance.agent.searcher.actors.manager.dao.{Available, SearcherDao, TotalIndexationState}
 import com.stratio.governance.agent.searcher.actors.manager.scheduler.Scheduler
 import com.stratio.governance.agent.searcher.actors.manager.scheduler.defimpl.DGScheduler
 import com.stratio.governance.agent.searcher.actors.manager.utils.ManagerUtils
@@ -84,12 +84,12 @@ class DGSearcherDaoMock(s: Semaphore, testNumber: Int) extends SearcherDao {
     totalIndexationSteps
   }
 
-  override def checkTotalIndexation(model: String): (Boolean, Option[String]) = {
+  override def checkTotalIndexation(model: String): (TotalIndexationState, Option[String]) = {
     totalIndexationSteps += 1
     checked = true
     testNumber match {
       case _ => {
-        return (false, None)
+        return (Available, None)
       }
     }
   }

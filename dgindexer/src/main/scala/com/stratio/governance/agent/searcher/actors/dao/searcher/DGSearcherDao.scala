@@ -1,5 +1,6 @@
 package com.stratio.governance.agent.searcher.actors.dao.searcher
 
+import com.stratio.governance.agent.searcher.actors.manager.dao.{Available, Busy, Error, TotalIndexationState}
 import com.stratio.governance.agent.searcher.http.{HttpException, HttpManager}
 import org.json4s._
 import org.json4s.native.JsonMethods.parse
@@ -14,8 +15,12 @@ class DGSearcherDao(httpManager: HttpManager) extends
   implicit val formats: DefaultFormats.type = DefaultFormats
 
   val FINAL_STATUS_OK: String = "ENDED"
-  val FINAL_STATUS_NOK: String = "CANCELLED"
-  val INDEXING_STATUS: String = "INDEXING"
+  val FINAL_STATUS_CANCELLED: String = "CANCELLED"
+  val FINAL_STATUS_ERROR: String = "ERROR"
+  val TRANSITION_STATUS_INDEXING: String = "INDEXING"
+  val TRANSITION_STATUS_INITIALIZING: String = "INITIALIZING"
+  val TRANSITION_STATUS_ENDING: String = "ENDING"
+  val TRANSITION_STATUS_CANCELLING: String = "CANCELLING"
 
   def indexPartial(model:  String, doc: String): Option[DGSearcherDaoException] = {
     try {
@@ -75,7 +80,7 @@ class DGSearcherDao(httpManager: HttpManager) extends
   }
 
   @throws(classOf[DGSearcherDaoException])
-  override def checkTotalIndexation(model: String): (Boolean, Option[String]) = {
+  override def checkTotalIndexation(model: String): (TotalIndexationState, Option[String]) = {
     try {
       LOG.debug("checking Total Indexation ...")
       val init = System.currentTimeMillis()
@@ -84,15 +89,18 @@ class DGSearcherDao(httpManager: HttpManager) extends
       val domains: IndexerDomains = json.extract[IndexerDomains]
       val domain: List[IndexerDomain] = domains.domains.filter(d => d.domain.contains(model))
       if (domain.isEmpty) {
-        (false, None)
+        (Available, None)
       } else {
         val dom: IndexerDomain = domain.head
-        if (dom.status.isEmpty || dom.status.contains(FINAL_STATUS_OK) || dom.status.contains(FINAL_STATUS_NOK)) {
-          LOG.debug("Total Indexation checked FALSE. time elapsed: " + (System.currentTimeMillis()-init))
-          (false, None)
+        if (dom.status.isEmpty || List(FINAL_STATUS_OK, FINAL_STATUS_CANCELLED, FINAL_STATUS_ERROR).contains(dom.status.get) ) {
+          LOG.debug("Total Indexation checked: Available. time elapsed: " + (System.currentTimeMillis()-init))
+          (Available, None)
+        } else if (List(TRANSITION_STATUS_INITIALIZING, TRANSITION_STATUS_INDEXING, TRANSITION_STATUS_ENDING).contains(dom.status.get)) {
+          LOG.debug("Total Indexation checked: Busy. time elapsed: " + (System.currentTimeMillis()-init))
+          (Busy, dom.token)
         } else {
-          LOG.debug("Total Indexation checked TRUE. time elapsed: " + (System.currentTimeMillis()-init))
-          (true, dom.token)
+          LOG.debug("Total Indexation checked: Error. time elapsed: " + (System.currentTimeMillis()-init))
+          (Error, dom.token)
         }
       }
     } catch {
@@ -129,11 +137,11 @@ class DGSearcherDao(httpManager: HttpManager) extends
       val json = parse(result)
       val domain: IndexerDomain = json.extract[IndexerDomain]
 
-      if (domain.status.contains(INDEXING_STATUS)) {
+      if (domain.status.contains(TRANSITION_STATUS_INDEXING)) {
         LOG.debug("total indexing for model " + model + " and token: " + domain.token.get + ". time elapsed: " + (System.currentTimeMillis()-init))
         domain.token.get
       } else {
-        throw DGSearcherDaoException("status is not " + INDEXING_STATUS)
+        throw DGSearcherDaoException("status is not " + TRANSITION_STATUS_INDEXING)
       }
     } catch {
       case HttpException(code, req, resp) =>
