@@ -1,6 +1,10 @@
 # Changelog
 
-## 0.3.0 (upcoming)
+## 0.4.0 (upcoming)
+
+* Pending changelog
+
+## 0.3.0-1cf6d84 (Built: February 20, 2019 | Pre-release)
 
 * [DGPB-1884] Some documents are not indexed when they have to do it
 * [DGPB-1849] Searcher by relevance is not working fine
