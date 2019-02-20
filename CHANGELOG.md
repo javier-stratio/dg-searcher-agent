@@ -2,6 +2,7 @@
 
 ## 0.3.0 (upcoming)
 
+* [DGPB-1884] Some documents are not indexed when they have to do it
 * [DGPB-1849] Searcher by relevance is not working fine
 
 ## 0.2.0-d728be8 (Built: February 07, 2019 | Released: February 18, 2019)

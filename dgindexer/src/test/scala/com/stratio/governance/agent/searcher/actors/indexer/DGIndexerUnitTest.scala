@@ -133,7 +133,7 @@ class SASTExtractor(indexer: ActorRef, params: ExtractorTestParams) extends Acto
 
 }
 
-class DGIndexerTest extends FlatSpec {
+class DGIndexerUnitTest extends FlatSpec {
 
   "Extractor Completed Events Simulation" should "be processed in Indexer Mock" in {
 
@@ -180,6 +180,25 @@ class DGIndexerTest extends FlatSpec {
     assertResult(reference)(result)
 
   }
+
+  "Extractor DGPB-XXXX Events Simulation" should "be processed in Indexer Mock" in {
+
+    val milis: Long = 1543424486000l
+    val reference: String = "[{\"id\":\"da/2\",\"name\":\"MyDataStore\",\"description\":\"My DataStore\",\"metadataPath\":\"MyDataStore:\",\"type\":\"SQL\",\"subtype\":\"DS\",\"tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"dataStore\":\"MyDataStore\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.QUALITY\":\"High\",\"key.OWNER\":\"finantial\"},{\"id\":\"bt/2\",\"name\":\"financial\",\"description\":\"Financial Business Term\",\"metadataPath\":\"\",\"type\":\"GLOSSARY\",\"subtype\":\"BUSINESS_TERMS\",\"tenant\":\"\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-28T17:01:26.000\",\"dataStore\":\"GLOSSARY\"}]"
+    val chunk: Array[DataAssetES] = Array(
+      new DataAssetES("da/2",Option("MyDataStore"),None,Option("My DataStore"),"MyDataStore:","SQL","DS","stratio",true, new Timestamp(milis), new Timestamp(milis)),
+      new DataAssetES("bt/2",Option("financial"),None,Option("Financial Business Term"),"","GLOSSARY","BUSINESS_TERMS","",true, new Timestamp(milis), new Timestamp(milis))
+    )
+    chunk.foreach( (da: DataAssetES) => {
+      da.dataStore = getDataStore(da.tpe, da.metadataPath)
+    })
+
+    val result = process(chunk, noAdds = false)
+
+    assertResult(reference)(result)
+
+  }
+
 
   private def process(chunk: Array[DataAssetES], noAdds: Boolean): String = {
     val s: Semaphore = new Semaphore(1)

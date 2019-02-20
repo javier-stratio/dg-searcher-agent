@@ -20,7 +20,12 @@ class DGIndexer(params: IndexerParams) extends Actor {
       case IndexerEvent(chunk, token) =>
         try {
           LOG.debug("handling Indexer Event. token: " + token)
-          val batches: List[Array[DataAssetES]] = chunk.grouped(params.getPartition).toList
+
+          // first at all separate dataAsset information from additional, this last one will not be process here
+          val realda: Array[DataAssetES] = chunk.filter(a => !params.getAdditionalBusiness.isAdaptable(a.tpe))
+          val additionalda: Array[DataAssetES] = chunk.filter(a => params.getAdditionalBusiness.isAdaptable(a.tpe))
+
+          val batches: List[Array[DataAssetES]] = realda.grouped(params.getPartition).toList
 
           val batchesEnriched: List[Array[DataAssetES]] = batches.map((x: Array[DataAssetES]) => {
 
@@ -66,7 +71,7 @@ class DGIndexer(params: IndexerParams) extends Actor {
 
           val list: Array[DataAssetES] = batchesEnriched.fold[Array[DataAssetES]](Array())((a: Array[DataAssetES], b: Array[DataAssetES]) => {
             a ++ b
-          })
+          }) ++ additionalda
 
           if (!list.isEmpty) {
             val jlist: JArray = JArray( list.map( a => a.getJsonObject ).toList )
