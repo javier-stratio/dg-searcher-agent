@@ -124,16 +124,16 @@
     ]
   },
   "search_fields": {
-    "name": 9,
-    "alias": 1000,
-    "description": 8,
-    "type": 2,
-    "subtype": 2,
-    "tenant": 2,
-    "discoveredAt": 2,
-    "modifiedAt": 2,
-    "businessTerms": 50,
-    "keys": 50
+    "name": RELEVANCE_NAME,
+    "alias": RELEVANCE_ALIAS,
+    "description": RELEVANCE_DESCRIPTION,
+    "type": 1,
+    "subtype": 1,
+    "tenant": 1,
+    "discoveredAt": 1,
+    "modifiedAt": 1,
+    "businessTerms": RELEVANCE_BUSINESSTERM,
+    "keys": RELEVANCE_KEY
     {{#keySearchs}}
       {{> keySearch}}
     {{/keySearchs}}

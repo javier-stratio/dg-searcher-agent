@@ -42,7 +42,7 @@ object BootDGIndexer extends App with LazyLogging {
     val scheduler = new DGScheduler(system, AppConf.schedulerPartialEnabled, AppConf.schedulerPartialInterval, AppConf.schedulerTotalEnabled, AppConf.schedulerTotalCronExpresion)
     scheduler.createTotalIndexerScheduling()
 
-    val dgManagerParams: DGManagerUtils = new DGManagerUtils(scheduler, sourceDao)
+    val dgManagerParams: DGManagerUtils = new DGManagerUtils(scheduler, sourceDao, List[Int](AppConf.managerRelevanceAlias, AppConf.managerRelevanceName, AppConf.managerRelevanceDescription, AppConf.managerRelevanceBusinessterm, AppConf.managerRelevanceKey, AppConf.managerRelevanceValue).map(i => i.toString))
     val dgExtractorParams: DGExtractorParams = DGExtractorParams(sourceDao, AppConf.extractorLimit, AppConf.extractorPeriodMs, exponentialBackOff, AppConf.extractorDelayMs, manager_name)
     val dgIndexerParams: DGIndexerParams = new DGIndexerParams(sourceDao, searcherDao, AppConf.indexerPartition, additionalBusiness)
 

@@ -1,5 +1,6 @@
 package com.stratio.governance.agent.searcher.main
 
+import com.stratio.governance.agent.searcher.actors.manager.utils.defimpl.RelevanceRef
 import com.typesafe.config.ConfigFactory
 
 import scala.util.Properties
@@ -74,5 +75,16 @@ object AppConf {
 
   lazy val additionalBusinessBusinessTermSubtype: String = envOrElseConfigOrElseDefault("additionalBusiness.businessTerm.subtype","BUSINESS_TERM")
 
+  lazy val managerRelevanceAlias: Int = envOrElseConfigOrElseDefault(RelevanceRef.RELEVANCE_ALIAS_REF._1,1000)
+
+  lazy val managerRelevanceName: Int = envOrElseConfigOrElseDefault(RelevanceRef.RELEVANCE_NAME_REF._1,10)
+
+  lazy val managerRelevanceDescription: Int = envOrElseConfigOrElseDefault(RelevanceRef.RELEVANCE_DESCRIPTION_REF._1,100)
+
+  lazy val managerRelevanceBusinessterm: Int = envOrElseConfigOrElseDefault(RelevanceRef.RELEVANCE_BUSINESSTERM_REF._1,50)
+
+  lazy val managerRelevanceKey: Int = envOrElseConfigOrElseDefault(RelevanceRef.RELEVANCE_KEY_REF._1,50)
+
+  lazy val managerRelevanceValue: Int = envOrElseConfigOrElseDefault(RelevanceRef.RELEVANCE_VALUE_REF._1, 50)
 
 }

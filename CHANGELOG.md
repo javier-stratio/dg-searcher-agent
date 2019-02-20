@@ -2,7 +2,7 @@
 
 ## 0.3.0 (upcoming)
 
-* Pending changelog
+* [DGPB-1849] Searcher by relevance is not working fine
 
 ## 0.2.0-d728be8 (Built: February 07, 2019 | Released: February 18, 2019)
 
