@@ -11,11 +11,11 @@ trait SourceDao {
 
   def readDataAssetsSince(offset: Int, limit: Int): (Array[DataAssetES], Int)
 
-  def readDataAssetsWhereIdsIn(ids: List[Int]): Array[DataAssetES]
+  def readDataAssetsWhereMdpsIn(ids: List[String]): Array[DataAssetES]
 
   def readBusinessTermsWhereIdsIn(ids: List[Int]): Array[DataAssetES]
 
-  def readUpdatedDataAssetsIdsSince(state: PostgresPartialIndexationReadState): (List[Int], List[Int], PostgresPartialIndexationReadState)
+  def readUpdatedDataAssetsIdsSince(state: PostgresPartialIndexationReadState): (List[String], List[Int], PostgresPartialIndexationReadState)
 
   def readPartialIndexationState(): PostgresPartialIndexationReadState
 

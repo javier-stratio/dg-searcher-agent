@@ -21,7 +21,7 @@ class AdditionalBusiness(dataAssetPrefix: String, businessTermPrefix: String, bt
 
   // Additional union/Query to extract Business Terms Ids for partial indexation
   def getBTPartialIndexationSubquery1(schema: String, businessAssets:  String, businessAssetsType:  String): String = {
-    s"SELECT ba.id,ba.modified_at,? FROM $schema.$businessAssets as ba, $schema.$businessAssetsType as bat WHERE ba.business_assets_type_id = bat.id and bat.name='TERM' and ba.modified_at > ? "
+    s"SELECT '',ba.id,ba.modified_at,? FROM $schema.$businessAssets as ba, $schema.$businessAssetsType as bat WHERE ba.business_assets_type_id = bat.id and bat.name='TERM' and ba.modified_at > ? "
   }
 
   // Additional union/Query to obtain Business Term from previously retrieved Ids for partial indexation

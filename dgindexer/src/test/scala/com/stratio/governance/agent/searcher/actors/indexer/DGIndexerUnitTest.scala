@@ -32,23 +32,23 @@ class ExtractorTestParams(s: Semaphore, sourceDao: CustomTestSourceDao, chunk: A
 
 }
 class CustomTestSourceDao(noAdds: Boolean) extends ExtractorSourceDao with IndexerSourceDao {
-  override def keyValuePairProcess(ids: Array[Int]): List[KeyValuePair] = {
+  override def keyValuePairProcess(mdps: List[String]): List[KeyValuePair] = {
     if (!noAdds) {
-      val rows: List[List[KeyValuePair]] = ids.map(i => List(KeyValuePair(i, "OWNER", "finantial", "2018-11-29T10:27:00.000"), KeyValuePair(i, "QUALITY", "High", "2018-09-28T20:45:00.000"))).toList
+      val rows: List[List[KeyValuePair]] = mdps.map(md => List(KeyValuePair(md, "OWNER", "finantial", "2018-11-29T10:27:00.000"), KeyValuePair(md, "QUALITY", "High", "2018-09-28T20:45:00.000")))
       rows.fold[List[KeyValuePair]](List())((a: List[KeyValuePair], b: List[KeyValuePair]) => {
         a ++ b
-      }).filter(a => a.getId != 1)
+      }).filter(a => a.getMatadataPath != "EmptyDatastore:")
     } else {
       List[KeyValuePair]()
     }
   }
 
-  override def businessAssets(ids: Array[Int]): List[BusinessAsset] = {
+  override def businessAssets(mdps: List[String]): List[BusinessAsset] = {
     if (!noAdds) {
-      val rows: List[List[BusinessAsset]] = ids.map(i => List(BusinessAsset(i, "RGDP", "RGDP law","APR","TERM","2018-09-28T20:45:00.000"), BusinessAsset(i, "FINANTIAL", "FINANTIAL law","APR","TERM" , "2018-09-28T20:45:00.000"))).toList
+      val rows: List[List[BusinessAsset]] = mdps.map(md => List(BusinessAsset(md, "RGDP", "RGDP law","APR","TERM","2018-09-28T20:45:00.000"), BusinessAsset(md, "FINANTIAL", "FINANTIAL law","APR","TERM" , "2018-09-28T20:45:00.000")))
       rows.fold[List[BusinessAsset]](List())((a: List[BusinessAsset], b: List[BusinessAsset]) => {
         a ++ b
-      }).filter(a => a.getId != 1)
+      }).filter(a => a.getMatadataPath != "EmptyDatastore:")
     } else {
       List[BusinessAsset]()
     }
@@ -58,9 +58,9 @@ class CustomTestSourceDao(noAdds: Boolean) extends ExtractorSourceDao with Index
 
   override def readDataAssetsSince(offset: Int, limit: Int): (Array[DataAssetES], Int) = ???
 
-  override def readDataAssetsWhereIdsIn(ids: List[Int]): Array[DataAssetES] = ???
+  override def readDataAssetsWhereMdpsIn(ids: List[String]): Array[DataAssetES] = ???
 
-  override def readUpdatedDataAssetsIdsSince(state: PostgresPartialIndexationReadState): (List[Int], List[Int], PostgresPartialIndexationReadState) = ???
+  override def readUpdatedDataAssetsIdsSince(state: PostgresPartialIndexationReadState): (List[String], List[Int], PostgresPartialIndexationReadState) = ???
 
   override def readPartialIndexationState(): PostgresPartialIndexationReadState = ???
 

@@ -29,34 +29,34 @@ class DGIndexer(params: IndexerParams) extends Actor {
 
           val batchesEnriched: List[Array[DataAssetES]] = batches.map((x: Array[DataAssetES]) => {
 
-            val ids: Array[Int] = x.filter( dadao => !params.getAdditionalBusiness.isAdaptable(dadao.tpe)).map((dadao: DataAssetES) => dataAssetIdtoInt(dadao.id))
+            val ids: Map[String, Long] = x.filter( dadao => !params.getAdditionalBusiness.isAdaptable(dadao.tpe)).map((dadao: DataAssetES) => (dadao.metadataPath, dataAssetIdtoLong(dadao.id))).toMap
 
-            val functionList: List[Array[Int] => List[EntityRow]] = List(params.getSourceDao.keyValuePairProcess, params.getSourceDao.businessAssets)
+            val functionList: List[List[String] => List[EntityRow]] = List(params.getSourceDao.keyValuePairProcess, params.getSourceDao.businessAssets)
 
             val relatedInfo: List[List[EntityRow]] = functionList.par.map(f => {
-              val erES = f(ids)
+              val erES = f(ids.keySet.toList)
               erES
             }).toList
 
-            val additionals: Array[(Long, List[EntityRow])] = pivotRelatedInfo(relatedInfo)
+            val additionals: Array[(Long, List[EntityRow])] = pivotRelatedInfo(relatedInfo, ids)
             val ids_adds = additionals.map(a => a._1).toList
 
-            val x_adds = x.filter(a => ids_adds.contains(dataAssetIdtoInt(a.id)))
-            val x_noAdds = x.filter(a => !ids_adds.contains(dataAssetIdtoInt(a.id)))
+            val x_adds = x.filter(a => ids_adds.contains(dataAssetIdtoLong(a.id)))
+            val x_noAdds = x.filter(a => !ids_adds.contains(dataAssetIdtoLong(a.id)))
 
             // x_adds management
-            val ordered_x = x_adds.sortWith((a, b) => dataAssetIdtoInt(a.id) < dataAssetIdtoInt(b.id))
+            val ordered_x = x_adds.sortWith((a, b) => dataAssetIdtoLong(a.id) < dataAssetIdtoLong(b.id))
             val ordered_additionales = additionals.sortWith((a, b) => a._1 < b._1)
             val batchEnriched_adds: Array[DataAssetES] = for ((x, a) <- ordered_x zip ordered_additionales) yield {
               var maxTime: Long = x.getModifiedAt
               a._2.foreach {
-                case BusinessAsset(id, name, description, status, tpe, modifiedAt) =>
+                case BusinessAsset(_, name, _, _, _, modifiedAt) =>
                   x.addBusinessTerm(name)
                   val upatedTs: Long = TimestampUtils.toLong(modifiedAt)
                   if (upatedTs > maxTime) {
                     maxTime = upatedTs
                   }
-                case KeyValuePair(id, key, value, updated_at) =>
+                case KeyValuePair(_, key, value, updated_at) =>
                   x.addKeyValue(key, value)
                   val upatedTs: Long = TimestampUtils.toLong(updated_at)
                   if (upatedTs > maxTime) {
@@ -95,18 +95,18 @@ class DGIndexer(params: IndexerParams) extends Actor {
 
   }
 
-  def pivotRelatedInfo(info: List[List[EntityRow]]): Array[(Long,List[EntityRow])] = {
+  def pivotRelatedInfo(info: List[List[EntityRow]], idsMap: Map[String, Long]): Array[(Long,List[EntityRow])] = {
 
     val list_completed: List[EntityRow] = info.fold[List[EntityRow]](List())( (a,b) => { a ++ b } )
-    val list_completed_by_id: Map[Long,List[EntityRow]] =  list_completed.map( e => (e.getId,e) ).groupBy[Long]( a => a._1 ).mapValues( (l: List[(Int,EntityRow)]) => {
+    val list_completed_by_id: Map[Long,List[EntityRow]] =  list_completed.map( e => (idsMap.get(e.getMatadataPath).get,e) ).groupBy[Long]( a => a._1 ).mapValues( (l: List[(Long,EntityRow)]) => {
       l.map( a => a._2 )
     })
 
     list_completed_by_id.toArray[(Long, List[EntityRow])]
   }
 
-  private def dataAssetIdtoInt(identifier: String): Int = {
-    identifier.split("/").last.toInt
+  private def dataAssetIdtoLong(identifier: String): Long = {
+    identifier.split("/").last.toLong
   }
 
 }

@@ -4,7 +4,7 @@ import com.stratio.governance.agent.searcher.model.EntityRow
 
 trait SourceDao {
 
-  def keyValuePairProcess(ids: Array[Int]): List[EntityRow]
+  def keyValuePairProcess(mdps: List[String]): List[EntityRow]
 
-  def businessAssets(ids: Array[Int]): List[EntityRow]
+  def businessAssets(mdps: List[String]): List[EntityRow]
 }

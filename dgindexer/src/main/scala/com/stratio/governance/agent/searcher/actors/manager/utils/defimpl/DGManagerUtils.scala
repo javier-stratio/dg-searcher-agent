@@ -2,8 +2,8 @@ package com.stratio.governance.agent.searcher.actors.manager.utils.defimpl
 
 import com.stratio.governance.agent.searcher.actors.manager.dao.SourceDao
 import com.stratio.governance.agent.searcher.actors.manager.scheduler.Scheduler
+import com.stratio.governance.agent.searcher.actors.manager.utils.defimpl.mustache.Mustache
 import com.stratio.governance.agent.searcher.actors.manager.utils.{ManagerUtils, ManagerUtilsException}
-import com.vspy.mustache.Mustache
 import org.slf4j.{Logger, LoggerFactory}
 
 class DGManagerUtils(scheduler: Scheduler, sourceDao: SourceDao, relevance: List[String]) extends ManagerUtils {

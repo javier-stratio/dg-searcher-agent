@@ -34,18 +34,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.stratio.governance</groupId>
-            <artifactId>model</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.scalikejdbc</groupId>
-            <artifactId>scalikejdbc_2.11</artifactId>
-            <version>${scalikejdbc.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>com.stratio.governance.bussinesglossary</groupId>
             <artifactId>dg-businessglossary-api</artifactId>
             <scope>test</scope>

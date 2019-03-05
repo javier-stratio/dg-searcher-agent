@@ -1,7 +1,7 @@
 package com.stratio.governance.agent.searcher.actors.manager
 
-import com.vspy.mustache.Mustache
 import org.scalatest.FlatSpec
+import com.stratio.governance.agent.searcher.actors.manager.utils.defimpl.mustache.Mustache
 
 class MustacheUnitTest extends FlatSpec {
 

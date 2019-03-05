@@ -24,7 +24,7 @@ import scala.concurrent.Future
 
 class CustomSourceDao(chunk: Array[DataAssetES]) extends ExtractorSourceDao with IndexerSourceDao {
   val chunkList: List[(Timestamp, DataAssetES)] = chunk.toList.map(t => (t.modifiedAt, t)).sortBy(_._1.getTime)
-  val byIdsList: List[(Int, DataAssetES)] = chunk.toList.map(t => (t.id.toInt, t)).sortBy(_._1)
+  val byIdsList: List[(String, DataAssetES)] = chunk.toList.map(t => (t.metadataPath, t)).sortBy(_._1)
   var lastState: PostgresPartialIndexationReadState = PostgresPartialIndexationReadState(this)
 
 //  override def readDataAssetsSince(instant: Option[Instant], limit: Int): (Array[DataAssetES], Option[Instant]) = {
@@ -41,14 +41,14 @@ class CustomSourceDao(chunk: Array[DataAssetES]) extends ExtractorSourceDao with
 
   override def readDataAssetsSince(offset: Int, limit: Int): (Array[DataAssetES], Int) = ???
 
-  override def readDataAssetsWhereIdsIn(param: List[Int]): Array[DataAssetES] = {
-    byIdsList.filter { ids: (Int, DataAssetES) => param.contains(ids._1) }.map(_._2).toArray
+  override def readDataAssetsWhereMdpsIn(param: List[String]): Array[DataAssetES] = {
+    byIdsList.filter { ids: (String, DataAssetES) => param.contains(ids._1) }.map(_._2).toArray
   }
 
-  override def readUpdatedDataAssetsIdsSince(state: PostgresPartialIndexationReadState): (List[Int], List[Int], PostgresPartialIndexationReadState) = {
+  override def readUpdatedDataAssetsIdsSince(state: PostgresPartialIndexationReadState): (List[String], List[Int], PostgresPartialIndexationReadState) = {
     val returnElems = chunkList.filter(_._1.after(state.readDataAsset))
     state.readDataAsset = returnElems.last._1
-    (returnElems.map(_._2.id.toInt), List(), state)
+    (returnElems.map(_._2.metadataPath), List(), state)
   }
 
   override def readPartialIndexationState(): PostgresPartialIndexationReadState = lastState
@@ -59,9 +59,9 @@ class CustomSourceDao(chunk: Array[DataAssetES]) extends ExtractorSourceDao with
 
   override def executeQuery(sql: String): ResultSet = ???
 
-  override def keyValuePairProcess(ids: Array[Int]): List[EntityRow] = ???
+  override def keyValuePairProcess(mdps: List[String]): List[EntityRow] = ???
 
-  override def businessAssets(ids: Array[Int]): List[EntityRow] = ???
+  override def businessAssets(mdps: List[String]): List[EntityRow] = ???
 
   override def execute(sql: String): Unit = ???
 
@@ -109,25 +109,25 @@ class DGExtractorTest extends FlatSpec {
   "Extractor Extracted Simulation Events" should "be processed in Indexer Mock" in {
 
     val chunk: Array[DataAssetES] = Array(
-      DataAssetES( "1", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath", "fake_type", "fake_subtype",
+      DataAssetES( "1", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_01", "fake_type", "fake_subtype",
         "fake_tenant", active = false, Timestamp.from(Instant.now()), Timestamp.valueOf("2010-01-01 01:01:01.001")),
-      DataAssetES( "2", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath", "fake_type", "fake_subtype",
+      DataAssetES( "2", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_02", "fake_type", "fake_subtype",
         "fake_tenant", active = false, Timestamp.from(Instant.now()), Timestamp.valueOf("2010-01-02 01:01:01.001")),
-      DataAssetES( "3", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath", "fake_type", "fake_subtype",
+      DataAssetES( "3", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_03", "fake_type", "fake_subtype",
         "fake_tenant", active = false, Timestamp.from(Instant.now()), Timestamp.valueOf("2010-01-03 01:01:01.001")),
-      DataAssetES( "4", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath", "fake_type", "fake_subtype",
+      DataAssetES( "4", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_04", "fake_type", "fake_subtype",
         "fake_tenant", active = false, Timestamp.from(Instant.now()), Timestamp.valueOf("2010-01-04 01:01:01.001")),
-      DataAssetES( "5", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath", "fake_type", "fake_subtype",
+      DataAssetES( "5", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_05", "fake_type", "fake_subtype",
         "fake_tenant", active = false, Timestamp.from(Instant.now()), Timestamp.valueOf("2010-01-05 01:01:01.001")),
-      DataAssetES( "6", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath", "fake_type", "fake_subtype",
+      DataAssetES( "6", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_06", "fake_type", "fake_subtype",
         "fake_tenant", active = false, Timestamp.from(Instant.now()), Timestamp.valueOf("2010-01-06 01:01:01.001")),
-      DataAssetES( "7", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath", "fake_type", "fake_subtype",
+      DataAssetES( "7", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_07", "fake_type", "fake_subtype",
         "fake_tenant", active = false, Timestamp.from(Instant.now()), Timestamp.valueOf("2010-01-07 01:01:01.001")),
-      DataAssetES( "8", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath", "fake_type", "fake_subtype",
+      DataAssetES( "8", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_08", "fake_type", "fake_subtype",
         "fake_tenant", active = false, Timestamp.from(Instant.now()), Timestamp.valueOf("2010-01-08 01:01:01.001")),
-      DataAssetES( "9", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath", "fake_type", "fake_subtype",
+      DataAssetES( "9", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_09", "fake_type", "fake_subtype",
         "fake_tenant", active = false, Timestamp.from(Instant.now()), Timestamp.valueOf("2010-01-09 01:01:01.001")),
-      DataAssetES( "10", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath", "fake_type", "fake_subtype",
+      DataAssetES( "10", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_10", "fake_type", "fake_subtype",
         "fake_tenant", active = false, Timestamp.from(Instant.now()), Timestamp.valueOf("2010-01-10 01:01:01.001"))
     )
 

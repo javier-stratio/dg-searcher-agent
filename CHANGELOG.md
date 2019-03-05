@@ -2,7 +2,7 @@
 
 ## 0.4.0 (upcoming)
 
-* Pending changelog
+* [DGPB-1910] Indexer Process Upgrade
 
 ## 0.3.0-1cf6d84 (Built: February 20, 2019 | Pre-release)
 

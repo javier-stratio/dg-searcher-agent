@@ -23,15 +23,15 @@ import scala.concurrent.duration._
 class CustomSourceDao extends ExtractorSourceDao with IndexerSourceDao {
   override def close(): Unit = ???
 
-  override def keyValuePairProcess(ids: Array[Int]): List[KeyValuePair] = ???
+  override def keyValuePairProcess(mdps: List[String]): List[KeyValuePair] = ???
 
-  override def businessAssets(ids: Array[Int]): List[BusinessAsset] = ???
+  override def businessAssets(mdps: List[String]): List[BusinessAsset] = ???
 
   override def readDataAssetsSince(offset: Int, limit: Int): (Array[DataAssetES], Int) = ???
 
-  override def readDataAssetsWhereIdsIn(ids: List[Int]): Array[DataAssetES] = ???
+  override def readDataAssetsWhereMdpsIn(mdps: List[String]): Array[DataAssetES] = ???
 
-  override def readUpdatedDataAssetsIdsSince(state: PostgresPartialIndexationReadState): (List[Int], List[Int], PostgresPartialIndexationReadState) = ???
+  override def readUpdatedDataAssetsIdsSince(state: PostgresPartialIndexationReadState): (List[String], List[Int], PostgresPartialIndexationReadState) = ???
 
   override def readPartialIndexationState(): PostgresPartialIndexationReadState = ???
 

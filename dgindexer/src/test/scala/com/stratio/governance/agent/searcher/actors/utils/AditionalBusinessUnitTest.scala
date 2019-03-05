@@ -1,6 +1,6 @@
 package com.stratio.governance.agent.searcher.actors.utils
 
-import com.stratio.governance.commons.agent.domain.MetadataPath
+import com.stratio.governance.commons.MetadataPath
 import org.json4s.native.JsonMethods._
 import org.scalatest.FlatSpec
 
@@ -18,7 +18,7 @@ class AditionalBusinessUnitTest extends FlatSpec {
   "method getBTPartialIndexationSubquery1" should "be processed properly" in {
 
     val result: String = additionalBusiness.getBTPartialIndexationSubquery1("dg_metadata", "business_assets", "business_assets_type")
-    assertResult("SELECT ba.id,ba.modified_at,? FROM dg_metadata.business_assets as ba, dg_metadata.business_assets_type as bat WHERE ba.business_assets_type_id = bat.id and bat.name='TERM' and ba.modified_at > ? ")(result)
+    assertResult("SELECT '',ba.id,ba.modified_at,? FROM dg_metadata.business_assets as ba, dg_metadata.business_assets_type as bat WHERE ba.business_assets_type_id = bat.id and bat.name='TERM' and ba.modified_at > ? ")(result)
 
   }
 
@@ -31,19 +31,19 @@ class AditionalBusinessUnitTest extends FlatSpec {
 
   "method adaptInfo Resources" should "be processed properly" in {
 
-    val result: (String, String, String, String) = additionalBusiness.adaptInfo(1, "HDFS", "RESOURCE", MetadataPath("ds", Some("path"), Some("resource"), None).toString(), parse("{\"schema\":\"parquet\",\"type\":\"whatever\"}"))
+    val result: (String, String, String, String) = additionalBusiness.adaptInfo(1, "HDFS", "RESOURCE", MetadataPath.factory("ds", Some("/path"), Some("resource"), None).toString(), parse("{\"hdfsFile\":{\"schema\":\"parquet\",\"type\":\"whatever\"}}"))
     assertResult("1")(result._1)
     assertResult("ds")(result._2)
     assertResult("Hdfs")(result._3)
     assertResult("Table")(result._4)
 
-    val result2: (String, String, String, String) = additionalBusiness.adaptInfo(1, "HDFS", "RESOURCE", MetadataPath("ds", Some("path"), Some("resource"), None).toString(), parse("{\"schema\":\"na\",\"type\":\"whatever\"}"))
+    val result2: (String, String, String, String) = additionalBusiness.adaptInfo(1, "HDFS", "RESOURCE", MetadataPath.factory("ds", Some("/path"), Some("resource"), None).toString(), parse("{\"hdfsFile\":{\"schema\":\"na\",\"type\":\"whatever\"}}"))
     assertResult("1")(result2._1)
     assertResult("ds")(result2._2)
     assertResult("Hdfs")(result2._3)
     assertResult("File")(result2._4)
 
-    val result3: (String, String, String, String) = additionalBusiness.adaptInfo(1, "SQL", "RESOURCE", MetadataPath("ds", Some("path"), Some("resource"), None).toString(), parse("{\"schema\":\"na\",\"type\":\"whatever\"}"))
+    val result3: (String, String, String, String) = additionalBusiness.adaptInfo(1, "SQL", "RESOURCE", MetadataPath.factory("ds", Some("/path"), Some("resource"), None).toString(), parse("{\"hdfsFile\":{\"schema\":\"na\",\"type\":\"whatever\"}}"))
     assertResult("1")(result3._1)
     assertResult("ds")(result3._2)
     assertResult("Sql")(result3._3)
@@ -53,19 +53,19 @@ class AditionalBusinessUnitTest extends FlatSpec {
 
   "method adaptInfo No Resources" should "be processed properly" in {
 
-    val result: (String, String, String, String) = additionalBusiness.adaptInfo(1, "HDFS", "DS", MetadataPath("ds", None, None, None).toString(), parse("{\"prop\":\"any\",\"type\":\"whatever\"}"))
+    val result: (String, String, String, String) = additionalBusiness.adaptInfo(1, "HDFS", "DS", MetadataPath.factory("ds", None, None, None).toString(), parse("{\"dataStore\":{\"prop\":\"any\",\"type\":\"whatever\"}}"))
     assertResult("1")(result._1)
     assertResult("ds")(result._2)
     assertResult("Hdfs")(result._3)
     assertResult("Data Store")(result._4)
 
-    val result2: (String, String, String, String) = additionalBusiness.adaptInfo(1, "HDFS", "PATH", MetadataPath("ds", Some("path"), None, None).toString(), parse("{\"prop\":\"any\",\"type\":\"whatever\"}"))
+    val result2: (String, String, String, String) = additionalBusiness.adaptInfo(1, "HDFS", "PATH", MetadataPath.factory("ds", Some("/path"), None, None).toString(), parse("{\"hdfsDir\":{\"prop\":\"any\",\"type\":\"whatever\"}}"))
     assertResult("1")(result2._1)
     assertResult("ds")(result2._2)
     assertResult("Hdfs")(result2._3)
     assertResult("Path")(result2._4)
 
-    val result3: (String, String, String, String) = additionalBusiness.adaptInfo(1, "HDFS", "FIELD", MetadataPath("ds", Some("path"), Some("resource"), Some("field")).toString(), parse("{\"prop\":\"any\",\"type\":\"whatever\"}"))
+    val result3: (String, String, String, String) = additionalBusiness.adaptInfo(1, "HDFS", "FIELD", MetadataPath.factory("ds", Some("/path"), Some("resource"), Some("field")).toString(), parse("{\"hdfsColumn\":{\"prop\":\"any\",\"type\":\"whatever\"}}"))
     assertResult("1")(result3._1)
     assertResult("ds")(result3._2)
     assertResult("Hdfs")(result3._3)

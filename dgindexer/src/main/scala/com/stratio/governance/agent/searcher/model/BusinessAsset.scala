@@ -20,21 +20,21 @@ object BusinessStatus extends Enumeration {
   }
 }
 
-case class BusinessAsset( id: Int,
+case class BusinessAsset( metadataPath: String,
                           name: String,
                           description: String,
                           status: BusinessStatus.Value,
                           tpe: BusinessType.Value,
-                          modifiedAt: Timestamp) extends EntityRow(id) {
+                          modifiedAt: Timestamp) extends EntityRow(metadataPath) {
 
-  def this(id: Int, name: String, description: String, status: String, tpe: String, modifiedAt: String) =
-    this(id, name, description, BusinessStatus.fromString(status), BusinessType.fromString(tpe), TimestampUtils.fromString(modifiedAt))
+  def this(metadataPath: String, name: String, description: String, status: String, tpe: String, modifiedAt: String) =
+    this(metadataPath, name, description, BusinessStatus.fromString(status), BusinessType.fromString(tpe), TimestampUtils.fromString(modifiedAt))
 }
 
 object BusinessAsset {
 
-  def apply(id: Int, name: String, description: String, status: String, tpe: String, modifiedAt: String): BusinessAsset =
-    new BusinessAsset(id, name, description, status, tpe, modifiedAt)
+  def apply(metadataPath: String, name: String, description: String, status: String, tpe: String, modifiedAt: String): BusinessAsset =
+    new BusinessAsset(metadataPath, name, description, status, tpe, modifiedAt)
 
   @scala.annotation.tailrec
   def getValueFromResult(resultSet: ResultSet, list: List[BusinessAsset] = Nil): List[BusinessAsset] = {
@@ -43,7 +43,7 @@ object BusinessAsset {
       val mod2: Timestamp = resultSet.getTimestamp(7)
       val max = TimestampUtils.max(List(mod1, mod2))
 
-      getValueFromResult(resultSet, BusinessAsset(resultSet.getInt(1),
+      getValueFromResult(resultSet, BusinessAsset(resultSet.getString(1),
                                                   resultSet.getString(2),
                                                   resultSet.getString(3),
                                                   BusinessStatus.fromString(resultSet.getString(4)),

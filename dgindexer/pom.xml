@@ -13,22 +13,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.scalikejdbc</groupId>
-            <artifactId>scalikejdbc_2.11</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.stratio.governance</groupId>
-            <artifactId>sender</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>log4j-over-slf4j</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>log4j</groupId>
-                    <artifactId>log4j</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
         </dependency>
         <dependency>
             <groupId>com.stratio.governance</groupId>
@@ -62,7 +48,7 @@
         <!-- Json4s -->
         <dependency>
             <groupId>org.json4s</groupId>
-            <artifactId>json4s-native_2.11</artifactId>
+            <artifactId>json4s-native_${scala.binary.version}</artifactId>
         </dependency>
 
         <!-- Akka-http -->
@@ -82,15 +68,8 @@
         <!-- Quartz -->
         <dependency>
             <groupId>com.enragedginger</groupId>
-            <artifactId>akka-quartz-scheduler_2.11</artifactId>
+            <artifactId>akka-quartz-scheduler_${scala.binary.version}</artifactId>
         </dependency>
-
-        <!-- Mustache -->
-        <dependency>
-            <groupId>com.vspy</groupId>
-            <artifactId>mustache_2.11</artifactId>
-        </dependency>
-
 
         <!-- Test -->
         <dependency>
@@ -100,13 +79,7 @@
         </dependency>
         <dependency>
             <groupId>org.scalamock</groupId>
-            <artifactId>scalamock_2.12</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.stratio.governance</groupId>
-            <artifactId>model</artifactId>
-            <type>test-jar</type>
+            <artifactId>scalamock_${scala.binary.version}</artifactId>
             <scope>test</scope>
         </dependency>
 

@@ -66,10 +66,10 @@ class PostgresSourceDaoIT extends LazyLogging {
   @Test
   def test01keyValuePairProcess: Unit = {
 
-    val list: List[KeyValuePair] = postgresDao.keyValuePairProcess(Array[Int](201,202,203))
+    val list: List[KeyValuePair] = postgresDao.keyValuePairProcess(List[String]("hdfsFinance://department/marketing/2018>/:region.parquet:R_REGIONKEY:", "hdfsFinance://department/marketing/2017>/:region.parquet:R_REGIONKEY:", "hdfsFinance://department/finance/2018>/:region.parquet:R_COMMENT:"))
 
     assertEquals(4, list.size)
-    assertEquals(3, list.map(_.id).distinct.size)
+    assertEquals(3, list.map(_.metadataPath).distinct.size)
 
   }
 
@@ -77,10 +77,10 @@ class PostgresSourceDaoIT extends LazyLogging {
   @Test
   def test02businessAssetsMethod: Unit = {
 
-    val list: List[BusinessAsset] = postgresDao.businessAssets(Array[Int](201,202,203))
+    val list: List[BusinessAsset] = postgresDao.businessAssets(List[String]("hdfsFinance://department/marketing/2018>/:region.parquet:R_REGIONKEY:", "hdfsFinance://department/marketing/2017>/:region.parquet:R_REGIONKEY:", "hdfsFinance://department/finance/2018>/:region.parquet:R_COMMENT:"))
 
     assertEquals(5, list.size)
-    assertEquals(3, list.map(_.id).distinct.size)
+    assertEquals(3, list.map(_.metadataPath).distinct.size)
 
   }
 
@@ -120,9 +120,9 @@ class PostgresSourceDaoIT extends LazyLogging {
 
   //"PostgresDao readDataAssetsWhereIdsIn method " should " retrieve all information related" in {
   @Test
-  def test04readDataAssetsWhereIdsIn: Unit = {
+  def test04readDataAssetsWhereMdpsIn: Unit = {
 
-    val list: Array[DataAssetES] = postgresDao.readDataAssetsWhereIdsIn(List[Int](201,202,203))
+    val list: Array[DataAssetES] = postgresDao.readDataAssetsWhereMdpsIn(List[String]("hdfsFinance://department/marketing/2018>/:region.parquet:R_REGIONKEY:", "hdfsFinance://department/marketing/2017>/:region.parquet:R_REGIONKEY:", "hdfsFinance://department/finance/2018>/:region.parquet:R_COMMENT:"))
     assertEquals(3, list.size)
     val ids = list.map(_.id)
     // Order is not defined
@@ -150,6 +150,7 @@ class PostgresSourceDaoIT extends LazyLogging {
   }
 
   //"Partial Indexation State cycle " should " be coherent" in {
+  @Test
   def test06IndexationStateCycle: Unit = {
 
     val statusInit = postgresDao.readPartialIndexationState()
@@ -160,9 +161,9 @@ class PostgresSourceDaoIT extends LazyLogging {
     assertEquals(emptyTs, statusInit.readKey)
     assertEquals(emptyTs, statusInit.readKeyDataAsset)
 
-    val (list1, list2, statusEnd): (List[Int], List[Int], PostgresPartialIndexationReadState) = postgresDao.readUpdatedDataAssetsIdsSince(statusInit)
+    val (list1, list2, statusEnd): (List[String], List[Int], PostgresPartialIndexationReadState) = postgresDao.readUpdatedDataAssetsIdsSince(statusInit)
     assertEquals(3, list1.size)
-    assert(list1.contains(201) && list1.contains(202) && list1.contains(203))
+    assert(list1.contains("hdfsFinance://department/marketing/2018>/:region.parquet:R_REGIONKEY:") && list1.contains("hdfsFinance://department/marketing/2017>/:region.parquet:R_REGIONKEY:") && list1.contains("hdfsFinance://department/finance/2018>/:region.parquet:R_COMMENT:"))
     assertEquals(3, list2.size)
     assert(list2.contains(1) && list2.contains(2) && list2.contains(3))
     val refTs = Timestamp.valueOf("2018-12-10 09:27:17.815")
@@ -181,7 +182,7 @@ class PostgresSourceDaoIT extends LazyLogging {
     assertEquals(refTs, statusEndRetrieved.readKey)
     assertEquals(refTs, statusEndRetrieved.readKeyDataAsset)
 
-    val (list1b, list2b, statusEndRetrievedFixed): (List[Int], List[Int], PostgresPartialIndexationReadState) = postgresDao.readUpdatedDataAssetsIdsSince(statusInit)
+    val (list1b, list2b, statusEndRetrievedFixed): (List[String], List[Int], PostgresPartialIndexationReadState) = postgresDao.readUpdatedDataAssetsIdsSince(statusInit)
     assertEquals(0,list1b.size)
     assertEquals(0, list2b.size)
     assertEquals(refTs, statusEndRetrievedFixed.readDataAsset)

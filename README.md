@@ -137,4 +137,4 @@ In order to run integration test in Jenkins, next configuration (after versions 
 ```
 And finally set the skipIT variable in testIT/pom.xml to false.
 
-Currently, this test are disabled.
+Currently, these tests are disabled.
