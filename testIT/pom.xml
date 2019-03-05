@@ -11,6 +11,10 @@
     <description>Partial documents indexation from Governance Datastore</description>
     <inceptionYear>2018</inceptionYear>
 
+    <properties>
+        <skipIT>true</skipIT>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.stratio.governance.agent.searcher</groupId>
@@ -68,6 +72,14 @@
             </resource>
         </resources>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.0.0-M3</version>
+                <configuration>
+                    <skipITs>${skipIT}</skipITs>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
