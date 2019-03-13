@@ -2,6 +2,7 @@
 
 ## 0.4.0 (upcoming)
 
+* [DGPB-1930] Adapt searcher agent to index with suggester options
 * [DGPB-1910] Indexer Process Upgrade
 
 ## 0.3.0-1cf6d84 (Built: February 20, 2019 | Pre-release)

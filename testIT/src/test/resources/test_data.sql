@@ -13,8 +13,8 @@ insert into dg_metadata.business_assets (id, name, description, properties, tena
 insert into dg_metadata.business_assets (id, name, description, properties, tenant, business_assets_type_id, domain_id, business_assets_status_id, modified_at) values (3,'Department', 'desc bt1', '{}', 'NONE', 1, 1, 1, ('2018-12-10 09:27:17.815'::timestamp));
 
 -- business asset and keyvalues for dataasset 201, 202, 203
-insert into dg_metadata.key (id, key, description, active, tenant, modified_at) values (1, 'OWNER','Owner',true,'NONE',('2018-12-10 09:27:17.815'::timestamp));
-insert into dg_metadata.key (id, key, description, active, tenant, modified_at) values (2, 'QUALITY','Quality',true,'NONE',('2018-12-10 09:27:17.815'::timestamp));
+insert into dg_metadata.key (id, key, description, active, tenant, value_regexp, modified_at) values (1, 'OWNER','Owner',true,'NONE','{"type":"STRING","regexp":".*"}',('2018-12-10 09:27:17.815'::timestamp));
+insert into dg_metadata.key (id, key, description, active, tenant, value_regexp, modified_at) values (2, 'QUALITY','Quality',true,'NONE','{"type":"STRING","regexp":".*"}',('2018-12-10 09:27:17.815'::timestamp));
 insert into dg_metadata.key_data_asset (value, key_id, metadata_path, tenant, modified_at) values ('finance',1,'hdfsFinance://department/marketing/2018>/:region.parquet:R_REGIONKEY:','NONE',('2018-12-10 09:27:17.815'::timestamp));
 insert into dg_metadata.key_data_asset (value, key_id, metadata_path, tenant, modified_at) values ('Low',2,'hdfsFinance://department/marketing/2018>/:region.parquet:R_REGIONKEY:','NONE',('2018-12-10 09:27:17.815'::timestamp));
 insert into dg_metadata.key_data_asset (value, key_id, metadata_path, tenant, modified_at) values ('finance2',1,'hdfsFinance://department/marketing/2017>/:region.parquet:R_REGIONKEY:','NONE',('2018-12-10 09:27:17.815'::timestamp));

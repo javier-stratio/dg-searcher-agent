@@ -2,7 +2,7 @@
 
 This project implements a process to take the metadata information discovered by the stratio data-governance tools to a Search-Environment hosted by the Stratio Search-Engine
 
-It connects directly to the PostGreSQL model used by the data-gobernance core and interacts with the Search-Engine by using a REST interface
+It connects directly to the PostGreSQL model used by the data-governance core and interacts with the Search-Engine by using a REST interface
 
 ## Project structure
 
@@ -54,7 +54,7 @@ This project is allocated [here](https://github.com/Stratio/search-engine-core).
 For developing purposes, the best idea is to run the "Completed Environment" (Verify the documentation in "local-env" folder to check if following commands are still valid):
 ```
 cd local-env
-(verify se-engine docker version in .env)
+(verify se-engine docker version in .env. Last version tested : 1.1.0-M2)
 docker-compose -f docker-compose-all.yml up
 ```
 

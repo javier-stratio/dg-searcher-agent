@@ -3,6 +3,10 @@
   "model": {
     "id": "id",
     "language": "english",
+    "search_fuzzy_enabled": true,
+    "search_ngram_enabled": true,
+    "autocomplete_phonetic_enabled": true,
+    "search_phonetic_enabled": true,
     "fields": [
       {
         "field": "id",
@@ -18,7 +22,8 @@
         "type": "text",
         "searchable": true,
         "sortable": true,
-        "aggregable": false
+        "aggregable": false,
+        "autocompletable": 1.0
       },
       {
         "field": "alias",
@@ -26,7 +31,8 @@
         "type": "text",
         "searchable": true,
         "sortable": true,
-        "aggregable": false
+        "aggregable": false,
+        "autocompletable": 1.0
       },
       {
         "field": "description",
