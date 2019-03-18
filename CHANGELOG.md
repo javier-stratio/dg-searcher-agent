@@ -5,7 +5,7 @@
 * [DGPB-1930] Adapt searcher agent to index with suggester options
 * [DGPB-1910] Indexer Process Upgrade
 
-## 0.3.0-1cf6d84 (Built: February 20, 2019 | Pre-release)
+## 0.3.0-1cf6d84 (Built: February 20, 2019 | Released: March 18, 2019)
 
 * [DGPB-1884] Some documents are not indexed when they have to do it
 * [DGPB-1849] Searcher by relevance is not working fine
