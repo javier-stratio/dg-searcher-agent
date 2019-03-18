@@ -116,7 +116,7 @@ class SearchIT {
 
   //"Total Indexation Error case " should " abort total indexation process" in {
   @Test
-  def test06TotalIndecationErrorCase: Unit = {
+  def test06TotalIndexationErrorCase: Unit = {
 
     val init = httpManager.initTotalIndexationProcess(DGManager.MODEL_NAME)
     val jsonInit = parse(init)

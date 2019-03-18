@@ -14,7 +14,7 @@ import com.stratio.governance.agent.searcher.actors.indexer.DGIndexer.IndexerEve
 import com.stratio.governance.agent.searcher.actors.indexer._
 import com.stratio.governance.agent.searcher.actors.indexer.dao.SearcherDao
 import com.stratio.governance.agent.searcher.model.EntityRow
-import com.stratio.governance.agent.searcher.model.es.DataAssetES
+import com.stratio.governance.agent.searcher.model.es.ElasticObject
 import com.stratio.governance.agent.searcher.model.utils.ExponentialBackOff
 import org.scalatest.FlatSpec
 
@@ -22,9 +22,9 @@ import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class CustomSourceDao(chunk: Array[DataAssetES]) extends ExtractorSourceDao with IndexerSourceDao {
-  val chunkList: List[(Timestamp, DataAssetES)] = chunk.toList.map(t => (t.modifiedAt, t)).sortBy(_._1.getTime)
-  val byIdsList: List[(String, DataAssetES)] = chunk.toList.map(t => (t.metadataPath, t)).sortBy(_._1)
+class CustomSourceDao(chunk: Array[ElasticObject]) extends ExtractorSourceDao with IndexerSourceDao {
+  val chunkList: List[(Timestamp, ElasticObject)] = chunk.toList.map(t => (t.modifiedAt, t)).sortBy(_._1.getTime)
+  val byIdsList: List[(String, ElasticObject)] = chunk.toList.map(t => (t.metadataPath, t)).sortBy(_._1)
   var lastState: PostgresPartialIndexationReadState = PostgresPartialIndexationReadState(this)
 
 //  override def readDataAssetsSince(instant: Option[Instant], limit: Int): (Array[DataAssetES], Option[Instant]) = {
@@ -39,16 +39,16 @@ class CustomSourceDao(chunk: Array[DataAssetES]) extends ExtractorSourceDao with
 
   override def close(): Unit = {}
 
-  override def readDataAssetsSince(offset: Int, limit: Int): (Array[DataAssetES], Int) = ???
+  override def readDataAssetsSince(offset: Int, limit: Int): (Array[ElasticObject], Int) = ???
 
-  override def readDataAssetsWhereMdpsIn(param: List[String]): Array[DataAssetES] = {
-    byIdsList.filter { ids: (String, DataAssetES) => param.contains(ids._1) }.map(_._2).toArray
+  override def readDataAssetsWhereMdpsIn(param: List[String]): Array[ElasticObject] = {
+    byIdsList.filter { ids: (String, ElasticObject) => param.contains(ids._1) }.map(_._2).toArray
   }
 
-  override def readUpdatedDataAssetsIdsSince(state: PostgresPartialIndexationReadState): (List[String], List[Int], PostgresPartialIndexationReadState) = {
+  override def readUpdatedDataAssetsIdsSince(state: PostgresPartialIndexationReadState): (List[String], List[Int], List[Int], PostgresPartialIndexationReadState) = {
     val returnElems = chunkList.filter(_._1.after(state.readDataAsset))
     state.readDataAsset = returnElems.last._1
-    (returnElems.map(_._2.metadataPath), List(), state)
+    (returnElems.map(_._2.metadataPath), List(), List(), state)
   }
 
   override def readPartialIndexationState(): PostgresPartialIndexationReadState = lastState
@@ -69,7 +69,11 @@ class CustomSourceDao(chunk: Array[DataAssetES]) extends ExtractorSourceDao with
 
   override def executeQueryPreparedStatement(sql: PreparedStatement): ResultSet = ???
 
-  override def readBusinessTermsWhereIdsIn(ids: List[Int]): Array[DataAssetES] = ???
+  override def readBusinessTermsWhereIdsIn(ids: List[Int]): Array[ElasticObject] = ???
+
+  override def qualityRules(mdps: List[String]): List[EntityRow] = ???
+
+  override def readQualityRulesWhereIdsIn(ids: List[Int]): Array[ElasticObject] = ???
 }
 
 
@@ -81,19 +85,19 @@ class testCustomSearcherDao extends SearcherDao() {
 }
 class CustomDGIndexerParams(sourceDao : CustomSourceDao, searcherDao: SearcherDao, val limit: Int, val semaphore: Semaphore) extends DGIndexerParams(sourceDao, searcherDao, 10, null) {
 
-  var returnList: List[DataAssetES] = List()
+  var returnList: List[ElasticObject] = List()
 
-  def setReturnList(list: List[DataAssetES]): Unit = {
+  def setReturnList(list: List[ElasticObject]): Unit = {
     this.returnList = list
   }
 
 }
 class CustomDGIndexer(params: CustomDGIndexerParams) extends Actor {
   var counter: Int = 0
-  var list: ArrayBuffer[DataAssetES]= ArrayBuffer()
+  var list: ArrayBuffer[ElasticObject]= ArrayBuffer()
 
   override def receive: Receive = {
-    case IndexerEvent(chunk: Array[DataAssetES], _) =>
+    case IndexerEvent(chunk: Array[ElasticObject], _) =>
       list ++= chunk
       if (chunk.length < params.limit) {
         params.setReturnList(list.toList)
@@ -108,26 +112,26 @@ class DGExtractorTest extends FlatSpec {
 
   "Extractor Extracted Simulation Events" should "be processed in Indexer Mock" in {
 
-    val chunk: Array[DataAssetES] = Array(
-      DataAssetES( "1", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_01", "fake_type", "fake_subtype",
+    val chunk: Array[ElasticObject] = Array(
+      ElasticObject( "1", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_01", "fake_type", "fake_subtype",
         "fake_tenant", active = false, Timestamp.from(Instant.now()), Timestamp.valueOf("2010-01-01 01:01:01.001")),
-      DataAssetES( "2", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_02", "fake_type", "fake_subtype",
+      ElasticObject( "2", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_02", "fake_type", "fake_subtype",
         "fake_tenant", active = false, Timestamp.from(Instant.now()), Timestamp.valueOf("2010-01-02 01:01:01.001")),
-      DataAssetES( "3", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_03", "fake_type", "fake_subtype",
+      ElasticObject( "3", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_03", "fake_type", "fake_subtype",
         "fake_tenant", active = false, Timestamp.from(Instant.now()), Timestamp.valueOf("2010-01-03 01:01:01.001")),
-      DataAssetES( "4", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_04", "fake_type", "fake_subtype",
+      ElasticObject( "4", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_04", "fake_type", "fake_subtype",
         "fake_tenant", active = false, Timestamp.from(Instant.now()), Timestamp.valueOf("2010-01-04 01:01:01.001")),
-      DataAssetES( "5", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_05", "fake_type", "fake_subtype",
+      ElasticObject( "5", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_05", "fake_type", "fake_subtype",
         "fake_tenant", active = false, Timestamp.from(Instant.now()), Timestamp.valueOf("2010-01-05 01:01:01.001")),
-      DataAssetES( "6", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_06", "fake_type", "fake_subtype",
+      ElasticObject( "6", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_06", "fake_type", "fake_subtype",
         "fake_tenant", active = false, Timestamp.from(Instant.now()), Timestamp.valueOf("2010-01-06 01:01:01.001")),
-      DataAssetES( "7", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_07", "fake_type", "fake_subtype",
+      ElasticObject( "7", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_07", "fake_type", "fake_subtype",
         "fake_tenant", active = false, Timestamp.from(Instant.now()), Timestamp.valueOf("2010-01-07 01:01:01.001")),
-      DataAssetES( "8", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_08", "fake_type", "fake_subtype",
+      ElasticObject( "8", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_08", "fake_type", "fake_subtype",
         "fake_tenant", active = false, Timestamp.from(Instant.now()), Timestamp.valueOf("2010-01-08 01:01:01.001")),
-      DataAssetES( "9", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_09", "fake_type", "fake_subtype",
+      ElasticObject( "9", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_09", "fake_type", "fake_subtype",
         "fake_tenant", active = false, Timestamp.from(Instant.now()), Timestamp.valueOf("2010-01-09 01:01:01.001")),
-      DataAssetES( "10", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_10", "fake_type", "fake_subtype",
+      ElasticObject( "10", Some("fake_column"), None, Some("fake_description"), "fake_metadatapath_10", "fake_type", "fake_subtype",
         "fake_tenant", active = false, Timestamp.from(Instant.now()), Timestamp.valueOf("2010-01-10 01:01:01.001"))
     )
 
@@ -136,7 +140,7 @@ class DGExtractorTest extends FlatSpec {
 
   }
 
-  def process(chunk: Array[DataAssetES]): List[DataAssetES] = {
+  def process(chunk: Array[ElasticObject]): List[ElasticObject] = {
     val s: Semaphore = new Semaphore(1)
 
     val sourceDao: CustomSourceDao = new CustomSourceDao(chunk)

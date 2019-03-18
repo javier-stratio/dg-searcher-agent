@@ -117,6 +117,14 @@
         "aggregable": true
       },
       {
+        "field": "qualityRules",
+        "name": "Quality rules",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
         "field": "keys",
         "name": "Keys",
         "type": "text",

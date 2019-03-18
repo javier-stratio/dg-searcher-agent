@@ -7,4 +7,6 @@ trait SourceDao {
   def keyValuePairProcess(mdps: List[String]): List[EntityRow]
 
   def businessAssets(mdps: List[String]): List[EntityRow]
+
+  def qualityRules(mdps: List[String]): List[EntityRow]
 }

@@ -3,19 +3,21 @@ package com.stratio.governance.agent.searcher.actors.extractor.dao
 import java.sql.{PreparedStatement, ResultSet, Timestamp}
 
 import com.stratio.governance.agent.searcher.actors.dao.postgres.PostgresPartialIndexationReadState
-import com.stratio.governance.agent.searcher.model.es.DataAssetES
+import com.stratio.governance.agent.searcher.model.es.ElasticObject
 
 trait SourceDao {
 
   def close():Unit
 
-  def readDataAssetsSince(offset: Int, limit: Int): (Array[DataAssetES], Int)
+  def readDataAssetsSince(offset: Int, limit: Int): (Array[ElasticObject], Int)
 
-  def readDataAssetsWhereMdpsIn(ids: List[String]): Array[DataAssetES]
+  def readDataAssetsWhereMdpsIn(ids: List[String]): Array[ElasticObject]
 
-  def readBusinessTermsWhereIdsIn(ids: List[Int]): Array[DataAssetES]
+  def readBusinessTermsWhereIdsIn(ids: List[Int]): Array[ElasticObject]
 
-  def readUpdatedDataAssetsIdsSince(state: PostgresPartialIndexationReadState): (List[String], List[Int], PostgresPartialIndexationReadState)
+  def readQualityRulesWhereIdsIn(ids: List[Int]): Array[ElasticObject]
+
+  def readUpdatedDataAssetsIdsSince(state: PostgresPartialIndexationReadState): (List[String], List[Int],List[Int], PostgresPartialIndexationReadState)
 
   def readPartialIndexationState(): PostgresPartialIndexationReadState
 

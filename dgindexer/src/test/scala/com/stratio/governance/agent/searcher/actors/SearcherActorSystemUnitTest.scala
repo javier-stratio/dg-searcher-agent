@@ -12,7 +12,7 @@ import com.stratio.governance.agent.searcher.actors.indexer.IndexerParams
 import com.stratio.governance.agent.searcher.actors.indexer.dao.SearcherDao
 import com.stratio.governance.agent.searcher.actors.utils.AdditionalBusiness
 import com.stratio.governance.agent.searcher.model._
-import com.stratio.governance.agent.searcher.model.es.DataAssetES
+import com.stratio.governance.agent.searcher.model.es.ElasticObject
 import com.stratio.governance.agent.searcher.model.utils.ExponentialBackOff
 import org.scalatest.FlatSpec
 import org.slf4j.{Logger, LoggerFactory}
@@ -27,11 +27,11 @@ class CustomSourceDao extends ExtractorSourceDao with IndexerSourceDao {
 
   override def businessAssets(mdps: List[String]): List[BusinessAsset] = ???
 
-  override def readDataAssetsSince(offset: Int, limit: Int): (Array[DataAssetES], Int) = ???
+  override def readDataAssetsSince(offset: Int, limit: Int): (Array[ElasticObject], Int) = ???
 
-  override def readDataAssetsWhereMdpsIn(mdps: List[String]): Array[DataAssetES] = ???
+  override def readDataAssetsWhereMdpsIn(mdps: List[String]): Array[ElasticObject] = ???
 
-  override def readUpdatedDataAssetsIdsSince(state: PostgresPartialIndexationReadState): (List[String], List[Int], PostgresPartialIndexationReadState) = ???
+  override def readUpdatedDataAssetsIdsSince(state: PostgresPartialIndexationReadState): (List[String], List[Int], List[Int], PostgresPartialIndexationReadState) = ???
 
   override def readPartialIndexationState(): PostgresPartialIndexationReadState = ???
 
@@ -47,7 +47,11 @@ class CustomSourceDao extends ExtractorSourceDao with IndexerSourceDao {
 
   override def executeQueryPreparedStatement(sql: PreparedStatement): ResultSet = ???
 
-  override def readBusinessTermsWhereIdsIn(ids: List[Int]): Array[DataAssetES] = ???
+  override def readBusinessTermsWhereIdsIn(ids: List[Int]): Array[ElasticObject] = ???
+
+  override def qualityRules(mdps: List[String]): List[EntityRow] = ???
+
+  override def readQualityRulesWhereIdsIn(ids: List[Int]): Array[ElasticObject] = ???
 }
 
 class CommonParams(s: Semaphore, sourceDao: CustomSourceDao, reference: String) extends DGExtractorParams(sourceDao, 10,10, ExponentialBackOff(10, 10),10, "test") with IndexerParams {
@@ -75,7 +79,7 @@ class CommonParams(s: Semaphore, sourceDao: CustomSourceDao, reference: String) 
 
   override def getPartition: Int = ???
 
-  override def getAdditionalBusiness: AdditionalBusiness = new AdditionalBusiness("","bt/", "GLOSSARY", "BUSSINESS_TERMS")
+  override def getAdditionalBusiness: AdditionalBusiness = new AdditionalBusiness("","bt/", "GLOSSARY", "BUSSINESS_TERMS", "qr/", "QUALITY", "RULES")
 }
 
 case class MetaInfo(value: String)

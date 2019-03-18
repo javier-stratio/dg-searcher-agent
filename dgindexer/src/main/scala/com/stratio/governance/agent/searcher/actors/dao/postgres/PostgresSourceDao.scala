@@ -3,6 +3,7 @@ package com.stratio.governance.agent.searcher.actors.dao.postgres
 import java.sql.{Connection, PreparedStatement, ResultSet, SQLException, Timestamp}
 
 import com.stratio.governance.agent.searcher.actors.utils.AdditionalBusiness
+import com.stratio.governance.agent.searcher.model.{EntityRow, QualityRule}
 
 //import collection.JavaConverters._
 
@@ -10,7 +11,7 @@ import akka.util.Timeout
 import com.stratio.governance.agent.searcher.actors.extractor.dao.{SourceDao => ExtractorSourceDao}
 import com.stratio.governance.agent.searcher.actors.indexer.dao.{SourceDao => IndexerSourceDao}
 import com.stratio.governance.agent.searcher.actors.manager.dao.{SourceDao => ManagerSourceDao}
-import com.stratio.governance.agent.searcher.model.es.DataAssetES
+import com.stratio.governance.agent.searcher.model.es.ElasticObject
 import com.stratio.governance.agent.searcher.model.utils.ExponentialBackOff
 import com.stratio.governance.agent.searcher.model.{BusinessAsset, KeyValuePair}
 import org.json4s.DefaultFormats
@@ -46,6 +47,8 @@ class PostgresSourceDao(sourceConnectionUrl: String,
   private val businessAssetsTable: String = "business_assets"
   private val businessAssetsTypeTable: String = "business_assets_type"
   private val businessAssetsStatusTable: String = "business_assets_status"
+
+  private val qualityRulesTable: String = "quality"
 
   private val partialIndexationStateTable: String = "partial_indexation_state"
 
@@ -89,7 +92,7 @@ class PostgresSourceDao(sourceConnectionUrl: String,
     } catch {
       case exception: SQLException =>
         // See https://www.postgresql.org/docs/current/errcodes-appendix.html
-        LOG.error("executeQuery - Exponential BackOff in progress ... . " + sql + ", " + exception.getMessage)
+        LOG.error("executeQuery - Exponential BackOff in progress ... . " + sql + ", " + exception.getMessage, exception)
         Thread.sleep(exponentialBackOff.actualPause)
         if (exception.getSQLState.startsWith("08")) { // Problems with Connection
           restartConnection()
@@ -106,7 +109,7 @@ class PostgresSourceDao(sourceConnectionUrl: String,
     } catch {
       case exception: SQLException =>
         // See https://www.postgresql.org/docs/current/errcodes-appendix.html
-        LOG.error("executeQuery - Exponential BackOff in progress ... . " + sql + ", " + exception.getMessage)
+        LOG.error("executeQuery - Exponential BackOff in progress ... . " + sql + ", " + exception.getMessage, exception)
         Thread.sleep(exponentialBackOff.actualPause)
         if (exception.getSQLState.startsWith("08")) { // Problems with Connection
           restartConnection()
@@ -123,7 +126,7 @@ class PostgresSourceDao(sourceConnectionUrl: String,
     } catch {
       case exception: SQLException =>
         // See https://www.postgresql.org/docs/current/errcodes-appendix.html
-        LOG.error("executePreparedStatement - Exponential BackOff in progress ... . " + sql + ", " + exception.getMessage)
+        LOG.error("executePreparedStatement - Exponential BackOff in progress ... . " + sql + ", " + exception.getMessage, exception)
         Thread.sleep(exponentialBackOff.actualPause)
         if (exception.getSQLState.startsWith("08")) { // Problems with Connection
           restartConnection()
@@ -141,7 +144,7 @@ class PostgresSourceDao(sourceConnectionUrl: String,
     } catch {
       case exception: SQLException =>
         // See https://www.postgresql.org/docs/current/errcodes-appendix.html
-        LOG.error("executePreparedStatement - Exponential BackOff in progress ... . " + sql + ", " + exception.getMessage)
+        LOG.error("executePreparedStatement - Exponential BackOff in progress ... . " + sql + ", " + exception.getMessage, exception)
         Thread.sleep(exponentialBackOff.actualPause)
         if (exception.getSQLState.startsWith("08")) { // Problems with Connection
           restartConnection()
@@ -159,7 +162,7 @@ class PostgresSourceDao(sourceConnectionUrl: String,
     } catch {
       case exception: SQLException =>
         // See https://www.postgresql.org/docs/current/errcodes-appendix.html
-        LOG.error("executePreparedStatement - Exponential BackOff in progress ... . " + sql + ", " + exception.getMessage)
+        LOG.error("executePreparedStatement - Exponential BackOff in progress ... . " + sql + ", " + exception.getMessage, exception)
         Thread.sleep(exponentialBackOff.actualPause)
         if (exception.getSQLState.startsWith("08")) { // Problems with Connection
           restartConnection()
@@ -237,7 +240,7 @@ class PostgresSourceDao(sourceConnectionUrl: String,
   private def createDataAssetMetadataTable() : Unit = {
     LOG.debug( s"creating $schema.$partialIndexationStateTable table ... " )
     execute( s"CREATE TABLE IF NOT EXISTS $schema.$partialIndexationStateTable (id SMALLINT NOT NULL UNIQUE," +
-      s"last_read_data_asset TIMESTAMP,last_read_key_data_asset TIMESTAMP,last_read_key TIMESTAMP,last_read_business_assets_data_asset TIMESTAMP, last_read_business_assets TIMESTAMP, CONSTRAINT pk_$partialIndexationStateTable PRIMARY KEY (id))" )
+      s"last_read_data_asset TIMESTAMP,last_read_key_data_asset TIMESTAMP,last_read_key TIMESTAMP,last_read_business_assets_data_asset TIMESTAMP, last_read_business_assets TIMESTAMP, last_read_quality_rules TIMESTAMP, CONSTRAINT pk_$partialIndexationStateTable PRIMARY KEY (id))" )
     LOG.debug( s"table $schema.$partialIndexationStateTable created!" )
   }
 
@@ -319,16 +322,16 @@ class PostgresSourceDao(sourceConnectionUrl: String,
     }
   }
 
-  def readDataAssetsSince(offset: Int, limit: Int): (Array[DataAssetES], Int) = {
-    val selectFromDataAssetWithWhereStatement: PreparedStatement = prepareStatement(s"((SELECT id,name,alias,description,metadata_path,type,subtype,tenant,properties,active,discovered_at,modified_at FROM $schema.$dataAssetTable WHERE active = ?) union " + additionalBusiness.getBTTotalIndexationsubquery(schema, businessAssetsTable, businessAssetsTypeTable) + ") order by id asc, name asc limit ? offset ?")
+  def readDataAssetsSince(offset: Int, limit: Int): (Array[ElasticObject], Int) = {
+    val selectFromDataAssetWithWhereStatement: PreparedStatement = prepareStatement(s"((SELECT id,name,alias,description,metadata_path,type,subtype,tenant,properties,active,discovered_at,modified_at FROM $schema.$dataAssetTable WHERE active = ?) union " + additionalBusiness.getAdditionalBusinessTotalIndexationSubquery(schema, businessAssetsTable, businessAssetsTypeTable, qualityRulesTable) + ") order by id asc, name asc limit ? offset ?")
     selectFromDataAssetWithWhereStatement.setBoolean(1, true)
     selectFromDataAssetWithWhereStatement.setInt(2, limit)
     selectFromDataAssetWithWhereStatement.setInt(3, offset)
-    val list = DataAssetES.getValuesFromResult(additionalBusiness.adaptInfo, executeQueryPreparedStatement(selectFromDataAssetWithWhereStatement))
+    val list = ElasticObject.getValuesFromResult(additionalBusiness.adaptInfo, executeQueryPreparedStatement(selectFromDataAssetWithWhereStatement))
     (list.toArray, offset + limit)
   }
 
-  def readDataAssetsWhereMdpsIn(mdps: List[String]): Array[DataAssetES] = {
+  def readDataAssetsWhereMdpsIn(mdps: List[String]): Array[ElasticObject] = {
     if (mdps.isEmpty) Array() else {
       // TODO This query has a problem with java-scala array conversion
 //      val selectFromDataAssetWithIdsInStatement: PreparedStatement = prepareStatement(s"SELECT id,name,description,metadata_path,type,subtype,tenant,properties,active,discovered_at,modified_at FROM $schema.$dataAssetTable WHERE id IN(?)")
@@ -346,30 +349,48 @@ class PostgresSourceDao(sourceConnectionUrl: String,
         selectFromDataAssetWithIdsInStatement.setString(index, mdp)
       })
 
-      DataAssetES.getValuesFromResult(additionalBusiness.adaptInfo, executeQueryPreparedStatement(selectFromDataAssetWithIdsInStatement)).toArray
+      ElasticObject.getValuesFromResult(additionalBusiness.adaptInfo, executeQueryPreparedStatement(selectFromDataAssetWithIdsInStatement)).toArray
     }
   }
 
-  def readBusinessTermsWhereIdsIn(ids: List[Int]): Array[DataAssetES] = {
+  def readBusinessTermsWhereIdsIn(ids: List[Int]): Array[ElasticObject] = {
     if (ids.isEmpty) Array() else {
       // Alternative Option without list object
       val repl:  String = ids.map( id => "?") match {
         case q: List[String] => q.mkString(",")
       }
-      val selectFromBusinessTermWithIdsInStatement: PreparedStatement = prepareStatement(additionalBusiness.getBTPartialIndexationSubquery2(schema, businessAssetsTable, businessAssetsTypeTable).replace("{{ids}}",repl))
+      val selectFromBusinessTermWithIdsInStatement: PreparedStatement = prepareStatement(additionalBusiness.getBusinessTermsPartialIndexationSubquery2(schema, businessAssetsTable, businessAssetsTypeTable).replace("{{ids}}",repl))
       var index: Int = 0
       ids.foreach(id => {
         index+=1
         selectFromBusinessTermWithIdsInStatement.setInt(index, id)
       })
 
-      DataAssetES.getValuesFromResult(additionalBusiness.adaptInfo, executeQueryPreparedStatement(selectFromBusinessTermWithIdsInStatement)).toArray
+      ElasticObject.getValuesFromResult(additionalBusiness.adaptInfo, executeQueryPreparedStatement(selectFromBusinessTermWithIdsInStatement)).toArray
     }
+  }
+
+  override def readQualityRulesWhereIdsIn(ids: List[Int]): Array[ElasticObject] = {
+    if (ids.isEmpty) Array() else {
+      // Alternative Option without list object
+      val repl:  String = ids.map( id => "?") match {
+        case q: List[String] => q.mkString(",")
+      }
+      val selectFromBusinessTermWithIdsInStatement: PreparedStatement = prepareStatement(additionalBusiness.getQualityRulesPartialIndexationSubquery2(schema, qualityRulesTable).replace("{{ids}}",repl))
+      var index: Int = 0
+      ids.foreach(id => {
+        index+=1
+        selectFromBusinessTermWithIdsInStatement.setInt(index, id)
+      })
+
+      ElasticObject.getValuesFromResult(additionalBusiness.adaptInfo, executeQueryPreparedStatement(selectFromBusinessTermWithIdsInStatement)).toArray
+    }
+
   }
 
   private case class Result (metadataPath: String, baId: Int, timestamp: Timestamp, literal: Short)
 
-  def readUpdatedDataAssetsIdsSince(state: PostgresPartialIndexationReadState): (List[String], List[Int], PostgresPartialIndexationReadState) = {
+  def readUpdatedDataAssetsIdsSince(state: PostgresPartialIndexationReadState): (List[String], List[Int],List[Int], PostgresPartialIndexationReadState) = {
     val unionSelectUpdatedStatement: PreparedStatement =
         prepareStatement(s"(" +
                                  s" SELECT metadata_path, 0, modified_at,1 FROM $schema.$dataAssetTable WHERE modified_at > ? " +
@@ -384,25 +405,30 @@ class PostgresSourceDao(sourceConnectionUrl: String,
                                  s"SELECT bus_assets_data_assets.metadata_path, 0, bus_assets.modified_at,5 FROM $schema.$businessAssetsDataAssetsTable AS bus_assets_data_assets, " +
                                     s"$schema.$businessAssetsTable AS bus_assets WHERE bus_assets_data_assets.business_assets_id = bus_assets.id and bus_assets.modified_at > ? " +
                                    "UNION " +
-                                 additionalBusiness.getBTPartialIndexationSubquery1(schema, businessAssetsTable, businessAssetsTypeTable) +
+                                 s"SELECT metadata_path, 0, modified_at,6 FROM $schema.$qualityRulesTable WHERE modified_at > ? " +
+                                   "UNION " +
+                                 additionalBusiness.getAdditionalBusinessPartialIndexationSubquery1(schema, businessAssetsTable, businessAssetsTypeTable, qualityRulesTable, 7) +
                                 s")")
     unionSelectUpdatedStatement.setTimestamp(1,state.readDataAsset)
     unionSelectUpdatedStatement.setTimestamp(2,state.readKeyDataAsset)
     unionSelectUpdatedStatement.setTimestamp(3,state.readKey)
     unionSelectUpdatedStatement.setTimestamp(4,state.readBusinessAssetsDataAsset)
     unionSelectUpdatedStatement.setTimestamp(5,state.readBusinessAssets)
+    unionSelectUpdatedStatement.setTimestamp(6,state.readQualityRules)
 
     // Additional queries conditions for business Terms
-    unionSelectUpdatedStatement.setInt(6, 6)
     unionSelectUpdatedStatement.setTimestamp(7,state.readBusinessAssets)
+    unionSelectUpdatedStatement.setTimestamp(8,state.readQualityRules)
+
 
     val resultSet: ResultSet = executeQueryPreparedStatement(unionSelectUpdatedStatement)
     var list : List[Result] = List()
     while (resultSet.next()) {
       list = Result(resultSet.getString(1), resultSet.getInt(2), resultSet.getTimestamp(3), resultSet.getShort(4)) :: list
     }
-    val mdps = list.filter(_.literal < 6).map(_.metadataPath).distinct
-    val idsBusinessTerms = list.filter(_.literal == 6).map(_.baId)
+    val mdps = list.filter(_.literal < 7).map(_.metadataPath).distinct
+    val idsBusinessTerms = list.filter(_.literal == 7).map(_.baId)
+    val idsQualityRules = list.filter(_.literal == 8).map(_.baId)
 
     list.filter(_.literal == 1).map(_.timestamp).sortWith(_.getTime > _.getTime).headOption match {
       case Some(t) => state.readDataAsset = t
@@ -425,10 +451,18 @@ class PostgresSourceDao(sourceConnectionUrl: String,
       case None =>
     }
     list.filter(_.literal == 6).map(_.timestamp).sortWith(_.getTime > _.getTime).headOption match {
+      case Some(t) => state.readQualityRules = t
+      case None =>
+    }
+    list.filter(_.literal == 7).map(_.timestamp).sortWith(_.getTime > _.getTime).headOption match {
       case Some(t) => state.readBusinessAssets = t
       case None =>
     }
-    (mdps, idsBusinessTerms, state)
+    list.filter(_.literal == 8).map(_.timestamp).sortWith(_.getTime > _.getTime).headOption match {
+      case Some(t) => state.readQualityRules = t
+      case None =>
+    }
+    (mdps, idsBusinessTerms, idsQualityRules, state)
   }
 
   override def getKeys(): List[String] = {
@@ -444,6 +478,34 @@ class PostgresSourceDao(sourceConnectionUrl: String,
   def writePartialIndexationState(state: PostgresPartialIndexationReadState): Unit = {
     status = Some(state)
     status.get.update(connection)
+  }
+
+  override def qualityRules(mdps: List[String]): List[QualityRule] = {
+    if (!mdps.isEmpty) {
+      try {
+        // Alternative Option
+        val repl: String = mdps.map( mdp => "?" ) match {
+          case q: List[String] => q.mkString( "," )
+        }
+        val selectQualityRulesStatement: PreparedStatement = prepareStatement( s"SELECT metadata_path, name, modified_at " +
+          s"FROM $schema.$qualityRulesTable " +
+          s"WHERE metadata_path IN({{mdps}})".replace( "{{mdps}}", repl ) +
+          "" )
+        var index: Int = 0
+        mdps.foreach( mdp => {
+          index += 1
+          selectQualityRulesStatement.setString( index, mdp )
+        } )
+        QualityRule.getValueFromResult( executeQueryPreparedStatement( selectQualityRulesStatement ) )
+      } catch {
+        case e: Throwable =>
+          LOG.error( "error while getting Business Assets", e )
+          List[QualityRule]()
+      }
+    } else {
+      LOG.debug("There is no ids to get Quality Rules")
+      List[QualityRule]()
+    }
   }
 
 

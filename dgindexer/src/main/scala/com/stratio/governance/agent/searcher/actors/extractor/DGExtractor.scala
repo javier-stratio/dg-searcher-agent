@@ -7,11 +7,12 @@ import com.stratio.governance.agent.searcher.actors.dao.postgres.PostgresPartial
 import com.stratio.governance.agent.searcher.actors.extractor.DGExtractor.{Message, _}
 import com.stratio.governance.agent.searcher.actors.indexer.DGIndexer
 import com.stratio.governance.agent.searcher.actors.manager.{DGManager, IndexationStatus}
-import com.stratio.governance.agent.searcher.model.es.DataAssetES
+import com.stratio.governance.agent.searcher.model.es.ElasticObject
 import com.stratio.governance.agent.searcher.model.utils.ExponentialBackOff
 import org.json4s.DefaultFormats
 import org.slf4j.{Logger, LoggerFactory}
 
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
@@ -25,17 +26,18 @@ object DGExtractor {
   case class TotalIndexationMessageInit(token: String) extends Message
   case class TotalIndexationMessageEnd(token: String) extends Message
   case class TotalIndexationMessage(offset: Int, limit: Int, exponentialBackOff: ExponentialBackOff, token: String) extends Message
-  case class SendTotalBatchToIndexerMessage(t: (Array[DataAssetES], Int), continue: Option[Message], exponentialBackOff: ExponentialBackOff, token: String)
+  case class SendTotalBatchToIndexerMessage(t: (Array[ElasticObject], Int), continue: Option[Message], exponentialBackOff: ExponentialBackOff, token: String)
 
   case class PartialIndexationMessageInit() extends Message
   case class PartialIndexationMessageEnd() extends Message
   case class PartialIndexationMessage(state: Option[PostgresPartialIndexationReadState], limit : Int, exponentialBackOff: ExponentialBackOff) extends Message
   case class SplitterPartialIndexationMessage(list: List[String], limit : Int, state: Option[PostgresPartialIndexationReadState], exponentialBackOff: ExponentialBackOff, addList: List[SendPartialIndexationAdditionalBusiness]) extends Message
-  case class SendPartialBatchToIndexerMessage(dataAssets: Array[DataAssetES], state: Option[PostgresPartialIndexationReadState], continue: Option[Message], exponentialBackOff: ExponentialBackOff, addList: List[SendPartialIndexationAdditionalBusiness]) extends Message
+  case class SendPartialBatchToIndexerMessage(dataAssets: Array[ElasticObject], state: Option[PostgresPartialIndexationReadState], continue: Option[Message], exponentialBackOff: ExponentialBackOff, addList: List[SendPartialIndexationAdditionalBusiness]) extends Message
 
   case class PartialIndexationAdditionalBusinessProcess(adds: List[SendPartialIndexationAdditionalBusiness])
   abstract class SendPartialIndexationAdditionalBusiness(ids: List[Int])
   case class SendPartialIndexationBusinessTerm(ids: List[Int], state: PostgresPartialIndexationReadState, exponentialBackOff: ExponentialBackOff) extends SendPartialIndexationAdditionalBusiness(ids)
+  case class SendPartialIndexationQualityRules(ids: List[Int], state: PostgresPartialIndexationReadState, exponentialBackOff: ExponentialBackOff) extends SendPartialIndexationAdditionalBusiness(ids)
 
 }
 
@@ -61,14 +63,14 @@ class DGExtractor(indexer: ActorRef, params: DGExtractorParams) extends Actor {
 
     case TotalIndexationMessage(offset, limit, exponentialBackOff: ExponentialBackOff, token) =>
       LOG.debug("Handling total Indexation messages. limit: " + limit + ", token: " + token)
-      val results: (Array[DataAssetES], Int) = params.sourceDao.readDataAssetsSince(offset, limit)
+      val results: (Array[ElasticObject], Int) = params.sourceDao.readDataAssetsSince(offset, limit)
       if (results._1.length == limit) {
         self ! SendTotalBatchToIndexerMessage(results, Some(DGExtractor.TotalIndexationMessage(results._2, limit, exponentialBackOff, token)), exponentialBackOff, token)
       } else {
         self ! SendTotalBatchToIndexerMessage(results, Some(DGExtractor.TotalIndexationMessageEnd(token)), exponentialBackOff, token)
       }
 
-    case SendTotalBatchToIndexerMessage(tuple: (Array[DataAssetES], Int), continue: Option[Message], exponentialBackOff: ExponentialBackOff, token: String) =>
+    case SendTotalBatchToIndexerMessage(tuple: (Array[ElasticObject], Int), continue: Option[Message], exponentialBackOff: ExponentialBackOff, token: String) =>
       LOG.debug("Sending total Indexation messages. token: " + token)
       val future = indexer ? DGIndexer.IndexerEvent(tuple._1, Some(token))
       future.onComplete {
@@ -99,16 +101,18 @@ class DGExtractor(indexer: ActorRef, params: DGExtractorParams) extends Actor {
     case PartialIndexationMessage(state, limit, exponentialBackOff) =>
       LOG.debug("Handling partial Indexation messages. limit: " + limit)
       var status = state.getOrElse(params.sourceDao.readPartialIndexationState())
-      val results:(List[String], List[Int], PostgresPartialIndexationReadState) = params.sourceDao.readUpdatedDataAssetsIdsSince(status)
-      status = results._3
-      val emptyAdditionalBusiness: List[SendPartialIndexationAdditionalBusiness] = List[SendPartialIndexationAdditionalBusiness]()
-      val additionalBusiness = results._2.isEmpty match {
-        case true =>
-          emptyAdditionalBusiness
-        case false =>
-          SendPartialIndexationBusinessTerm(results._2, status, exponentialBackOff) :: emptyAdditionalBusiness
+      val results:(List[String], List[Int], List[Int], PostgresPartialIndexationReadState) = params.sourceDao.readUpdatedDataAssetsIdsSince(status)
+      status = results._4
+      val additionalBusiness: ListBuffer[SendPartialIndexationAdditionalBusiness] = ListBuffer()
+
+
+      if (results._2.nonEmpty) {
+        additionalBusiness += SendPartialIndexationBusinessTerm(results._2, status, exponentialBackOff)
       }
-      self ! SplitterPartialIndexationMessage(results._1, limit, Some(status), exponentialBackOff, additionalBusiness)
+      if (results._3.nonEmpty) {
+        additionalBusiness += SendPartialIndexationQualityRules(results._3, status, exponentialBackOff)
+      }
+      self ! SplitterPartialIndexationMessage(results._1, limit, Some(status), exponentialBackOff, additionalBusiness.toList)
 
     case SplitterPartialIndexationMessage(mdps, limit, status,  exponentialBackOff, additionalBusiness) =>
       LOG.debug("splitter partial Indexation messages. limit: " + limit + ", status: " + status)
@@ -119,7 +123,7 @@ class DGExtractor(indexer: ActorRef, params: DGExtractorParams) extends Actor {
         self ! SendPartialBatchToIndexerMessage(params.sourceDao.readDataAssetsWhereMdpsIn(mdps_tuple._1), status, Some(PartialIndexationMessageEnd()), exponentialBackOff, additionalBusiness)
       }
 
-    case SendPartialBatchToIndexerMessage(dataAssets: Array[DataAssetES], state: Option[PostgresPartialIndexationReadState], continue: Option[Message], exponentialBackOff: ExponentialBackOff, additionalBusiness) =>
+    case SendPartialBatchToIndexerMessage(dataAssets: Array[ElasticObject], state: Option[PostgresPartialIndexationReadState], continue: Option[Message], exponentialBackOff: ExponentialBackOff, additionalBusiness) =>
       LOG.debug("Sending Partial Indexation messages")
       val future = (indexer ? DGIndexer.IndexerEvent(dataAssets, None))
       future.onComplete{
@@ -153,9 +157,11 @@ class DGExtractor(indexer: ActorRef, params: DGExtractorParams) extends Actor {
 
     case PartialIndexationAdditionalBusinessProcess(adds: List[SendPartialIndexationAdditionalBusiness]) =>
       LOG.debug("Partial Indexation Additional Business Process")
-      val addToIndex: (Array[DataAssetES], PostgresPartialIndexationReadState, ExponentialBackOff) = adds.head match {
+      val addToIndex: (Array[ElasticObject], PostgresPartialIndexationReadState, ExponentialBackOff) = adds.head match {
         case SendPartialIndexationBusinessTerm(ids, state, exponentialBackOff) =>
           (params.sourceDao.readBusinessTermsWhereIdsIn(ids), state, exponentialBackOff)
+        case SendPartialIndexationQualityRules(ids, state, exponentialBackOff) =>
+          (params.sourceDao.readQualityRulesWhereIdsIn(ids), state, exponentialBackOff)
       }
       val future = (indexer ? DGIndexer.IndexerEvent(addToIndex._1, None))
       future.onComplete{

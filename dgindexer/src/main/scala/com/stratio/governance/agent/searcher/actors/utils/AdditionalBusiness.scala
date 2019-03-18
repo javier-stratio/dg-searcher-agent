@@ -3,7 +3,7 @@ package com.stratio.governance.agent.searcher.actors.utils
 import org.json4s.JsonAST._
 import org.slf4j.{Logger, LoggerFactory}
 
-class AdditionalBusiness(dataAssetPrefix: String, businessTermPrefix: String, btType: String, btSubType: String) {
+class AdditionalBusiness(dataAssetPrefix: String, businessTermPrefix: String, btType: String, btSubType: String, qualityRulePrefix: String, qrType: String, qrSubtype: String) {
 
   private lazy val LOG: Logger = LoggerFactory.getLogger(getClass.getName)
 
@@ -14,19 +14,35 @@ class AdditionalBusiness(dataAssetPrefix: String, businessTermPrefix: String, bt
 
   private val subtypeMap = Map("DS" -> "Data Store", "PATH" -> "Path", "RESOURCE" -> "Table", EXTRA_RESOURCE_FOR_FILES -> "File", "FIELD" -> "Column")
 
-  // Additional union/Query to obtain Business Terms for Total indexation
-  def getBTTotalIndexationsubquery(schema: String, businessAsset: String, businessAssetType: String): String = {
+  def getAdditionalBusinessTotalIndexationSubqueryPart1(schema: String, businessAsset: String, businessAssetType: String): String = {
     s"select ba.id as id,ba.name as name,'' as alias,ba.description as description,'' as metadata_path,'$btType' as type,'$btSubType' as subtype,'' as tenant,null as properties,true as active,ba.modified_at as discovered_at,ba.modified_at as modified_at from $schema.$businessAsset as ba, $schema.$businessAssetType as bat where ba.business_assets_type_id = bat.id and bat.name='TERM'"
   }
 
+  def getAdditionalBusinessTotalIndexationSubqueryPart2(schema: String, qualityAsset: String): String = {
+    s"select id,name,'' as alias,description,metadata_path,'$qrType' as type,'$qrSubtype' as subtype, tenant,null as properties, active, modified_at as discovered_at, modified_at from $schema.$qualityAsset"
+  }
+
+  // Additional union/Query to obtain Business Terms for Total indexation
+  def getAdditionalBusinessTotalIndexationSubquery(schema: String, businessAsset: String, businessAssetType: String, qualityAsset: String): String = {
+    getAdditionalBusinessTotalIndexationSubqueryPart1(schema, businessAsset, businessAssetType) + " UNION " +
+      getAdditionalBusinessTotalIndexationSubqueryPart2(schema, qualityAsset)
+
+  }
+
   // Additional union/Query to extract Business Terms Ids for partial indexation
-  def getBTPartialIndexationSubquery1(schema: String, businessAssets:  String, businessAssetsType:  String): String = {
-    s"SELECT '',ba.id,ba.modified_at,? FROM $schema.$businessAssets as ba, $schema.$businessAssetsType as bat WHERE ba.business_assets_type_id = bat.id and bat.name='TERM' and ba.modified_at > ? "
+  def getAdditionalBusinessPartialIndexationSubquery1(schema: String, businessAssets:  String, businessAssetsType:  String, qualityTable: String, resultNumber: Int): String = {
+    s"SELECT '',ba.id,ba.modified_at,$resultNumber FROM $schema.$businessAssets as ba, $schema.$businessAssetsType as bat WHERE ba.business_assets_type_id = bat.id and bat.name='TERM' and ba.modified_at > ? UNION " +
+      s"SELECT metadata_path, id, modified_at, ${resultNumber+1} FROM $schema.$qualityTable WHERE modified_at > ?"
   }
 
   // Additional union/Query to obtain Business Term from previously retrieved Ids for partial indexation
-  def getBTPartialIndexationSubquery2(schema: String, businessAsset: String, businessAssetType: String): String = {
-    getBTTotalIndexationsubquery( schema, businessAsset, businessAssetType ) + " and ba.id IN({{ids}})"
+  def getBusinessTermsPartialIndexationSubquery2(schema: String, businessAsset: String, businessAssetType: String): String = {
+    getAdditionalBusinessTotalIndexationSubqueryPart1(schema, businessAsset, businessAssetType) + " and ba.id IN({{ids}})"
+  }
+
+  // Additional union/Query to obtain Business Term from previously retrieved Ids for partial indexation
+  def getQualityRulesPartialIndexationSubquery2(schema: String, qualityAsset: String): String = {
+    getAdditionalBusinessTotalIndexationSubqueryPart2(schema, qualityAsset) + " and id IN({{ids}})"
   }
 
   // Retrieve the enriched (id_extended and dataStore) information given certain parameters of a Search Document
@@ -34,12 +50,16 @@ class AdditionalBusiness(dataAssetPrefix: String, businessTermPrefix: String, bt
     val idExtended: String = subtype match {
       case `btSubType` =>
         businessTermPrefix + id.toString
+      case `qrSubtype` =>
+        qualityRulePrefix + id.toString
       case _ =>
         dataAssetPrefix + id.toString
     }
     val dataStore: String = subtype match {
       case `btSubType` =>
         btType
+      case `qrSubtype` =>
+        qrType
       case _ =>
         try {
           metadataPath.substring(0, metadataPath.indexOf(":"))
@@ -76,6 +96,8 @@ class AdditionalBusiness(dataAssetPrefix: String, businessTermPrefix: String, bt
   def isAdaptable(typ: String): Boolean = {
     typ match {
       case `btType` =>
+        true
+      case `qrType` =>
         true
       case _ =>
         false

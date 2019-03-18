@@ -4,7 +4,7 @@ import akka.actor.Actor
 import com.stratio.governance.agent.searcher.actors.indexer.DGIndexer.IndexerEvent
 import com.stratio.governance.agent.searcher.actors.manager.DGManager
 import com.stratio.governance.agent.searcher.model._
-import com.stratio.governance.agent.searcher.model.es.DataAssetES
+import com.stratio.governance.agent.searcher.model.es.ElasticObject
 import com.stratio.governance.agent.searcher.model.utils.TimestampUtils
 import org.json4s.DefaultFormats
 import org.json4s.JsonAST.JArray
@@ -22,16 +22,16 @@ class DGIndexer(params: IndexerParams) extends Actor {
           LOG.debug("handling Indexer Event. token: " + token)
 
           // first at all separate dataAsset information from additional, this last one will not be process here
-          val realda: Array[DataAssetES] = chunk.filter(a => !params.getAdditionalBusiness.isAdaptable(a.tpe))
-          val additionalda: Array[DataAssetES] = chunk.filter(a => params.getAdditionalBusiness.isAdaptable(a.tpe))
+          val realda: Array[ElasticObject] = chunk.filter(a => !params.getAdditionalBusiness.isAdaptable(a.tpe))
+          val additionalda: Array[ElasticObject] = chunk.filter(a => params.getAdditionalBusiness.isAdaptable(a.tpe))
 
-          val batches: List[Array[DataAssetES]] = realda.grouped(params.getPartition).toList
+          val batches: List[Array[ElasticObject]] = realda.grouped(params.getPartition).toList
 
-          val batchesEnriched: List[Array[DataAssetES]] = batches.map((x: Array[DataAssetES]) => {
+          val batchesEnriched: List[Array[ElasticObject]] = batches.map((x: Array[ElasticObject]) => {
 
-            val ids: Map[String, Long] = x.filter( dadao => !params.getAdditionalBusiness.isAdaptable(dadao.tpe)).map((dadao: DataAssetES) => (dadao.metadataPath, dataAssetIdtoLong(dadao.id))).toMap
+            val ids: Map[String, Long] = x.filter( dadao => !params.getAdditionalBusiness.isAdaptable(dadao.tpe)).map((dadao: ElasticObject) => (dadao.metadataPath, dataAssetIdtoLong(dadao.id))).toMap
 
-            val functionList: List[List[String] => List[EntityRow]] = List(params.getSourceDao.keyValuePairProcess, params.getSourceDao.businessAssets)
+            val functionList: List[List[String] => List[EntityRow]] = List(params.getSourceDao.keyValuePairProcess, params.getSourceDao.businessAssets, params.getSourceDao.qualityRules)
 
             val relatedInfo: List[List[EntityRow]] = functionList.par.map(f => {
               val erES = f(ids.keySet.toList)
@@ -47,7 +47,7 @@ class DGIndexer(params: IndexerParams) extends Actor {
             // x_adds management
             val ordered_x = x_adds.sortWith((a, b) => dataAssetIdtoLong(a.id) < dataAssetIdtoLong(b.id))
             val ordered_additionales = additionals.sortWith((a, b) => a._1 < b._1)
-            val batchEnriched_adds: Array[DataAssetES] = for ((x, a) <- ordered_x zip ordered_additionales) yield {
+            val batchEnriched_adds: Array[ElasticObject] = for ((x, a) <- ordered_x zip ordered_additionales) yield {
               var maxTime: Long = x.getModifiedAt
               a._2.foreach {
                 case BusinessAsset(_, name, _, _, _, modifiedAt) =>
@@ -62,6 +62,12 @@ class DGIndexer(params: IndexerParams) extends Actor {
                   if (upatedTs > maxTime) {
                     maxTime = upatedTs
                   }
+                case QualityRule(_, name, modifiedAt) =>
+                  x.addQualityRule(name)
+                  val upatedTs: Long = TimestampUtils.toLong(modifiedAt)
+                  if (upatedTs > maxTime) {
+                    maxTime = upatedTs
+                  }
               }
               x.modifiedAt = TimestampUtils.fromLong(maxTime)
               x
@@ -69,7 +75,7 @@ class DGIndexer(params: IndexerParams) extends Actor {
             batchEnriched_adds ++ x_noAdds
           })
 
-          val list: Array[DataAssetES] = batchesEnriched.fold[Array[DataAssetES]](Array())((a: Array[DataAssetES], b: Array[DataAssetES]) => {
+          val list: Array[ElasticObject] = batchesEnriched.fold[Array[ElasticObject]](Array())((a: Array[ElasticObject], b: Array[ElasticObject]) => {
             a ++ b
           }) ++ additionalda
 
@@ -122,6 +128,6 @@ object DGIndexer {
   /**
     * Actor messages
     */
-  case class IndexerEvent(notificationChunks: Array[DataAssetES], token: Option[String])
+  case class IndexerEvent(notificationChunks: Array[ElasticObject], token: Option[String])
 
 }

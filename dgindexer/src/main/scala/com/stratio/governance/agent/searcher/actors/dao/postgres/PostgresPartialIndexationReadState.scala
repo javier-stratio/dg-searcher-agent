@@ -13,6 +13,7 @@ case class PostgresPartialIndexationReadState(sourceDao: SourceDao) {
   var readKey: Timestamp = TimestampUtils.MIN
   var readBusinessAssetsDataAsset: Timestamp = TimestampUtils.MIN
   var readBusinessAssets: Timestamp = TimestampUtils.MIN
+  var readQualityRules: Timestamp = TimestampUtils.MIN
 
   def read(connection: Connection): PostgresPartialIndexationReadState = {
     val preparedStatement: PreparedStatement = sourceDao.prepareStatement(PostgresPartialIndexationReadState.selectQuery)
@@ -23,6 +24,7 @@ case class PostgresPartialIndexationReadState(sourceDao: SourceDao) {
       readKey = Option(resultSet.getTimestamp(3)).getOrElse(TimestampUtils.MIN)
       readBusinessAssetsDataAsset = Option(resultSet.getTimestamp(4)).getOrElse(TimestampUtils.MIN)
       readBusinessAssets = Option(resultSet.getTimestamp(5)).getOrElse(TimestampUtils.MIN)
+      readQualityRules = Option(resultSet.getTimestamp(6)).getOrElse(TimestampUtils.MIN)
     }
 
     // If it is the first read. Just insert
@@ -39,6 +41,7 @@ case class PostgresPartialIndexationReadState(sourceDao: SourceDao) {
     preparedStatement.setTimestamp(3, readKey)
     preparedStatement.setTimestamp(4, readBusinessAssetsDataAsset)
     preparedStatement.setTimestamp(5, readBusinessAssets)
+    preparedStatement.setTimestamp(6, readQualityRules)
     sourceDao.executePreparedStatement(preparedStatement)
   }
 
@@ -49,6 +52,7 @@ case class PostgresPartialIndexationReadState(sourceDao: SourceDao) {
     preparedStatement.setTimestamp(3, readKey)
     preparedStatement.setTimestamp(4, readBusinessAssetsDataAsset)
     preparedStatement.setTimestamp(5, readBusinessAssets)
+    preparedStatement.setTimestamp(6, readQualityRules)
     sourceDao.executePreparedStatement(preparedStatement)
   }
 
@@ -61,8 +65,8 @@ object PostgresPartialIndexationReadState {
   private val schema: String = AppConf.sourceSchema
   private val table: String = "partial_indexation_state"
   val selectQuery: String = "SELECT last_read_data_asset, last_read_key_data_asset, last_read_key, " +
-    s"last_read_business_assets_data_asset, last_read_business_assets FROM $schema.$table WHERE id = 1"
-  val insertQuery: String = s"INSERT INTO $schema.$table VALUES (1, ?, ?, ?, ?, ?)"
-  val updateQuery: String = s"UPDATE $schema.$table SET last_read_data_asset=?, last_read_key_data_asset=?, last_read_key=?, last_read_business_assets_data_asset=?, last_read_business_assets=? WHERE id = 1"
+    s"last_read_business_assets_data_asset, last_read_business_assets, last_read_quality_rules FROM $schema.$table WHERE id = 1"
+  val insertQuery: String = s"INSERT INTO $schema.$table VALUES (1, ?, ?, ?, ?, ?, ?)"
+  val updateQuery: String = s"UPDATE $schema.$table SET last_read_data_asset=?, last_read_key_data_asset=?, last_read_key=?, last_read_business_assets_data_asset=?, last_read_business_assets=?, last_read_quality_rules=? WHERE id = 1"
   val deleteQuery: String = s"DELETE FROM $schema.$table WHERE id = 1"
 }

@@ -6,25 +6,31 @@ import org.scalatest.FlatSpec
 
 class AditionalBusinessUnitTest extends FlatSpec {
 
-  val additionalBusiness: AdditionalBusiness = new AdditionalBusiness("","bt/", "GLOSSARY", "BUSINESS_TERM")
+  val additionalBusiness: AdditionalBusiness = new AdditionalBusiness("","bt/", "GLOSSARY", "BUSINESS_TERM", "qr/", "QUALITY", "RULES")
 
   "method getBTTotalIndexationsubquery" should "be processed properly" in {
 
-    val result: String = additionalBusiness.getBTTotalIndexationsubquery("dg_metadata", "business_assets", "business_assets_type")
-    assertResult("select ba.id as id,ba.name as name,'' as alias,ba.description as description,'' as metadata_path,'GLOSSARY' as type,'BUSINESS_TERM' as subtype,'' as tenant,null as properties,true as active,ba.modified_at as discovered_at,ba.modified_at as modified_at from dg_metadata.business_assets as ba, dg_metadata.business_assets_type as bat where ba.business_assets_type_id = bat.id and bat.name='TERM'")(result)
+    val result: String = additionalBusiness.getAdditionalBusinessTotalIndexationSubquery("dg_metadata", "business_assets", "business_assets_type", "quality")
+    assertResult("select ba.id as id,ba.name as name,'' as alias,ba.description as description,'' as metadata_path,'GLOSSARY' as type,'BUSINESS_TERM' as subtype,'' as tenant,null as properties,true as active,ba.modified_at as discovered_at,ba.modified_at as modified_at " +
+      "from dg_metadata.business_assets as ba, dg_metadata.business_assets_type as bat where ba.business_assets_type_id = bat.id and bat.name='TERM' " +
+      "UNION " +
+      "select id,name,'' as alias,description,metadata_path,'QUALITY' as type,'RULES' as subtype, tenant,null as properties, active, modified_at as discovered_at, modified_at from dg_metadata.quality")(result)
 
   }
 
   "method getBTPartialIndexationSubquery1" should "be processed properly" in {
 
-    val result: String = additionalBusiness.getBTPartialIndexationSubquery1("dg_metadata", "business_assets", "business_assets_type")
-    assertResult("SELECT '',ba.id,ba.modified_at,? FROM dg_metadata.business_assets as ba, dg_metadata.business_assets_type as bat WHERE ba.business_assets_type_id = bat.id and bat.name='TERM' and ba.modified_at > ? ")(result)
+    val result: String = additionalBusiness.getAdditionalBusinessPartialIndexationSubquery1("dg_metadata", "business_assets", "business_assets_type", "quality", 7)
+    assertResult("SELECT '',ba.id,ba.modified_at,7 " +
+      "FROM dg_metadata.business_assets as ba, dg_metadata.business_assets_type as bat " +
+      "WHERE ba.business_assets_type_id = bat.id and bat.name='TERM' and ba.modified_at > ? UNION " +
+      "SELECT metadata_path, id, modified_at, 8 FROM dg_metadata.quality WHERE modified_at > ?")(result)
 
   }
 
   "method getBTPartialIndexationSubquery2" should "be processed properly" in {
 
-    val result: String = additionalBusiness.getBTPartialIndexationSubquery2("dg_metadata", "business_assets", "business_assets_type")
+    val result: String = additionalBusiness.getBusinessTermsPartialIndexationSubquery2("dg_metadata", "business_assets", "business_assets_type")
     assertResult("select ba.id as id,ba.name as name,'' as alias,ba.description as description,'' as metadata_path,'GLOSSARY' as type,'BUSINESS_TERM' as subtype,'' as tenant,null as properties,true as active,ba.modified_at as discovered_at,ba.modified_at as modified_at from dg_metadata.business_assets as ba, dg_metadata.business_assets_type as bat where ba.business_assets_type_id = bat.id and bat.name='TERM' and ba.id IN({{ids}})")(result)
 
   }
