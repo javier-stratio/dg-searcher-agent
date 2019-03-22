@@ -22,8 +22,7 @@ hose {
 
             doPackage(config)
 
-            parallel(QC: {doStaticAnalysis(config)},
-                     DEPLOY: {doDeploy(config)},
+            parallel(DEPLOY: {doDeploy(config)},
                      DOCKER: {doDocker(config)},
                      failFast: config.FAILFAST)
     }
