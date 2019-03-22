@@ -18,7 +18,9 @@ case class PostgresPartialIndexationReadState(sourceDao: SourceDao) {
   def read(connection: Connection): PostgresPartialIndexationReadState = {
     val preparedStatement: PreparedStatement = sourceDao.prepareStatement(PostgresPartialIndexationReadState.selectQuery)
     val resultSet: ResultSet = sourceDao.executeQueryPreparedStatement(preparedStatement)
+    var anyResult: Boolean = false
     if (resultSet.next()) {
+      anyResult = true
       readDataAsset = Option(resultSet.getTimestamp(1)).getOrElse(TimestampUtils.MIN)
       readKeyDataAsset = Option(resultSet.getTimestamp(2)).getOrElse(TimestampUtils.MIN)
       readKey = Option(resultSet.getTimestamp(3)).getOrElse(TimestampUtils.MIN)
@@ -28,7 +30,7 @@ case class PostgresPartialIndexationReadState(sourceDao: SourceDao) {
     }
 
     // If it is the first read. Just insert
-    if ( readDataAsset == TimestampUtils.MIN )
+    if ( !anyResult )
       insert(connection)
 
     this

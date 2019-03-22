@@ -12,14 +12,14 @@ class AdditionalBusiness(dataAssetPrefix: String, businessTermPrefix: String, bt
   private val FILE_DEFINITION_KEY: String = "schema"
   private val FILE_DEFINITION_VALUE: String = "na"
 
-  private val subtypeMap = Map("DS" -> "Data Store", "PATH" -> "Path", "RESOURCE" -> "Table", EXTRA_RESOURCE_FOR_FILES -> "File", "FIELD" -> "Column")
+  private val subtypeMap = Map("DS" -> "Data store", "PATH" -> "Path", "RESOURCE" -> "Table", EXTRA_RESOURCE_FOR_FILES -> "File", "FIELD" -> "Column")
 
   def getAdditionalBusinessTotalIndexationSubqueryPart1(schema: String, businessAsset: String, businessAssetType: String): String = {
     s"select ba.id as id,ba.name as name,'' as alias,ba.description as description,'' as metadata_path,'$btType' as type,'$btSubType' as subtype,'' as tenant,null as properties,true as active,ba.modified_at as discovered_at,ba.modified_at as modified_at from $schema.$businessAsset as ba, $schema.$businessAssetType as bat where ba.business_assets_type_id = bat.id and bat.name='TERM'"
   }
 
   def getAdditionalBusinessTotalIndexationSubqueryPart2(schema: String, qualityAsset: String): String = {
-    s"select id,name,'' as alias,description,metadata_path,'$qrType' as type,'$qrSubtype' as subtype, tenant,null as properties, active, modified_at as discovered_at, modified_at from $schema.$qualityAsset"
+    s"select id,name,'' as alias,description,'' as metadata_path,'$qrType' as type,'$qrSubtype' as subtype, tenant,null as properties, active, modified_at as discovered_at, modified_at from $schema.$qualityAsset"
   }
 
   // Additional union/Query to obtain Business Terms for Total indexation
@@ -40,9 +40,9 @@ class AdditionalBusiness(dataAssetPrefix: String, businessTermPrefix: String, bt
     getAdditionalBusinessTotalIndexationSubqueryPart1(schema, businessAsset, businessAssetType) + " and ba.id IN({{ids}})"
   }
 
-  // Additional union/Query to obtain Business Term from previously retrieved Ids for partial indexation
+  // Additional union/Query to obtain QualityRules from previously retrieved Ids for partial indexation
   def getQualityRulesPartialIndexationSubquery2(schema: String, qualityAsset: String): String = {
-    getAdditionalBusinessTotalIndexationSubqueryPart2(schema, qualityAsset) + " and id IN({{ids}})"
+    getAdditionalBusinessTotalIndexationSubqueryPart2(schema, qualityAsset) + " where id IN({{ids}})"
   }
 
   // Retrieve the enriched (id_extended and dataStore) information given certain parameters of a Search Document

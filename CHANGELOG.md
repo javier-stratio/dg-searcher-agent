@@ -2,6 +2,7 @@
 
 ## 0.4.0 (upcoming)
 
+* [DGPB-1964] Partial Indexation with QR does not work
 * [DGPB-1963] libnss3.so not found in dg-searcher-agent
 * [DGPB-1932] Index quality Rules in searcher
 * [DGPB-1930] Adapt searcher agent to index with suggester options

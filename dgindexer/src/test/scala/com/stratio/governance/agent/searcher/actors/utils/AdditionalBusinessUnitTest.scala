@@ -4,7 +4,7 @@ import com.stratio.governance.commons.MetadataPath
 import org.json4s.native.JsonMethods._
 import org.scalatest.FlatSpec
 
-class AditionalBusinessUnitTest extends FlatSpec {
+class AdditionalBusinessUnitTest extends FlatSpec {
 
   val additionalBusiness: AdditionalBusiness = new AdditionalBusiness("","bt/", "GLOSSARY", "BUSINESS_TERM", "qr/", "QUALITY", "RULES")
 
@@ -14,7 +14,7 @@ class AditionalBusinessUnitTest extends FlatSpec {
     assertResult("select ba.id as id,ba.name as name,'' as alias,ba.description as description,'' as metadata_path,'GLOSSARY' as type,'BUSINESS_TERM' as subtype,'' as tenant,null as properties,true as active,ba.modified_at as discovered_at,ba.modified_at as modified_at " +
       "from dg_metadata.business_assets as ba, dg_metadata.business_assets_type as bat where ba.business_assets_type_id = bat.id and bat.name='TERM' " +
       "UNION " +
-      "select id,name,'' as alias,description,metadata_path,'QUALITY' as type,'RULES' as subtype, tenant,null as properties, active, modified_at as discovered_at, modified_at from dg_metadata.quality")(result)
+      "select id,name,'' as alias,description,'' as metadata_path,'QUALITY' as type,'RULES' as subtype, tenant,null as properties, active, modified_at as discovered_at, modified_at from dg_metadata.quality")(result)
 
   }
 
@@ -32,6 +32,13 @@ class AditionalBusinessUnitTest extends FlatSpec {
 
     val result: String = additionalBusiness.getBusinessTermsPartialIndexationSubquery2("dg_metadata", "business_assets", "business_assets_type")
     assertResult("select ba.id as id,ba.name as name,'' as alias,ba.description as description,'' as metadata_path,'GLOSSARY' as type,'BUSINESS_TERM' as subtype,'' as tenant,null as properties,true as active,ba.modified_at as discovered_at,ba.modified_at as modified_at from dg_metadata.business_assets as ba, dg_metadata.business_assets_type as bat where ba.business_assets_type_id = bat.id and bat.name='TERM' and ba.id IN({{ids}})")(result)
+
+  }
+
+  "method getQualityRulesPartialIndexationSubquery2" should "be processed properly" in {
+
+    val result: String = additionalBusiness.getQualityRulesPartialIndexationSubquery2("dg_metadata", "quality")
+    assertResult("select id,name,'' as alias,description,'' as metadata_path,'QUALITY' as type,'RULES' as subtype, tenant,null as properties, active, modified_at as discovered_at, modified_at from dg_metadata.quality where id IN({{ids}})")(result)
 
   }
 
@@ -63,7 +70,7 @@ class AditionalBusinessUnitTest extends FlatSpec {
     assertResult("1")(result._1)
     assertResult("ds")(result._2)
     assertResult("Hdfs")(result._3)
-    assertResult("Data Store")(result._4)
+    assertResult("Data store")(result._4)
 
     val result2: (String, String, String, String) = additionalBusiness.adaptInfo(1, "HDFS", "PATH", MetadataPath.factory("ds", Some("/path"), None, None).toString(), parse("{\"hdfsDir\":{\"prop\":\"any\",\"type\":\"whatever\"}}"))
     assertResult("1")(result2._1)

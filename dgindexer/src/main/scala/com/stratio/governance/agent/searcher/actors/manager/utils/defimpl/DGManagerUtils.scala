@@ -21,6 +21,7 @@ class DGManagerUtils(scheduler: Scheduler, sourceDao: SourceDao, relevance: List
       .replace(RelevanceRef.RELEVANCE_NAME_REF._2, relevance(RelevanceRef.RELEVANCE_NAME_REF._3))
       .replace(RelevanceRef.RELEVANCE_DESCRIPTION_REF._2, relevance(RelevanceRef.RELEVANCE_DESCRIPTION_REF._3))
       .replace(RelevanceRef.RELEVANCE_BUSINESSTERM_REF._2, relevance(RelevanceRef.RELEVANCE_BUSINESSTERM_REF._3))
+      .replace(RelevanceRef.RELEVANCE_QUALITYRULES_REF._2, relevance(RelevanceRef.RELEVANCE_QUALITYRULES_REF._3))
       .replace(RelevanceRef.RELEVANCE_KEY_REF._2, relevance(RelevanceRef.RELEVANCE_KEY_REF._3))
     val key_template_1: String = loadResource(KEY_TEMPLATE_1)
     val key_template_2: String = loadResource(KEY_TEMPLATE_2)
@@ -60,7 +61,8 @@ object RelevanceRef {
   val RELEVANCE_NAME_REF: (String, String, Int)= ("manager.relevance.name","RELEVANCE_NAME",1)
   val RELEVANCE_DESCRIPTION_REF: (String, String, Int)= ("manager.relevance.description","RELEVANCE_DESCRIPTION",2)
   val RELEVANCE_BUSINESSTERM_REF: (String, String, Int)= ("manager.relevance.businessterm","RELEVANCE_BUSINESSTERM",3)
-  val RELEVANCE_KEY_REF: (String, String, Int)= ("manager.relevance.key","RELEVANCE_KEY",4)
-  val RELEVANCE_VALUE_REF: (String, String, Int)= ("manager.relevance.value","RELEVANCE_VALUE",5)
+  val RELEVANCE_QUALITYRULES_REF: (String, String, Int)= ("manager.relevance.qualityRules","RELEVANCE_QUALITYRULES",4)
+  val RELEVANCE_KEY_REF: (String, String, Int)= ("manager.relevance.key","RELEVANCE_KEY",5)
+  val RELEVANCE_VALUE_REF: (String, String, Int)= ("manager.relevance.value","RELEVANCE_VALUE",6)
 
 }

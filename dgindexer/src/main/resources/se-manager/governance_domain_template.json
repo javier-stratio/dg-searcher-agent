@@ -147,6 +147,7 @@
     "discoveredAt": 1,
     "modifiedAt": 1,
     "businessTerms": RELEVANCE_BUSINESSTERM,
+    "qualityRules": RELEVANCE_QUALITYRULES,
     "keys": RELEVANCE_KEY
     {{#keySearchs}}
       {{> keySearch}}

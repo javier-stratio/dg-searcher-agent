@@ -91,6 +91,8 @@ object AppConf {
 
   lazy val managerRelevanceBusinessterm: Int = envOrElseConfigOrElseDefault(RelevanceRef.RELEVANCE_BUSINESSTERM_REF._1,50)
 
+  lazy val managerRelevanceQualityRules: Int = envOrElseConfigOrElseDefault(RelevanceRef.RELEVANCE_QUALITYRULES_REF._1,50)
+
   lazy val managerRelevanceKey: Int = envOrElseConfigOrElseDefault(RelevanceRef.RELEVANCE_KEY_REF._1,50)
 
   lazy val managerRelevanceValue: Int = envOrElseConfigOrElseDefault(RelevanceRef.RELEVANCE_VALUE_REF._1, 50)
