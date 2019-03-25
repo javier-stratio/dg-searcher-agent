@@ -1,6 +1,10 @@
 # Changelog
 
-## 0.4.0 (upcoming)
+## 0.5.0 (upcoming)
+
+* Pending changelog
+
+## 0.4.0-728822d (Built: March 25, 2019 | Pre-release)
 
 * [DGPB-1964] Partial Indexation with QR does not work
 * [DGPB-1963] libnss3.so not found in dg-searcher-agent
