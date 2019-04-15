@@ -1,8 +1,8 @@
 # Changelog
 
-## 0.5.0 (upcoming)
+## 1.0.0 (upcoming)
 
-* Pending changelog
+* [DGPB-2039] Update searcher versions
 
 ## 0.4.0-45b89e7 (Built: April 04, 2019 | Pre-release)
 
