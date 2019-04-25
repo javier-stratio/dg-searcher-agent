@@ -2,7 +2,7 @@
 
 ## 1.1.0 (upcoming)
 
-* Pending changelog
+* [DGPB-2075] Enable tenant filter
 
 ## 1.0.0-3d8f405 (Built: April 15, 2019 | Pre-release)
 

@@ -72,7 +72,7 @@
         "type": "text",
         "searchable": true,
         "sortable": true,
-        "aggregable": false
+        "aggregable": true
       },
       {
         "field": "active",
