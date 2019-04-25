@@ -4,7 +4,7 @@
 
 * [DGPB-2075] Enable tenant filter
 
-## 1.0.0-3d8f405 (Built: April 15, 2019 | Pre-release)
+## 1.0.0-af2b702 (Built: April 25, 2019 | Pre-release)
 
 * [DGPB-2039] Update searcher versions
 
