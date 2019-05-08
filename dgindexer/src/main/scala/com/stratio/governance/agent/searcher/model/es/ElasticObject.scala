@@ -64,9 +64,9 @@ case class ElasticObject(id: String,
 
   def getJsonObject: JValue = {
     jsonObject = jsonObject ~ ("id" -> JString(id))
-    if (name.isDefined && (name.get != null)) jsonObject = jsonObject ~ ("name" -> JString(name.get))
-    if (alias.isDefined && (alias.get != null)) jsonObject = jsonObject ~ ("alias" -> JString(alias.get))
-    if (description.isDefined && (description != null)) jsonObject = jsonObject ~ ("description" -> JString(description.get))
+    jsonObject = jsonObject ~ ("name" -> JString(if (name.isDefined && name.get != null) name.get else ""))
+    jsonObject = jsonObject ~ ("alias" -> JString(if (alias.isDefined && alias.get != null) alias.get else ""))
+    jsonObject = jsonObject ~ ("description" -> JString(if (description.isDefined && description.get != null) description.get else ""))
     jsonObject = jsonObject ~ ("metadataPath" -> JString(metadataPath))
     jsonObject = jsonObject ~ ("type" -> JString(tpe))
     jsonObject = jsonObject ~ ("subtype" -> JString(subtype))

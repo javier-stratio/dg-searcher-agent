@@ -16,7 +16,7 @@ WORKDIR /
 
 ARG CACHEBUST
 RUN apk update && \
-    apk add binutils=2.30-r1 openjdk8-jre-base=8.201.08-r0 su-exec=0.2-r0 curl=7.61.1-r2 bash=4.3.48-r1 jq=1.5-r4 openssl=1.0.2r-r0 && \
+    apk add binutils=2.30-r1 openjdk8-jre-base=8.212.04-r0 su-exec=0.2-r0 curl=7.61.1-r2 bash=4.3.48-r1 jq=1.5-r4 openssl=1.0.2r-r0 && \
     apk add --no-cache nss=3.30.1-r0 && \
     addgroup ${GROUP} && \
     adduser -H -h /home/${USER} -G ${GROUP} -s /bin/nologin ${USER} -D && \
