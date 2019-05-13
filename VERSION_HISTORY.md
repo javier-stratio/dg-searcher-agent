@@ -1,7 +1,7 @@
 # Version History
 
 
-#### 1.0.0-af2b702 (Built: April 25, 2019 | Pre-release)
+#### 1.0.0-af2b702 (Built: April 25, 2019 | Released: May 13, 2019)
 
 #### 0.4.0-45b89e7 (Built: April 04, 2019 | Pre-release)
 
