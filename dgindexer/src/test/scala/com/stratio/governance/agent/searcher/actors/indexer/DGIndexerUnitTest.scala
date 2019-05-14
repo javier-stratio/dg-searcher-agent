@@ -34,7 +34,7 @@ class ExtractorTestParams(s: Semaphore, sourceDao: CustomTestSourceDao, chunk: A
 class CustomTestSourceDao(noAdds: Boolean) extends ExtractorSourceDao with IndexerSourceDao {
   override def keyValuePairProcess(mdps: List[String]): List[KeyValuePair] = {
     if (!noAdds) {
-      val rows: List[List[KeyValuePair]] = mdps.map(md => List(KeyValuePair(md, "OWNER", "finantial", "2018-11-29T10:27:00.000"), KeyValuePair(md, "QUALITY", "High", "2018-09-28T20:45:00.000")))
+      val rows: List[List[KeyValuePair]] = mdps.map(md => List(KeyValuePair(md, "OWNER", "{\"name\":\"\",\"value\":\"finantial\"}", "2018-11-29T10:27:00.000"), KeyValuePair(md, "QUALITY", "{\"name\":\"\",\"value\":\"High\"}", "2018-09-28T20:45:00.000")))
       rows.fold[List[KeyValuePair]](List())((a: List[KeyValuePair], b: List[KeyValuePair]) => {
         a ++ b
       }).filter(a => a.getMatadataPath != "EmptyDatastore:")

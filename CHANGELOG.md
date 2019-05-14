@@ -2,6 +2,7 @@
 
 ## 1.1.0 (upcoming)
 
+* [DGPB-2092] Environment variables management
 * [DGPB-2075] Enable tenant filter
 
 ## 1.0.0-af2b702 (Built: April 25, 2019 | Released: May 13, 2019)

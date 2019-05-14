@@ -6,7 +6,10 @@ import com.stratio.governance.agent.searcher.model.utils.TimestampUtils
 import org.json4s.JsonAST._
 import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods._
+import org.json4s.DefaultFormats
 import org.slf4j.{Logger, LoggerFactory}
+
+case class Variable(name: String, value: String)
 
 case class ElasticObject(id: String,
                          name: Option[String],
@@ -80,7 +83,14 @@ case class ElasticObject(id: String,
     if (keyValues.isDefined) {
       jsonObject = jsonObject ~ ("keys" -> JArray(keyValues.get.map(a=>JString(a._1))))
       keyValues.get.foreach( a => {
-        jsonObject = jsonObject ~ ("key." + a._1 -> JString(a._2))
+        try {
+          implicit val formats = DefaultFormats
+          val valueObject: Variable = parse( a._2 ).extract[Variable]
+          jsonObject = jsonObject ~ ("key." + a._1 -> valueObject.value)
+        } catch {
+          case e: Throwable =>
+            LOG.warn(s"attribute key.${a._1} has not been indexed for id $id!. ${e.getMessage}")
+        }
       })
     }
     jsonObject

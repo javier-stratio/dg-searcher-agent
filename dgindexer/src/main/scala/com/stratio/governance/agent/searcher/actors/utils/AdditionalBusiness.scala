@@ -15,7 +15,7 @@ class AdditionalBusiness(dataAssetPrefix: String, businessTermPrefix: String, bt
   private val subtypeMap = Map("DS" -> "Data store", "PATH" -> "Path", "RESOURCE" -> "Table", EXTRA_RESOURCE_FOR_FILES -> "File", "FIELD" -> "Column")
 
   def getAdditionalBusinessTotalIndexationSubqueryPart1(schema: String, businessAsset: String, businessAssetType: String): String = {
-    s"select ba.id as id,ba.name as name,'' as alias,ba.description as description,'' as metadata_path,'$btType' as type,'$btSubType' as subtype,'' as tenant,null as properties,true as active,ba.modified_at as discovered_at,ba.modified_at as modified_at from $schema.$businessAsset as ba, $schema.$businessAssetType as bat where ba.business_assets_type_id = bat.id and bat.name='TERM'"
+    s"select ba.id as id,ba.name as name,'' as alias,ba.description as description,'' as metadata_path,'$btType' as type,'$btSubType' as subtype,ba.tenant,null as properties,true as active,ba.modified_at as discovered_at,ba.modified_at as modified_at from $schema.$businessAsset as ba, $schema.$businessAssetType as bat where ba.business_assets_type_id = bat.id and bat.name='TERM'"
   }
 
   def getAdditionalBusinessTotalIndexationSubqueryPart2(schema: String, qualityAsset: String): String = {
