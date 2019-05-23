@@ -24,5 +24,5 @@ export CONFIG=/docker/lib/process.sh
 [[ -f $TRUSTSTORE  ]] && source $TRUSTSTORE ||  { errorLogging "$TRUSTSTORE No such file........" 1006; exit 10; }
 [[ -f $CONFIG  ]] && source $CONFIG ||  { errorLogging "$CONFIG No such file........" 1005; exit 10; }
 
-infoLogging "su-exec $USER:1000 $JAVA_HOME/bin/java $JAVA_OPTS -jar /opt/sds/$MODULE/$JAR"
-exec su-exec $USER:1000 $JAVA_HOME/bin/java $JAVA_OPTS -jar /opt/sds/$MODULE/$JAR
+infoLogging "exec $JAVA_HOME/bin/java $JAVA_OPTS -jar /opt/sds/$MODULE/$JAR"
+exec $JAVA_HOME/bin/java $JAVA_OPTS -jar /opt/sds/$MODULE/$JAR

@@ -2,6 +2,7 @@
 
 ## 1.1.0 (upcoming)
 
+* [DGPB-2169] Actualizar imagen base Alpine a Ubuntu
 * [DGPB-2092] Environment variables management
 * [DGPB-2075] Enable tenant filter
 
