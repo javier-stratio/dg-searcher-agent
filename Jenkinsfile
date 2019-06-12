@@ -10,7 +10,8 @@ hose {
     RELEASETIMEOUT = 30
     MAXITRETRIES = 2
     BUILDTOOLVERSION = '3.5.0'
-    NEW_VERSIONING = 'true'
+    NEW_VERSIONING = true
+    GENERATE_QA_ISSUE = true
     KMS_UTILS = '0.4.0'
 
     DEV = {
