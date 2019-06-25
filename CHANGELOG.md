@@ -1,6 +1,10 @@
 # Changelog
 
-## 1.1.0 (upcoming)
+## 1.2.0 (upcoming)
+
+* Pending changelog
+
+## 1.1.0-67ddcd4 (Built: June 25, 2019 | Pre-release)
 
 * [DGPB-2169] Actualizar imagen base Alpine a Ubuntu
 * [DGPB-2092] Environment variables management
