@@ -4,8 +4,9 @@
 
 * [DGPB-2299] Adapt searcher agent for tenant filter
 
-## 1.1.0-67ddcd4 (Built: June 25, 2019 | Pre-release)
+## 1.1.0-403b4ac (Built: July 09, 2019 | Pre-release)
 
+* [DGPB-2299] Adapt searcher agent for tenant filter
 * [DGPB-2169] Actualizar imagen base Alpine a Ubuntu
 * [DGPB-2092] Environment variables management
 * [DGPB-2075] Enable tenant filter
