@@ -2,7 +2,7 @@
 
 ## 1.2.0 (upcoming)
 
-* Pending changelog
+* [DGPB-2299] Adapt searcher agent for tenant filter
 
 ## 1.1.0-67ddcd4 (Built: June 25, 2019 | Pre-release)
 

@@ -67,14 +67,6 @@
         "aggregable": true
       },
       {
-        "field": "tenant",
-        "name": "Tenant",
-        "type": "text",
-        "searchable": true,
-        "sortable": true,
-        "aggregable": true
-      },
-      {
         "field": "active",
         "name": "Active",
         "type": "boolean",
@@ -143,7 +135,6 @@
     "description": RELEVANCE_DESCRIPTION,
     "type": 1,
     "subtype": 1,
-    "tenant": 1,
     "discoveredAt": 1,
     "modifiedAt": 1,
     "businessTerms": RELEVANCE_BUSINESSTERM,

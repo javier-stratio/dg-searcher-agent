@@ -73,7 +73,7 @@ case class ElasticObject(id: String,
     jsonObject = jsonObject ~ ("metadataPath" -> JString(metadataPath))
     jsonObject = jsonObject ~ ("type" -> JString(tpe))
     jsonObject = jsonObject ~ ("subtype" -> JString(subtype))
-    jsonObject = jsonObject ~ ("tenant" -> JString(tenant))
+    jsonObject = jsonObject ~ ("_tenant" -> JString(tenant))
     jsonObject = jsonObject ~ ("active" -> JBool(active))
     jsonObject = jsonObject ~ ("discoveredAt" -> JString(getDiscoveredAtAsString))
     jsonObject = jsonObject ~ ("modifiedAt" -> JString(getModifiedAtAsString))
