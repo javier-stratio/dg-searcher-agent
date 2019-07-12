@@ -4,8 +4,10 @@
 
 * [DGPB-2299] Adapt searcher agent for tenant filter
 
-## 1.1.0-403b4ac (Built: July 09, 2019 | Pre-release)
+## 1.1.0-f2011be (Built: July 12, 2019 | Pre-release)
 
+* [DGPB-2327] Search of boolean attribute
+* [DGPB-2325] Special char in asest name and metadatapath 
 * [DGPB-2299] Adapt searcher agent for tenant filter
 * [DGPB-2169] Actualizar imagen base Alpine a Ubuntu
 * [DGPB-2092] Environment variables management
