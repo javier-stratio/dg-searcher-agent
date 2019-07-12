@@ -31,10 +31,18 @@ class ExtractorTestParams(s: Semaphore, sourceDao: CustomTestSourceDao, chunk: A
   }
 
 }
-class CustomTestSourceDao(noAdds: Boolean) extends ExtractorSourceDao with IndexerSourceDao {
+class CustomTestSourceDao(noAdds: Boolean, value_type: Option[String]) extends ExtractorSourceDao with IndexerSourceDao {
   override def keyValuePairProcess(mdps: List[String]): List[KeyValuePair] = {
     if (!noAdds) {
-      val rows: List[List[KeyValuePair]] = mdps.map(md => List(KeyValuePair(md, "OWNER", "{\"name\":\"\",\"value\":\"finantial\"}", "2018-11-29T10:27:00.000"), KeyValuePair(md, "QUALITY", "{\"name\":\"\",\"value\":\"High\"}", "2018-09-28T20:45:00.000")))
+      val value_quality_json: String = value_type match {
+        case Some("STRING") => "{\"name\":\"\",\"value\":\"High\"}"
+        case Some("BOOLEAN") => "{\"name\":\"\",\"value\":true}"
+        case Some("NUMBER") => "{\"name\":\"\",\"value\":1234}"
+        case Some("NULL") => "{\"name\":\"\",\"value\":null}"
+        case Some("EMPTY") => "{\"name\":\"\",\"value\":\"\"}"
+        case None => ""
+      }
+      val rows: List[List[KeyValuePair]] = mdps.map(md => List(KeyValuePair(md, "OWNER", "{\"name\":\"\",\"value\":\"finantial\"}", "2018-11-29T10:27:00.000"), KeyValuePair(md, "QUALITY", value_quality_json, "2018-09-28T20:45:00.000")))
       rows.fold[List[KeyValuePair]](List())((a: List[KeyValuePair], b: List[KeyValuePair]) => {
         a ++ b
       }).filter(a => a.getMatadataPath != "EmptyDatastore:")
@@ -92,7 +100,7 @@ class CustomTestSourceDao(noAdds: Boolean) extends ExtractorSourceDao with Index
   override def readQualityRulesWhereIdsIn(ids: List[Int]): Array[ElasticObject] = ???
 }
 
-class PartialIndexerTestParams(s: Semaphore, noAdds: Boolean) extends IndexerParams {
+class PartialIndexerTestParams(s: Semaphore, noAdds: Boolean, value_type: Option[String]) extends IndexerParams {
 
   var result: String = ""
 
@@ -100,7 +108,7 @@ class PartialIndexerTestParams(s: Semaphore, noAdds: Boolean) extends IndexerPar
     s
   }
 
-  override def getSourceDao: CustomTestSourceDao = new CustomTestSourceDao(noAdds)
+  override def getSourceDao: CustomTestSourceDao = new CustomTestSourceDao(noAdds, value_type)
 
   override def getSearcherDao: SearcherDao = new SearcherDao {
 
@@ -148,7 +156,7 @@ class SASTExtractor(indexer: ActorRef, params: ExtractorTestParams) extends Acto
 
 class DGIndexerUnitTest extends FlatSpec {
 
-  "Extractor Completed Events Simulation" should "be processed in Indexer Mock" in {
+  "Extractor Completed Events Simulation with text typed attribute" should "be processed in Indexer Mock" in {
 
     val milis: Long = 1543424486000l
     val reference: String = "[{\"id\":\"da/2\",\"name\":\"MyDataStore\",\"alias\":\"\",\"description\":\"My DataStore\",\"metadataPath\":\"MyDataStore:\",\"type\":\"SQL\",\"subtype\":\"DS\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"dataStore\":\"MyDataStore\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"qualityRules\":[\"qualityRule2\",\"qualityRule1\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.QUALITY\":\"High\",\"key.OWNER\":\"finantial\"},{\"id\":\"da/1\",\"name\":\"EmptyStore\",\"alias\":\"TheOnlyOne\",\"description\":\"Empty DataStore\",\"metadataPath\":\"EmptyDatastore:\",\"type\":\"HDFS\",\"subtype\":\"DS\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-28T17:01:26.000\",\"dataStore\":\"EmptyDatastore\"},{\"id\":\"da/3\",\"name\":\"FinantialDB\",\"alias\":\"\",\"description\":\"Finantial DataBase\",\"metadataPath\":\"MyDataStore://>FinantialDB/:\",\"type\":\"SQL\",\"subtype\":\"PATH\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"dataStore\":\"MyDataStore\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"qualityRules\":[\"qualityRule2\",\"qualityRule1\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.QUALITY\":\"High\",\"key.OWNER\":\"finantial\"},{\"id\":\"da/4\",\"name\":\"toys-department\",\"alias\":\"\",\"description\":\"Toys Department\",\"metadataPath\":\"MyDataStore://>FinantialDB/:toys-department\",\"type\":\"SQL\",\"subtype\":\"RESOURCE\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"dataStore\":\"MyDataStore\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"qualityRules\":[\"qualityRule2\",\"qualityRule1\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.QUALITY\":\"High\",\"key.OWNER\":\"finantial\"},{\"id\":\"da/5\",\"name\":\"purchaserName\",\"alias\":\"\",\"description\":\"Purchaser Name\",\"metadataPath\":\"MyDataStore://>FinantialDB/:toys-department:purchaserName:\",\"type\":\"SQL\",\"subtype\":\"FIELD\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"dataStore\":\"MyDataStore\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"qualityRules\":[\"qualityRule2\",\"qualityRule1\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.QUALITY\":\"High\",\"key.OWNER\":\"finantial\"},{\"id\":\"da/6\",\"name\":\"purchases\",\"alias\":\"\",\"description\":\"Purchases\",\"metadataPath\":\"MyDataStore://>FinantialDB/:toys-department:purchases:\",\"type\":\"SQL\",\"subtype\":\"FIELD\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"dataStore\":\"MyDataStore\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"qualityRules\":[\"qualityRule2\",\"qualityRule1\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.QUALITY\":\"High\",\"key.OWNER\":\"finantial\"},{\"id\":\"bt/1\",\"name\":\"financial\",\"alias\":\"\",\"description\":\"Financial Business Term\",\"metadataPath\":\"\",\"type\":\"GLOSSARY\",\"subtype\":\"BUSINESS_TERM\",\"_tenant\":\"\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-28T17:01:26.000\",\"dataStore\":\"GLOSSARY\"}]"
@@ -165,7 +173,99 @@ class DGIndexerUnitTest extends FlatSpec {
       da.dataStore = getDataStore(da.tpe, da.metadataPath)
     })
 
-    val result = process(chunk, noAdds = false)
+    val result = process(chunk, noAdds = false, Some("STRING"))
+
+    assertResult(reference)(result)
+
+  }
+
+  "Extractor Completed Events Simulation with empty text typed attribute" should "be processed in Indexer Mock" in {
+
+    val milis: Long = 1543424486000l
+    val reference: String = "[{\"id\":\"da/2\",\"name\":\"MyDataStore\",\"alias\":\"\",\"description\":\"My DataStore\",\"metadataPath\":\"MyDataStore:\",\"type\":\"SQL\",\"subtype\":\"DS\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"dataStore\":\"MyDataStore\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"qualityRules\":[\"qualityRule2\",\"qualityRule1\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.QUALITY\":\"\",\"key.OWNER\":\"finantial\"},{\"id\":\"da/1\",\"name\":\"EmptyStore\",\"alias\":\"TheOnlyOne\",\"description\":\"Empty DataStore\",\"metadataPath\":\"EmptyDatastore:\",\"type\":\"HDFS\",\"subtype\":\"DS\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-28T17:01:26.000\",\"dataStore\":\"EmptyDatastore\"},{\"id\":\"da/3\",\"name\":\"FinantialDB\",\"alias\":\"\",\"description\":\"Finantial DataBase\",\"metadataPath\":\"MyDataStore://>FinantialDB/:\",\"type\":\"SQL\",\"subtype\":\"PATH\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"dataStore\":\"MyDataStore\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"qualityRules\":[\"qualityRule2\",\"qualityRule1\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.QUALITY\":\"\",\"key.OWNER\":\"finantial\"},{\"id\":\"da/4\",\"name\":\"toys-department\",\"alias\":\"\",\"description\":\"Toys Department\",\"metadataPath\":\"MyDataStore://>FinantialDB/:toys-department\",\"type\":\"SQL\",\"subtype\":\"RESOURCE\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"dataStore\":\"MyDataStore\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"qualityRules\":[\"qualityRule2\",\"qualityRule1\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.QUALITY\":\"\",\"key.OWNER\":\"finantial\"},{\"id\":\"da/5\",\"name\":\"purchaserName\",\"alias\":\"\",\"description\":\"Purchaser Name\",\"metadataPath\":\"MyDataStore://>FinantialDB/:toys-department:purchaserName:\",\"type\":\"SQL\",\"subtype\":\"FIELD\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"dataStore\":\"MyDataStore\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"qualityRules\":[\"qualityRule2\",\"qualityRule1\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.QUALITY\":\"\",\"key.OWNER\":\"finantial\"},{\"id\":\"da/6\",\"name\":\"purchases\",\"alias\":\"\",\"description\":\"Purchases\",\"metadataPath\":\"MyDataStore://>FinantialDB/:toys-department:purchases:\",\"type\":\"SQL\",\"subtype\":\"FIELD\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"dataStore\":\"MyDataStore\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"qualityRules\":[\"qualityRule2\",\"qualityRule1\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.QUALITY\":\"\",\"key.OWNER\":\"finantial\"},{\"id\":\"bt/1\",\"name\":\"financial\",\"alias\":\"\",\"description\":\"Financial Business Term\",\"metadataPath\":\"\",\"type\":\"GLOSSARY\",\"subtype\":\"BUSINESS_TERM\",\"_tenant\":\"\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-28T17:01:26.000\",\"dataStore\":\"GLOSSARY\"}]"
+    val chunk: Array[ElasticObject] = Array(
+      new ElasticObject("da/1",Option("EmptyStore"),Option("TheOnlyOne"), Option("Empty DataStore"),"EmptyDatastore:","HDFS","DS","stratio",true, new Timestamp(milis), modifiedAt = new Timestamp(milis)),
+      new ElasticObject("da/2",Option("MyDataStore"),None,Option("My DataStore"),"MyDataStore:","SQL","DS","stratio",true, new Timestamp(milis), new Timestamp(milis)),
+      new ElasticObject("da/3",Option("FinantialDB"),None,Option("Finantial DataBase"),"MyDataStore://>FinantialDB/:","SQL","PATH","stratio",true, new Timestamp(milis), new Timestamp(milis)),
+      new ElasticObject("da/4",Option("toys-department"),None,Option("Toys Department"),"MyDataStore://>FinantialDB/:toys-department","SQL","RESOURCE","stratio",true, new Timestamp(milis), new Timestamp(milis)),
+      new ElasticObject("da/5",Option("purchaserName"),None,Option("Purchaser Name"),"MyDataStore://>FinantialDB/:toys-department:purchaserName:","SQL","FIELD","stratio",true, new Timestamp(milis), new Timestamp(milis)),
+      new ElasticObject("da/6",Option("purchases"),None,Option("Purchases"),"MyDataStore://>FinantialDB/:toys-department:purchases:","SQL","FIELD","stratio",true, new Timestamp(milis), new Timestamp(milis)),
+      new ElasticObject("bt/1",Option("financial"),None,Option("Financial Business Term"),"","GLOSSARY","BUSINESS_TERM","",true, new Timestamp(milis), new Timestamp(milis))
+    )
+    chunk.foreach( (da: ElasticObject) => {
+      da.dataStore = getDataStore(da.tpe, da.metadataPath)
+    })
+
+    val result = process(chunk, noAdds = false, Some("EMPTY"))
+
+    assertResult(reference)(result)
+
+  }
+
+  "Extractor Completed Events Simulation with null attribute" should "be processed in Indexer Mock" in {
+
+    val milis: Long = 1543424486000l
+    val reference: String = "[{\"id\":\"da/2\",\"name\":\"MyDataStore\",\"alias\":\"\",\"description\":\"My DataStore\",\"metadataPath\":\"MyDataStore:\",\"type\":\"SQL\",\"subtype\":\"DS\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"dataStore\":\"MyDataStore\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"qualityRules\":[\"qualityRule2\",\"qualityRule1\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.OWNER\":\"finantial\"},{\"id\":\"da/1\",\"name\":\"EmptyStore\",\"alias\":\"TheOnlyOne\",\"description\":\"Empty DataStore\",\"metadataPath\":\"EmptyDatastore:\",\"type\":\"HDFS\",\"subtype\":\"DS\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-28T17:01:26.000\",\"dataStore\":\"EmptyDatastore\"},{\"id\":\"da/3\",\"name\":\"FinantialDB\",\"alias\":\"\",\"description\":\"Finantial DataBase\",\"metadataPath\":\"MyDataStore://>FinantialDB/:\",\"type\":\"SQL\",\"subtype\":\"PATH\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"dataStore\":\"MyDataStore\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"qualityRules\":[\"qualityRule2\",\"qualityRule1\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.OWNER\":\"finantial\"},{\"id\":\"da/4\",\"name\":\"toys-department\",\"alias\":\"\",\"description\":\"Toys Department\",\"metadataPath\":\"MyDataStore://>FinantialDB/:toys-department\",\"type\":\"SQL\",\"subtype\":\"RESOURCE\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"dataStore\":\"MyDataStore\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"qualityRules\":[\"qualityRule2\",\"qualityRule1\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.OWNER\":\"finantial\"},{\"id\":\"da/5\",\"name\":\"purchaserName\",\"alias\":\"\",\"description\":\"Purchaser Name\",\"metadataPath\":\"MyDataStore://>FinantialDB/:toys-department:purchaserName:\",\"type\":\"SQL\",\"subtype\":\"FIELD\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"dataStore\":\"MyDataStore\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"qualityRules\":[\"qualityRule2\",\"qualityRule1\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.OWNER\":\"finantial\"},{\"id\":\"da/6\",\"name\":\"purchases\",\"alias\":\"\",\"description\":\"Purchases\",\"metadataPath\":\"MyDataStore://>FinantialDB/:toys-department:purchases:\",\"type\":\"SQL\",\"subtype\":\"FIELD\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"dataStore\":\"MyDataStore\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"qualityRules\":[\"qualityRule2\",\"qualityRule1\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.OWNER\":\"finantial\"},{\"id\":\"bt/1\",\"name\":\"financial\",\"alias\":\"\",\"description\":\"Financial Business Term\",\"metadataPath\":\"\",\"type\":\"GLOSSARY\",\"subtype\":\"BUSINESS_TERM\",\"_tenant\":\"\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-28T17:01:26.000\",\"dataStore\":\"GLOSSARY\"}]"
+    val chunk: Array[ElasticObject] = Array(
+      new ElasticObject("da/1",Option("EmptyStore"),Option("TheOnlyOne"), Option("Empty DataStore"),"EmptyDatastore:","HDFS","DS","stratio",true, new Timestamp(milis), modifiedAt = new Timestamp(milis)),
+      new ElasticObject("da/2",Option("MyDataStore"),None,Option("My DataStore"),"MyDataStore:","SQL","DS","stratio",true, new Timestamp(milis), new Timestamp(milis)),
+      new ElasticObject("da/3",Option("FinantialDB"),None,Option("Finantial DataBase"),"MyDataStore://>FinantialDB/:","SQL","PATH","stratio",true, new Timestamp(milis), new Timestamp(milis)),
+      new ElasticObject("da/4",Option("toys-department"),None,Option("Toys Department"),"MyDataStore://>FinantialDB/:toys-department","SQL","RESOURCE","stratio",true, new Timestamp(milis), new Timestamp(milis)),
+      new ElasticObject("da/5",Option("purchaserName"),None,Option("Purchaser Name"),"MyDataStore://>FinantialDB/:toys-department:purchaserName:","SQL","FIELD","stratio",true, new Timestamp(milis), new Timestamp(milis)),
+      new ElasticObject("da/6",Option("purchases"),None,Option("Purchases"),"MyDataStore://>FinantialDB/:toys-department:purchases:","SQL","FIELD","stratio",true, new Timestamp(milis), new Timestamp(milis)),
+      new ElasticObject("bt/1",Option("financial"),None,Option("Financial Business Term"),"","GLOSSARY","BUSINESS_TERM","",true, new Timestamp(milis), new Timestamp(milis))
+    )
+    chunk.foreach( (da: ElasticObject) => {
+      da.dataStore = getDataStore(da.tpe, da.metadataPath)
+    })
+
+    val result = process(chunk, noAdds = false, Some("NULL"))
+
+    assertResult(reference)(result)
+
+  }
+
+  "Extractor Completed Events Simulation with boolean typed attribute" should "be processed in Indexer Mock" in {
+
+    val milis: Long = 1543424486000l
+    val reference: String = "[{\"id\":\"da/2\",\"name\":\"MyDataStore\",\"alias\":\"\",\"description\":\"My DataStore\",\"metadataPath\":\"MyDataStore:\",\"type\":\"SQL\",\"subtype\":\"DS\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"dataStore\":\"MyDataStore\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"qualityRules\":[\"qualityRule2\",\"qualityRule1\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.QUALITY\":\"true\",\"key.OWNER\":\"finantial\"},{\"id\":\"da/1\",\"name\":\"EmptyStore\",\"alias\":\"TheOnlyOne\",\"description\":\"Empty DataStore\",\"metadataPath\":\"EmptyDatastore:\",\"type\":\"HDFS\",\"subtype\":\"DS\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-28T17:01:26.000\",\"dataStore\":\"EmptyDatastore\"},{\"id\":\"da/3\",\"name\":\"FinantialDB\",\"alias\":\"\",\"description\":\"Finantial DataBase\",\"metadataPath\":\"MyDataStore://>FinantialDB/:\",\"type\":\"SQL\",\"subtype\":\"PATH\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"dataStore\":\"MyDataStore\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"qualityRules\":[\"qualityRule2\",\"qualityRule1\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.QUALITY\":\"true\",\"key.OWNER\":\"finantial\"},{\"id\":\"da/4\",\"name\":\"toys-department\",\"alias\":\"\",\"description\":\"Toys Department\",\"metadataPath\":\"MyDataStore://>FinantialDB/:toys-department\",\"type\":\"SQL\",\"subtype\":\"RESOURCE\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"dataStore\":\"MyDataStore\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"qualityRules\":[\"qualityRule2\",\"qualityRule1\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.QUALITY\":\"true\",\"key.OWNER\":\"finantial\"},{\"id\":\"da/5\",\"name\":\"purchaserName\",\"alias\":\"\",\"description\":\"Purchaser Name\",\"metadataPath\":\"MyDataStore://>FinantialDB/:toys-department:purchaserName:\",\"type\":\"SQL\",\"subtype\":\"FIELD\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"dataStore\":\"MyDataStore\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"qualityRules\":[\"qualityRule2\",\"qualityRule1\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.QUALITY\":\"true\",\"key.OWNER\":\"finantial\"},{\"id\":\"da/6\",\"name\":\"purchases\",\"alias\":\"\",\"description\":\"Purchases\",\"metadataPath\":\"MyDataStore://>FinantialDB/:toys-department:purchases:\",\"type\":\"SQL\",\"subtype\":\"FIELD\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"dataStore\":\"MyDataStore\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"qualityRules\":[\"qualityRule2\",\"qualityRule1\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.QUALITY\":\"true\",\"key.OWNER\":\"finantial\"},{\"id\":\"bt/1\",\"name\":\"financial\",\"alias\":\"\",\"description\":\"Financial Business Term\",\"metadataPath\":\"\",\"type\":\"GLOSSARY\",\"subtype\":\"BUSINESS_TERM\",\"_tenant\":\"\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-28T17:01:26.000\",\"dataStore\":\"GLOSSARY\"}]"
+    val chunk: Array[ElasticObject] = Array(
+      new ElasticObject("da/1",Option("EmptyStore"),Option("TheOnlyOne"), Option("Empty DataStore"),"EmptyDatastore:","HDFS","DS","stratio",true, new Timestamp(milis), modifiedAt = new Timestamp(milis)),
+      new ElasticObject("da/2",Option("MyDataStore"),None,Option("My DataStore"),"MyDataStore:","SQL","DS","stratio",true, new Timestamp(milis), new Timestamp(milis)),
+      new ElasticObject("da/3",Option("FinantialDB"),None,Option("Finantial DataBase"),"MyDataStore://>FinantialDB/:","SQL","PATH","stratio",true, new Timestamp(milis), new Timestamp(milis)),
+      new ElasticObject("da/4",Option("toys-department"),None,Option("Toys Department"),"MyDataStore://>FinantialDB/:toys-department","SQL","RESOURCE","stratio",true, new Timestamp(milis), new Timestamp(milis)),
+      new ElasticObject("da/5",Option("purchaserName"),None,Option("Purchaser Name"),"MyDataStore://>FinantialDB/:toys-department:purchaserName:","SQL","FIELD","stratio",true, new Timestamp(milis), new Timestamp(milis)),
+      new ElasticObject("da/6",Option("purchases"),None,Option("Purchases"),"MyDataStore://>FinantialDB/:toys-department:purchases:","SQL","FIELD","stratio",true, new Timestamp(milis), new Timestamp(milis)),
+      new ElasticObject("bt/1",Option("financial"),None,Option("Financial Business Term"),"","GLOSSARY","BUSINESS_TERM","",true, new Timestamp(milis), new Timestamp(milis))
+    )
+    chunk.foreach( (da: ElasticObject) => {
+      da.dataStore = getDataStore(da.tpe, da.metadataPath)
+    })
+
+    val result = process(chunk, noAdds = false, Some("BOOLEAN"))
+
+    assertResult(reference)(result)
+
+  }
+
+  "Extractor Completed Events Simulation with number typed attribute" should "be processed in Indexer Mock" in {
+
+    val milis: Long = 1543424486000l
+    val reference: String = "[{\"id\":\"da/2\",\"name\":\"MyDataStore\",\"alias\":\"\",\"description\":\"My DataStore\",\"metadataPath\":\"MyDataStore:\",\"type\":\"SQL\",\"subtype\":\"DS\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"dataStore\":\"MyDataStore\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"qualityRules\":[\"qualityRule2\",\"qualityRule1\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.QUALITY\":\"1234\",\"key.OWNER\":\"finantial\"},{\"id\":\"da/1\",\"name\":\"EmptyStore\",\"alias\":\"TheOnlyOne\",\"description\":\"Empty DataStore\",\"metadataPath\":\"EmptyDatastore:\",\"type\":\"HDFS\",\"subtype\":\"DS\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-28T17:01:26.000\",\"dataStore\":\"EmptyDatastore\"},{\"id\":\"da/3\",\"name\":\"FinantialDB\",\"alias\":\"\",\"description\":\"Finantial DataBase\",\"metadataPath\":\"MyDataStore://>FinantialDB/:\",\"type\":\"SQL\",\"subtype\":\"PATH\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"dataStore\":\"MyDataStore\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"qualityRules\":[\"qualityRule2\",\"qualityRule1\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.QUALITY\":\"1234\",\"key.OWNER\":\"finantial\"},{\"id\":\"da/4\",\"name\":\"toys-department\",\"alias\":\"\",\"description\":\"Toys Department\",\"metadataPath\":\"MyDataStore://>FinantialDB/:toys-department\",\"type\":\"SQL\",\"subtype\":\"RESOURCE\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"dataStore\":\"MyDataStore\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"qualityRules\":[\"qualityRule2\",\"qualityRule1\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.QUALITY\":\"1234\",\"key.OWNER\":\"finantial\"},{\"id\":\"da/5\",\"name\":\"purchaserName\",\"alias\":\"\",\"description\":\"Purchaser Name\",\"metadataPath\":\"MyDataStore://>FinantialDB/:toys-department:purchaserName:\",\"type\":\"SQL\",\"subtype\":\"FIELD\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"dataStore\":\"MyDataStore\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"qualityRules\":[\"qualityRule2\",\"qualityRule1\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.QUALITY\":\"1234\",\"key.OWNER\":\"finantial\"},{\"id\":\"da/6\",\"name\":\"purchases\",\"alias\":\"\",\"description\":\"Purchases\",\"metadataPath\":\"MyDataStore://>FinantialDB/:toys-department:purchases:\",\"type\":\"SQL\",\"subtype\":\"FIELD\",\"_tenant\":\"stratio\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-29T10:27:00.000\",\"dataStore\":\"MyDataStore\",\"businessTerms\":[\"FINANTIAL\",\"RGDP\"],\"qualityRules\":[\"qualityRule2\",\"qualityRule1\"],\"keys\":[\"QUALITY\",\"OWNER\"],\"key.QUALITY\":\"1234\",\"key.OWNER\":\"finantial\"},{\"id\":\"bt/1\",\"name\":\"financial\",\"alias\":\"\",\"description\":\"Financial Business Term\",\"metadataPath\":\"\",\"type\":\"GLOSSARY\",\"subtype\":\"BUSINESS_TERM\",\"_tenant\":\"\",\"active\":true,\"discoveredAt\":\"2018-11-28T17:01:26.000\",\"modifiedAt\":\"2018-11-28T17:01:26.000\",\"dataStore\":\"GLOSSARY\"}]"
+    val chunk: Array[ElasticObject] = Array(
+      new ElasticObject("da/1",Option("EmptyStore"),Option("TheOnlyOne"), Option("Empty DataStore"),"EmptyDatastore:","HDFS","DS","stratio",true, new Timestamp(milis), modifiedAt = new Timestamp(milis)),
+      new ElasticObject("da/2",Option("MyDataStore"),None,Option("My DataStore"),"MyDataStore:","SQL","DS","stratio",true, new Timestamp(milis), new Timestamp(milis)),
+      new ElasticObject("da/3",Option("FinantialDB"),None,Option("Finantial DataBase"),"MyDataStore://>FinantialDB/:","SQL","PATH","stratio",true, new Timestamp(milis), new Timestamp(milis)),
+      new ElasticObject("da/4",Option("toys-department"),None,Option("Toys Department"),"MyDataStore://>FinantialDB/:toys-department","SQL","RESOURCE","stratio",true, new Timestamp(milis), new Timestamp(milis)),
+      new ElasticObject("da/5",Option("purchaserName"),None,Option("Purchaser Name"),"MyDataStore://>FinantialDB/:toys-department:purchaserName:","SQL","FIELD","stratio",true, new Timestamp(milis), new Timestamp(milis)),
+      new ElasticObject("da/6",Option("purchases"),None,Option("Purchases"),"MyDataStore://>FinantialDB/:toys-department:purchases:","SQL","FIELD","stratio",true, new Timestamp(milis), new Timestamp(milis)),
+      new ElasticObject("bt/1",Option("financial"),None,Option("Financial Business Term"),"","GLOSSARY","BUSINESS_TERM","",true, new Timestamp(milis), new Timestamp(milis))
+    )
+    chunk.foreach( (da: ElasticObject) => {
+      da.dataStore = getDataStore(da.tpe, da.metadataPath)
+    })
+
+    val result = process(chunk, noAdds = false, Some("NUMBER"))
 
     assertResult(reference)(result)
 
@@ -188,7 +288,7 @@ class DGIndexerUnitTest extends FlatSpec {
       da.dataStore = getDataStore(da.tpe, da.metadataPath)
     })
 
-    val result = process(chunk, noAdds = true)
+    val result = process(chunk, noAdds = true, None)
 
     assertResult(reference)(result)
 
@@ -206,19 +306,18 @@ class DGIndexerUnitTest extends FlatSpec {
       da.dataStore = getDataStore(da.tpe, da.metadataPath)
     })
 
-    val result = process(chunk, noAdds = false)
+    val result = process(chunk, noAdds = false, Some("STRING"))
 
     assertResult(reference)(result)
 
   }
 
-
-  private def process(chunk: Array[ElasticObject], noAdds: Boolean): String = {
+  private def process(chunk: Array[ElasticObject], noAdds: Boolean, value_type: Option[String]): String = {
     val s: Semaphore = new Semaphore(1)
     //
-    val sourceDao: CustomTestSourceDao = new CustomTestSourceDao(noAdds)
+    val sourceDao: CustomTestSourceDao = new CustomTestSourceDao(noAdds, value_type)
     val eParams: ExtractorTestParams = new ExtractorTestParams(s, sourceDao, chunk)
-    val piParams: PartialIndexerTestParams = new PartialIndexerTestParams(s, noAdds)
+    val piParams: PartialIndexerTestParams = new PartialIndexerTestParams(s, noAdds, value_type)
 
     eParams.getSemaphore.acquire()
 

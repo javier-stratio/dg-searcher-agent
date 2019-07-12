@@ -27,7 +27,7 @@ class DGHttpManager(managerURL: String, indexerURL: String) extends HttpManager 
   override def partialPostRequest(model: String, json: String): String = {
     val put = new HttpPut(PUT_PARTIAL_INDEXATION.replace(MODEL, model))
     put.setHeader("Content-type", "application/json")
-    put.setEntity(new StringEntity(json))
+    put.setEntity(new StringEntity(json, "UTF-8"))
     val response: HttpSearchResponse = handleHttpSearchRequest(put)
     val responseStr: String = response match {
       case HttpSearchResponseOK(_, message) => message
@@ -40,7 +40,7 @@ class DGHttpManager(managerURL: String, indexerURL: String) extends HttpManager 
   override def totalPostRequest(model: String, token: String, json: String): String = {
     val put = new HttpPut(PUT_TOTAL_INDEXATION.replace(MODEL, model).replace(TOKEN,token))
     put.setHeader("Content-type", "application/json")
-    put.setEntity(new StringEntity(json))
+    put.setEntity(new StringEntity(json, "UTF-8"))
     val response: HttpSearchResponse = handleHttpSearchRequest(put)
     val responseStr: String = response match {
       case HttpSearchResponseOK(_, message) => message
@@ -86,7 +86,7 @@ class DGHttpManager(managerURL: String, indexerURL: String) extends HttpManager 
   override def insertOrUpdateModel(model: String, json: String): Unit = {
     val put = new HttpPut(PUT_MANAGER_MODEL.replace(MODEL, model))
     put.setHeader("Content-type", "application/json")
-    put.setEntity(new StringEntity(json))
+    put.setEntity(new StringEntity(json, "UTF-8"))
 
     val response: HttpSearchResponse = handleHttpSearchRequest(put)
     response match {

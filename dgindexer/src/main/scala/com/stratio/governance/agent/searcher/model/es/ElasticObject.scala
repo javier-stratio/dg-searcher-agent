@@ -9,8 +9,6 @@ import org.json4s.native.JsonMethods._
 import org.json4s.DefaultFormats
 import org.slf4j.{Logger, LoggerFactory}
 
-case class Variable(name: String, value: String)
-
 case class ElasticObject(id: String,
                          name: Option[String],
                          alias: Option[String],
@@ -85,8 +83,8 @@ case class ElasticObject(id: String,
       keyValues.get.foreach( a => {
         try {
           implicit val formats = DefaultFormats
-          val valueObject: Variable = parse( a._2 ).extract[Variable]
-          jsonObject = jsonObject ~ ("key." + a._1 -> valueObject.value)
+          val valueObject = parse( a._2 ).extract[Map[String, Object]]
+          Option(valueObject.get("value").get).map(e => jsonObject = jsonObject ~ ("key." + a._1 -> e.toString))
         } catch {
           case e: Throwable =>
             LOG.warn(s"attribute key.${a._1} has not been indexed for id $id!. ${e.getMessage}")
