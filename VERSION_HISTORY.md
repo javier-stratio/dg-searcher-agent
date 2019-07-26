@@ -1,7 +1,7 @@
 # Version History
 
 
-#### 1.1.0-f2011be (Built: July 12, 2019 | Pre-release)
+#### 1.1.0-f2011be (Built: July 12, 2019 | Released: July 26, 2019)
 
 #### 1.0.0-af2b702 (Built: April 25, 2019 | Released: May 13, 2019)
 
