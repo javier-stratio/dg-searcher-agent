@@ -3,6 +3,7 @@
 ## 1.2.0 (upcoming)
 
 * [DGPB-2299] Adapt searcher agent for tenant filter
+* [DGPB-2376] BPM business assets visualization
 
 ## 1.1.0-f2011be (Built: July 12, 2019 | Released: July 26, 2019)
 

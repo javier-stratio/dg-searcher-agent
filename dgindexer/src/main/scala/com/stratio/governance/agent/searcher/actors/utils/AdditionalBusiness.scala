@@ -14,8 +14,8 @@ class AdditionalBusiness(dataAssetPrefix: String, businessTermPrefix: String, bt
 
   private val subtypeMap = Map("DS" -> "Data store", "PATH" -> "Path", "RESOURCE" -> "Table", EXTRA_RESOURCE_FOR_FILES -> "File", "FIELD" -> "Column")
 
-  def getAdditionalBusinessTotalIndexationSubqueryPart1(schema: String, businessAsset: String, businessAssetType: String): String = {
-    s"select ba.id as id,ba.name as name,'' as alias,ba.description as description,'' as metadata_path,'$btType' as type,'$btSubType' as subtype,ba.tenant,null as properties,true as active,ba.modified_at as discovered_at,ba.modified_at as modified_at from $schema.$businessAsset as ba, $schema.$businessAssetType as bat where ba.business_assets_type_id = bat.id and bat.name='TERM'"
+  def getAdditionalBusinessTotalIndexationSubqueryPart1(schema: String, businessAsset: String, businessAssetType: String, businessAssetStatus: String): String = {
+    s"select ba.id as id,ba.name as name,'' as alias,ba.description as description,'' as metadata_path,'$btType' as type,'$btSubType' as subtype,ba.tenant,null as properties,true as active,ba.modified_at as discovered_at,ba.modified_at as modified_at from $schema.$businessAsset as ba, $schema.$businessAssetType as bat, $schema.$businessAssetStatus as bas where ba.business_assets_type_id = bat.id and bat.name='TERM' and ba.business_assets_status_id = bas.id and bas.active = true"
   }
 
   def getAdditionalBusinessTotalIndexationSubqueryPart2(schema: String, qualityAsset: String): String = {
@@ -23,21 +23,21 @@ class AdditionalBusiness(dataAssetPrefix: String, businessTermPrefix: String, bt
   }
 
   // Additional union/Query to obtain Business Terms for Total indexation
-  def getAdditionalBusinessTotalIndexationSubquery(schema: String, businessAsset: String, businessAssetType: String, qualityAsset: String): String = {
-    getAdditionalBusinessTotalIndexationSubqueryPart1(schema, businessAsset, businessAssetType) + " UNION " +
+  def getAdditionalBusinessTotalIndexationSubquery(schema: String, businessAsset: String, businessAssetType: String, businessAssetStatus: String, qualityAsset: String): String = {
+    getAdditionalBusinessTotalIndexationSubqueryPart1(schema, businessAsset, businessAssetType, businessAssetStatus) + " UNION " +
       getAdditionalBusinessTotalIndexationSubqueryPart2(schema, qualityAsset)
 
   }
 
   // Additional union/Query to extract Business Terms Ids for partial indexation
-  def getAdditionalBusinessPartialIndexationSubquery1(schema: String, businessAssets:  String, businessAssetsType:  String, qualityTable: String, resultNumber: Int): String = {
-    s"SELECT '',ba.id,ba.modified_at,$resultNumber FROM $schema.$businessAssets as ba, $schema.$businessAssetsType as bat WHERE ba.business_assets_type_id = bat.id and bat.name='TERM' and ba.modified_at > ? UNION " +
+  def getAdditionalBusinessPartialIndexationSubquery1(schema: String, businessAssets:  String, businessAssetsType:  String, businessAssetsStatus:  String, qualityTable: String, resultNumber: Int): String = {
+    s"SELECT '',ba.id,ba.modified_at,$resultNumber FROM $schema.$businessAssets as ba, $schema.$businessAssetsType as bat, $schema.$businessAssetsStatus as bas WHERE ba.business_assets_type_id = bat.id and bat.name='TERM' and ba.business_assets_status_id = bas.id and bas.active = true and ba.modified_at > ? UNION " +
       s"SELECT metadata_path, id, modified_at, ${resultNumber+1} FROM $schema.$qualityTable WHERE modified_at > ?"
   }
 
   // Additional union/Query to obtain Business Term from previously retrieved Ids for partial indexation
-  def getBusinessTermsPartialIndexationSubquery2(schema: String, businessAsset: String, businessAssetType: String): String = {
-    getAdditionalBusinessTotalIndexationSubqueryPart1(schema, businessAsset, businessAssetType) + " and ba.id IN({{ids}})"
+  def getBusinessTermsPartialIndexationSubquery2(schema: String, businessAsset: String, businessAssetType: String, businessAssetStatus: String): String = {
+    getAdditionalBusinessTotalIndexationSubqueryPart1(schema, businessAsset, businessAssetType, businessAssetStatus) + " and ba.id IN({{ids}})"
   }
 
   // Additional union/Query to obtain QualityRules from previously retrieved Ids for partial indexation

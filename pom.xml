@@ -23,7 +23,7 @@
         <akka.version>2.5.19</akka.version>
         <debug.suspend>n</debug.suspend>
         <dg.commons.version>1.1.0-0afa325</dg.commons.version>
-        <dg.business.glossary>0.3.0-M8</dg.business.glossary>
+        <dg.business.glossary>1.2.0-SNAPSHOT</dg.business.glossary>
         <encoding>UTF-8</encoding>
         <http_client_version>4.5.5</http_client_version>
         <json4s_version>3.5.2</json4s_version>

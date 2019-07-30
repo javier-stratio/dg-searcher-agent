@@ -12,23 +12,15 @@ object BusinessType extends Enumeration {
   }
 }
 
-object BusinessStatus extends Enumeration {
-  val APR, PEN, UNR: BusinessStatus.Value = Value
-
-  def fromString(value: String): BusinessStatus.Value = {
-    BusinessStatus.withName(value)
-  }
-}
-
 case class BusinessAsset( metadataPath: String,
                           name: String,
                           description: String,
-                          status: BusinessStatus.Value,
+                          status: String,
                           tpe: BusinessType.Value,
                           modifiedAt: Timestamp) extends EntityRow(metadataPath) {
 
   def this(metadataPath: String, name: String, description: String, status: String, tpe: String, modifiedAt: String) =
-    this(metadataPath, name, description, BusinessStatus.fromString(status), BusinessType.fromString(tpe), TimestampUtils.fromString(modifiedAt))
+    this(metadataPath, name, description, status, BusinessType.fromString(tpe), TimestampUtils.fromString(modifiedAt))
 }
 
 object BusinessAsset {
@@ -46,7 +38,7 @@ object BusinessAsset {
       getValueFromResult(resultSet, BusinessAsset(resultSet.getString(1),
                                                   resultSet.getString(2),
                                                   resultSet.getString(3),
-                                                  BusinessStatus.fromString(resultSet.getString(4)),
+                                                  resultSet.getString(4),
                                                   BusinessType.fromString(resultSet.getString(5)),
                                                   max.get) :: list)
     } else {

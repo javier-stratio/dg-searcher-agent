@@ -46,7 +46,7 @@ class PostgresSourceDao(sourceConnectionUrl: String,
   private val businessAssetsDataAssetsTable: String = "business_assets_data_asset"
   private val businessAssetsTable: String = "business_assets"
   private val businessAssetsTypeTable: String = "business_assets_type"
-  private val businessAssetsStatusTable: String = "business_assets_status"
+  private val businessAssetsStatusTable: String = "bpm_status"
 
   private val qualityRulesTable: String = "quality"
 
@@ -323,7 +323,7 @@ class PostgresSourceDao(sourceConnectionUrl: String,
   }
 
   def readDataAssetsSince(offset: Int, limit: Int): (Array[ElasticObject], Int) = {
-    val selectFromDataAssetWithWhereStatement: PreparedStatement = prepareStatement(s"((SELECT id,name,alias,description,metadata_path,type,subtype,tenant,properties,active,discovered_at,modified_at FROM $schema.$dataAssetTable WHERE active = ?) union " + additionalBusiness.getAdditionalBusinessTotalIndexationSubquery(schema, businessAssetsTable, businessAssetsTypeTable, qualityRulesTable) + ") order by id asc, name asc limit ? offset ?")
+    val selectFromDataAssetWithWhereStatement: PreparedStatement = prepareStatement(s"((SELECT id,name,alias,description,metadata_path,type,subtype,tenant,properties,active,discovered_at,modified_at FROM $schema.$dataAssetTable WHERE active = ?) union " + additionalBusiness.getAdditionalBusinessTotalIndexationSubquery(schema, businessAssetsTable, businessAssetsTypeTable, businessAssetsStatusTable, qualityRulesTable) + ") order by id asc, name asc limit ? offset ?")
     selectFromDataAssetWithWhereStatement.setBoolean(1, true)
     selectFromDataAssetWithWhereStatement.setInt(2, limit)
     selectFromDataAssetWithWhereStatement.setInt(3, offset)
@@ -359,7 +359,7 @@ class PostgresSourceDao(sourceConnectionUrl: String,
       val repl:  String = ids.map( id => "?") match {
         case q: List[String] => q.mkString(",")
       }
-      val selectFromBusinessTermWithIdsInStatement: PreparedStatement = prepareStatement(additionalBusiness.getBusinessTermsPartialIndexationSubquery2(schema, businessAssetsTable, businessAssetsTypeTable).replace("{{ids}}",repl))
+      val selectFromBusinessTermWithIdsInStatement: PreparedStatement = prepareStatement(additionalBusiness.getBusinessTermsPartialIndexationSubquery2(schema, businessAssetsTable, businessAssetsTypeTable, businessAssetsStatusTable).replace("{{ids}}",repl))
       var index: Int = 0
       ids.foreach(id => {
         index+=1
@@ -407,7 +407,7 @@ class PostgresSourceDao(sourceConnectionUrl: String,
                                    "UNION " +
                                  s"SELECT metadata_path, 0, modified_at,6 FROM $schema.$qualityRulesTable WHERE modified_at > ? " +
                                    "UNION " +
-                                 additionalBusiness.getAdditionalBusinessPartialIndexationSubquery1(schema, businessAssetsTable, businessAssetsTypeTable, qualityRulesTable, 7) +
+                                 additionalBusiness.getAdditionalBusinessPartialIndexationSubquery1(schema, businessAssetsTable, businessAssetsTypeTable, businessAssetsStatusTable, qualityRulesTable, 7) +
                                 s")")
     unionSelectUpdatedStatement.setTimestamp(1,state.readDataAsset)
     unionSelectUpdatedStatement.setTimestamp(2,state.readKeyDataAsset)
