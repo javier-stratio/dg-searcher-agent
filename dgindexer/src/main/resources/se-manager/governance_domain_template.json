@@ -118,15 +118,20 @@
       },
       {
         "field": "keys",
-        "name": "Keys",
+        "name": "Attributes",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
+        "field": "keysValues",
+        "name": "Attributes Values",
         "type": "text",
         "searchable": true,
         "sortable": true,
         "aggregable": true
       }
-      {{#keyFields}}
-         {{> keyField}}
-      {{/keyFields}}
     ]
   },
   "search_fields": {
@@ -139,9 +144,7 @@
     "modifiedAt": 1,
     "businessTerms": RELEVANCE_BUSINESSTERM,
     "qualityRules": RELEVANCE_QUALITYRULES,
-    "keys": RELEVANCE_KEY
-    {{#keySearchs}}
-      {{> keySearch}}
-    {{/keySearchs}}
+    "keys": RELEVANCE_KEY,
+    "keysValues": RELEVANCE_KEY
   }
 }

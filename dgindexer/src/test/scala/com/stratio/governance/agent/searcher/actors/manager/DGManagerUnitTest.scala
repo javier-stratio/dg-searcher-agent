@@ -140,7 +140,7 @@ class ExtratorActorMock(s: Semaphore, name: String) extends Actor {
 
 }
 
-class DGManagerTest extends FlatSpec {
+class DGManagerUnitTest extends FlatSpec {
 
   implicit val timeout: Timeout = Timeout(60000, MILLISECONDS)
   lazy val system = ActorSystem("DGManagerTest")

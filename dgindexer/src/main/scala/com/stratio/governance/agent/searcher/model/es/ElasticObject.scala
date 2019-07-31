@@ -23,6 +23,9 @@ case class ElasticObject(id: String,
 
   private lazy val LOG: Logger = LoggerFactory.getLogger(getClass.getName)
 
+  private final val KEY_VALUE_SEP: String = ":="
+  private final val KEY_VALUE_EXC: String = "EXCEPTION!"
+
   var jsonObject: JObject = JObject(List())
 
   var businessTerms: Option[List[String]] = None
@@ -80,16 +83,19 @@ case class ElasticObject(id: String,
     if (qualityRules.isDefined) jsonObject = jsonObject ~ ("qualityRules" -> JArray(qualityRules.get.map(a=>JString(a))))
     if (keyValues.isDefined) {
       jsonObject = jsonObject ~ ("keys" -> JArray(keyValues.get.map(a=>JString(a._1))))
-      keyValues.get.foreach( a => {
+      val hash_values: List[String] = keyValues.get.map( a => {
         try {
           implicit val formats = DefaultFormats
           val valueObject = parse( a._2 ).extract[Map[String, Object]]
-          Option(valueObject.get("value").get).map(e => jsonObject = jsonObject ~ ("key." + a._1 -> e.toString))
+          val value: String = valueObject.get("value").get.toString
+          s"${a._1}$KEY_VALUE_SEP$value";
         } catch {
           case e: Throwable =>
             LOG.warn(s"attribute key.${a._1} has not been indexed for id $id!. ${e.getMessage}")
+            KEY_VALUE_EXC
         }
       })
+      jsonObject = jsonObject ~ ("keysValues" -> JArray(hash_values.filter(!_.equals(KEY_VALUE_EXC)).map(a=>JString(a))))
     }
     jsonObject
   }

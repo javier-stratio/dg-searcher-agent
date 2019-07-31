@@ -4,6 +4,7 @@
 
 * [DGPB-2299] Adapt searcher agent for tenant filter
 * [DGPB-2376] BPM business assets visualization
+* [DGPB-2165] Indexation logic refactor
 
 ## 1.1.0-f2011be (Built: July 12, 2019 | Released: July 26, 2019)
 
