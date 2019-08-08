@@ -8,11 +8,12 @@ import akka.actor.Actor
 import com.stratio.governance.agent.searcher.actors.SearcherActorSystem
 import com.stratio.governance.agent.searcher.actors.dao.postgres.PostgresPartialIndexationReadState
 import com.stratio.governance.agent.searcher.actors.dao.searcher.DGSearcherDaoException
-import com.stratio.governance.agent.searcher.actors.extractor.dao.{SourceDao => ExtractorSourceDao}
+import com.stratio.governance.agent.searcher.actors.extractor.dao.{ReaderElementDao, SourceDao => ExtractorSourceDao}
 import com.stratio.governance.agent.searcher.actors.indexer.dao.{SourceDao => IndexerSourceDao}
 import com.stratio.governance.agent.searcher.actors.indexer.DGIndexer.IndexerEvent
 import com.stratio.governance.agent.searcher.actors.indexer._
 import com.stratio.governance.agent.searcher.actors.indexer.dao.SearcherDao
+import com.stratio.governance.agent.searcher.main.AppConf
 import com.stratio.governance.agent.searcher.model.EntityRow
 import com.stratio.governance.agent.searcher.model.es.ElasticObject
 import com.stratio.governance.agent.searcher.model.utils.ExponentialBackOff
@@ -22,10 +23,10 @@ import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class CustomSourceDao(chunk: Array[ElasticObject]) extends ExtractorSourceDao with IndexerSourceDao {
+class CustomSourceDao(chunk: Array[ElasticObject]) extends ExtractorSourceDao with ReaderElementDao with IndexerSourceDao {
   val chunkList: List[(Timestamp, ElasticObject)] = chunk.toList.map(t => (t.modifiedAt, t)).sortBy(_._1.getTime)
   val byIdsList: List[(String, ElasticObject)] = chunk.toList.map(t => (t.metadataPath, t)).sortBy(_._1)
-  var lastState: PostgresPartialIndexationReadState = PostgresPartialIndexationReadState(this)
+  var lastState: PostgresPartialIndexationReadState = PostgresPartialIndexationReadState(this, AppConf.sourceSchema)
 
 //  override def readDataAssetsSince(instant: Option[Instant], limit: Int): (Array[DataAssetES], Option[Instant]) = {
 //
@@ -39,15 +40,21 @@ class CustomSourceDao(chunk: Array[ElasticObject]) extends ExtractorSourceDao wi
 
   override def close(): Unit = {}
 
-  override def readDataAssetsSince(offset: Int, limit: Int): (Array[ElasticObject], Int) = ???
+  override def readElementsSince(offset: Int, limit: Int): (Array[ElasticObject], Int) = ???
 
   override def readDataAssetsWhereMdpsIn(param: List[String]): Array[ElasticObject] = {
     byIdsList.filter { ids: (String, ElasticObject) => param.contains(ids._1) }.map(_._2).toArray
   }
 
-  override def readUpdatedDataAssetsIdsSince(state: PostgresPartialIndexationReadState): (List[String], List[Int], List[Int], PostgresPartialIndexationReadState) = {
-    val returnElems = chunkList.filter(_._1.after(state.readDataAsset))
-    state.readDataAsset = returnElems.last._1
+  override def readUpdatedElementsIdsSince(state: PostgresPartialIndexationReadState): (List[String], List[Int], List[Int], PostgresPartialIndexationReadState) = {
+    val returnElems = chunkList.filter(_._1.after(state.fields.get("last_read_data_asset").get._2))
+    state.fields = state.fields.map(e => {
+      if (e._1 == "last_read_data_asset") {
+        (e._1, (e._2._1, returnElems.last._1))
+      } else {
+        e
+      }
+    })
     (returnElems.map(_._2.metadataPath), List(), List(), state)
   }
 
@@ -59,9 +66,9 @@ class CustomSourceDao(chunk: Array[ElasticObject]) extends ExtractorSourceDao wi
 
   override def executeQuery(sql: String): ResultSet = ???
 
-  override def keyValuePairProcess(mdps: List[String]): List[EntityRow] = ???
+  override def keyValuePairForDataAsset(mdps: List[String]): List[EntityRow] = ???
 
-  override def businessAssets(mdps: List[String]): List[EntityRow] = ???
+  override def businessTermsForDataAsset(mdps: List[String]): List[EntityRow] = ???
 
   override def execute(sql: String): Unit = ???
 
@@ -69,11 +76,17 @@ class CustomSourceDao(chunk: Array[ElasticObject]) extends ExtractorSourceDao wi
 
   override def executeQueryPreparedStatement(sql: PreparedStatement): ResultSet = ???
 
-  override def readBusinessTermsWhereIdsIn(ids: List[Int]): Array[ElasticObject] = ???
+  override def readBusinessAssetsWhereIdsIn(ids: List[Int]): Array[ElasticObject] = ???
 
-  override def qualityRules(mdps: List[String]): List[EntityRow] = ???
+  override def qualityRulesForDataAsset(mdps: List[String]): List[EntityRow] = ???
 
   override def readQualityRulesWhereIdsIn(ids: List[Int]): Array[ElasticObject] = ???
+
+  override def keyValuePairForBusinessAsset(ids: List[Long]): List[EntityRow] = ???
+
+  override def keyValuePairForQualityRule(ids: List[Long]): List[EntityRow] = ???
+
+  override def businessRulesForQualityRule(ids: List[Long]): List[EntityRow] = ???
 }
 
 
@@ -151,7 +164,7 @@ class DGExtractorTest extends FlatSpec {
     val pauseMs: Long = 2
     val maxErrorRetry: Int= 5
     val delayMs: Long = 1000
-    val eParams: DGExtractorParams = new DGExtractorParams(sourceDao, limit, periodMs, ExponentialBackOff(pauseMs, maxErrorRetry), delayMs,"test")
+    val eParams: DGExtractorParams = new DGExtractorParams(sourceDao, sourceDao, limit, periodMs, ExponentialBackOff(pauseMs, maxErrorRetry), delayMs,"test")
     val piParams: CustomDGIndexerParams = new CustomDGIndexerParams(sourceDao, searcherDao, limit, s)
 
     s.acquire()

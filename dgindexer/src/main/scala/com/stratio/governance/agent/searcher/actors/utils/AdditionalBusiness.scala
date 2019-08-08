@@ -1,9 +1,11 @@
 package com.stratio.governance.agent.searcher.actors.utils
 
+import com.stratio.governance.agent.searcher.domain.SearchElementDomain
+import com.stratio.governance.agent.searcher.domain.SearchElementDomain.{BusinessAssetReaderElement, QualityRuleReaderElement}
 import org.json4s.JsonAST._
 import org.slf4j.{Logger, LoggerFactory}
 
-class AdditionalBusiness(dataAssetPrefix: String, businessTermPrefix: String, btType: String, btSubType: String, qualityRulePrefix: String, qrType: String, qrSubtype: String) {
+class AdditionalBusiness(dataAssetPrefix: String, businessTermPrefix: String, val btType: String, qualityRulePrefix: String, val qrType: String, val qrSubtype: String) {
 
   private lazy val LOG: Logger = LoggerFactory.getLogger(getClass.getName)
 
@@ -14,52 +16,44 @@ class AdditionalBusiness(dataAssetPrefix: String, businessTermPrefix: String, bt
 
   private val subtypeMap = Map("DS" -> "Data store", "PATH" -> "Path", "RESOURCE" -> "Table", EXTRA_RESOURCE_FOR_FILES -> "File", "FIELD" -> "Column")
 
-  def getAdditionalBusinessTotalIndexationSubqueryPart1(schema: String, businessAsset: String, businessAssetType: String, businessAssetStatus: String): String = {
-    s"select ba.id as id,ba.name as name,'' as alias,ba.description as description,'' as metadata_path,'$btType' as type,'$btSubType' as subtype,ba.tenant,null as properties,true as active,ba.modified_at as discovered_at,ba.modified_at as modified_at from $schema.$businessAsset as ba, $schema.$businessAssetType as bat, $schema.$businessAssetStatus as bas where ba.business_assets_type_id = bat.id and bat.name='TERM' and ba.business_assets_status_id = bas.id and bas.active = true"
+  // These three first methods, that use total indexation interface, are wrapped. Partial indexation is used directly
+
+  // Additional union/Query to obtain Business Assets and Quality for Total indexation
+  def getAdditionalBusinessTotalIndexationSubquery(schema: String, businessAsset: String, businessAssetType: String, businessAssetStatus: String, quality: String): String = {
+    getTotalIndexationQueryInfo(new BusinessAssetReaderElement(schema, businessAsset, businessAssetType, businessAssetStatus, "", ""), btType, "") + " UNION " +
+      getTotalIndexationQueryInfo(new QualityRuleReaderElement(schema, quality, "", "", "", ""), qrType, qrSubtype)
   }
 
-  def getAdditionalBusinessTotalIndexationSubqueryPart2(schema: String, qualityAsset: String): String = {
-    s"select id,name,'' as alias,description,'' as metadata_path,'$qrType' as type,'$qrSubtype' as subtype, tenant,null as properties, active, modified_at as discovered_at, modified_at from $schema.$qualityAsset"
-  }
-
-  // Additional union/Query to obtain Business Terms for Total indexation
-  def getAdditionalBusinessTotalIndexationSubquery(schema: String, businessAsset: String, businessAssetType: String, businessAssetStatus: String, qualityAsset: String): String = {
-    getAdditionalBusinessTotalIndexationSubqueryPart1(schema, businessAsset, businessAssetType, businessAssetStatus) + " UNION " +
-      getAdditionalBusinessTotalIndexationSubqueryPart2(schema, qualityAsset)
-
-  }
-
-  // Additional union/Query to extract Business Terms Ids for partial indexation
-  def getAdditionalBusinessPartialIndexationSubquery1(schema: String, businessAssets:  String, businessAssetsType:  String, businessAssetsStatus:  String, qualityTable: String, resultNumber: Int): String = {
-    s"SELECT '',ba.id,ba.modified_at,$resultNumber FROM $schema.$businessAssets as ba, $schema.$businessAssetsType as bat, $schema.$businessAssetsStatus as bas WHERE ba.business_assets_type_id = bat.id and bat.name='TERM' and ba.business_assets_status_id = bas.id and bas.active = true and ba.modified_at > ? UNION " +
-      s"SELECT metadata_path, id, modified_at, ${resultNumber+1} FROM $schema.$qualityTable WHERE modified_at > ?"
-  }
-
-  // Additional union/Query to obtain Business Term from previously retrieved Ids for partial indexation
-  def getBusinessTermsPartialIndexationSubquery2(schema: String, businessAsset: String, businessAssetType: String, businessAssetStatus: String): String = {
-    getAdditionalBusinessTotalIndexationSubqueryPart1(schema, businessAsset, businessAssetType, businessAssetStatus) + " and ba.id IN({{ids}})"
+  // Additional union/Query to obtain Business Asset from previously retrieved Ids for partial indexation
+  def getBusinessAssetsPartialIndexationSubqueryInfoById(schema: String, businessAsset: String, businessAssetType: String, businessAssetStatus: String): String = {
+    getTotalIndexationQueryInfo(new BusinessAssetReaderElement(schema, businessAsset, businessAssetType, businessAssetStatus, "", ""), btType, "") + " and ba.id IN({{ids}})"
   }
 
   // Additional union/Query to obtain QualityRules from previously retrieved Ids for partial indexation
-  def getQualityRulesPartialIndexationSubquery2(schema: String, qualityAsset: String): String = {
-    getAdditionalBusinessTotalIndexationSubqueryPart2(schema, qualityAsset) + " where id IN({{ids}})"
+  def getQualityRulesPartialIndexationSubqueryInfoById(schema: String, qualityAsset: String): String = {
+    getTotalIndexationQueryInfo(new QualityRuleReaderElement(schema, qualityAsset, "", "", "", ""), qrType, qrSubtype) + " where id IN({{ids}})"
+  }
+
+  // Additional Total indexation query parameters for W
+  private def getTotalIndexationQueryInfo[W](w: W, typ: String, subTpe: String)(implicit reader: SearchElementDomain.Reader[W]): String = {
+    reader.getTotalIndexationQueryInfo(w, typ, subTpe)
   }
 
   // Retrieve the enriched (id_extended and dataStore) information given certain parameters of a Search Document
   def adaptInfo(id: Int, typ: String, subtype: String, metadataPath: String, properties: JValue): (String, String, String, String) = {
-    val idExtended: String = subtype match {
-      case `btSubType` =>
+    val idExtended: String = typ match {
+      case `btType` =>
         businessTermPrefix + id.toString
-      case `qrSubtype` =>
+      case `qrType` =>
         qualityRulePrefix + id.toString
       case _ =>
         dataAssetPrefix + id.toString
     }
-    val dataStore: String = subtype match {
-      case `btSubType` =>
-        btType
-      case `qrSubtype` =>
+    val dataStore: String = (typ, subtype) match {
+      case (_,`qrSubtype`) =>
         qrType
+      case (`btType`,_) =>
+        btType
       case _ =>
         try {
           metadataPath.substring(0, metadataPath.indexOf(":"))
@@ -92,8 +86,8 @@ class AdditionalBusiness(dataAssetPrefix: String, businessTermPrefix: String, bt
     (idExtended, dataStore, typeFormatted, if (subTypeMapped.isDefined) subTypeMapped.get else subtype)
   }
 
-  // Check if the, given a type, the Search Document belong to an additional Business Item.
-  def isAdaptable(typ: String): Boolean = {
+  // Check if, given a type, the Search Document belong to an additional Business Item.
+  def isAdditionalBusinessItem(typ: String): Boolean = {
     typ match {
       case `btType` =>
         true

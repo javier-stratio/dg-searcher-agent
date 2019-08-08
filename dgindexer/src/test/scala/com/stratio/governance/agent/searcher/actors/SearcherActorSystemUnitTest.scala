@@ -6,7 +6,7 @@ import java.util.concurrent.Semaphore
 import akka.actor.{Actor, ActorRef, Cancellable}
 import com.stratio.governance.agent.searcher.actors.dao.postgres.PostgresPartialIndexationReadState
 import com.stratio.governance.agent.searcher.actors.extractor.DGExtractorParams
-import com.stratio.governance.agent.searcher.actors.extractor.dao.{SourceDao => ExtractorSourceDao}
+import com.stratio.governance.agent.searcher.actors.extractor.dao.{ReaderElementDao, SourceDao => ExtractorSourceDao}
 import com.stratio.governance.agent.searcher.actors.indexer.dao.{SourceDao => IndexerSourceDao}
 import com.stratio.governance.agent.searcher.actors.indexer.IndexerParams
 import com.stratio.governance.agent.searcher.actors.indexer.dao.SearcherDao
@@ -20,18 +20,18 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
-class CustomSourceDao extends ExtractorSourceDao with IndexerSourceDao {
+class CustomSourceDao extends ExtractorSourceDao with ReaderElementDao with IndexerSourceDao {
   override def close(): Unit = ???
 
-  override def keyValuePairProcess(mdps: List[String]): List[KeyValuePair] = ???
+  override def keyValuePairForDataAsset(mdps: List[String]): List[KeyValuePair] = ???
 
-  override def businessAssets(mdps: List[String]): List[BusinessAsset] = ???
+  override def businessTermsForDataAsset(mdps: List[String]): List[BusinessAsset] = ???
 
-  override def readDataAssetsSince(offset: Int, limit: Int): (Array[ElasticObject], Int) = ???
+  override def readElementsSince(offset: Int, limit: Int): (Array[ElasticObject], Int) = ???
 
   override def readDataAssetsWhereMdpsIn(mdps: List[String]): Array[ElasticObject] = ???
 
-  override def readUpdatedDataAssetsIdsSince(state: PostgresPartialIndexationReadState): (List[String], List[Int], List[Int], PostgresPartialIndexationReadState) = ???
+  override def readUpdatedElementsIdsSince(state: PostgresPartialIndexationReadState): (List[String], List[Int], List[Int], PostgresPartialIndexationReadState) = ???
 
   override def readPartialIndexationState(): PostgresPartialIndexationReadState = ???
 
@@ -47,14 +47,20 @@ class CustomSourceDao extends ExtractorSourceDao with IndexerSourceDao {
 
   override def executeQueryPreparedStatement(sql: PreparedStatement): ResultSet = ???
 
-  override def readBusinessTermsWhereIdsIn(ids: List[Int]): Array[ElasticObject] = ???
+  override def readBusinessAssetsWhereIdsIn(ids: List[Int]): Array[ElasticObject] = ???
 
-  override def qualityRules(mdps: List[String]): List[EntityRow] = ???
+  override def qualityRulesForDataAsset(mdps: List[String]): List[EntityRow] = ???
 
   override def readQualityRulesWhereIdsIn(ids: List[Int]): Array[ElasticObject] = ???
+
+  override def keyValuePairForBusinessAsset(ids: List[Long]): List[EntityRow] = ???
+
+  override def keyValuePairForQualityRule(ids: List[Long]): List[EntityRow] = ???
+
+  override def businessRulesForQualityRule(ids: List[Long]): List[EntityRow] = ???
 }
 
-class CommonParams(s: Semaphore, sourceDao: CustomSourceDao, reference: String) extends DGExtractorParams(sourceDao, 10,10, ExponentialBackOff(10, 10),10, "test") with IndexerParams {
+class CommonParams(s: Semaphore, sourceDao: CustomSourceDao, reference: String) extends DGExtractorParams(sourceDao, sourceDao, 10,10, ExponentialBackOff(10, 10),10, "test") with IndexerParams {
 
   var r: String =""
 
@@ -79,7 +85,7 @@ class CommonParams(s: Semaphore, sourceDao: CustomSourceDao, reference: String) 
 
   override def getPartition: Int = ???
 
-  override def getAdditionalBusiness: AdditionalBusiness = new AdditionalBusiness("","bt/", "GLOSSARY", "BUSSINESS_TERMS", "qr/", "QUALITY", "RULES")
+  override def getAdditionalBusiness: AdditionalBusiness = new AdditionalBusiness("","bt/", "GLOSSARY", "qr/", "QUALITY", "RULES")
 }
 
 case class MetaInfo(value: String)

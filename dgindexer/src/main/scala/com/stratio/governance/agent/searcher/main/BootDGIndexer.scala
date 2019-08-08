@@ -35,7 +35,7 @@ object BootDGIndexer extends App with LazyLogging {
 
     // Initialize indexer params objects
     val exponentialBackOff: ExponentialBackOff = ExponentialBackOff(AppConf.extractorExponentialbackoffPauseMs, AppConf.extractorExponentialbackoffMaxErrorRetry)
-    val additionalBusiness: AdditionalBusiness = new AdditionalBusiness(AppConf.additionalBusinessDataAssetPrefix, AppConf.additionalBusinessBusinessTermPrefix, AppConf.additionalBusinessBusinessTermType, AppConf.additionalBusinessBusinessTermSubtype, AppConf.additionalBusinessQualityRulePrefix, AppConf.additionalBusinessQualityRuleType, AppConf.additionalBusinessQualityRuleSubtype)
+    val additionalBusiness: AdditionalBusiness = new AdditionalBusiness(AppConf.additionalBusinessDataAssetPrefix, AppConf.additionalBusinessBusinessAssetPrefix, AppConf.additionalBusinessBusinessAssetType, AppConf.additionalBusinessQualityRulePrefix, AppConf.additionalBusinessQualityRuleType, AppConf.additionalBusinessQualityRuleSubtype)
     val sourceDao = new PostgresSourceDao(AppConf.sourceConnectionUrl, AppConf.sourceConnectionUser, AppConf.sourceConnectionPassword, AppConf.sourceDatabase, AppConf.sourceSchema, AppConf.sourceConnectionInitialSize, AppConf.sourceConnectionMaxSize, exponentialBackOff, additionalBusiness)
     val httpManager = new DGHttpManager(AppConf.managerUrl, AppConf.indexerURL)
     val searcherDao = new DGSearcherDao(httpManager)
@@ -43,7 +43,7 @@ object BootDGIndexer extends App with LazyLogging {
     scheduler.createTotalIndexerScheduling()
 
     val dgManagerParams: DGManagerUtils = new DGManagerUtils(scheduler, sourceDao, List[Int](AppConf.managerRelevanceAlias, AppConf.managerRelevanceName, AppConf.managerRelevanceDescription, AppConf.managerRelevanceBusinessterm, AppConf.managerRelevanceQualityRules, AppConf.managerRelevanceKey, AppConf.managerRelevanceValue).map(i => i.toString))
-    val dgExtractorParams: DGExtractorParams = DGExtractorParams(sourceDao, AppConf.extractorLimit, AppConf.extractorPeriodMs, exponentialBackOff, AppConf.extractorDelayMs, manager_name)
+    val dgExtractorParams: DGExtractorParams = DGExtractorParams(sourceDao, sourceDao, AppConf.extractorLimit, AppConf.extractorPeriodMs, exponentialBackOff, AppConf.extractorDelayMs, manager_name)
     val dgIndexerParams: DGIndexerParams = new DGIndexerParams(sourceDao, searcherDao, AppConf.indexerPartition, additionalBusiness)
 
     // initialize the actor system

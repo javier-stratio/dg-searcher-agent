@@ -5,10 +5,10 @@ import java.sql.Timestamp
 import com.stratio.governance.agent.searcher.actors.utils.AdditionalBusiness
 import com.stratio.governance.agent.searcher.main.AppConf
 import com.stratio.governance.agent.searcher.model.utils.ExponentialBackOff
-import com.stratio.governance.agent.search.testit.utils.{PostgresSourceDaoTest, SystemPropertyConfigurator}
-import com.stratio.governance.agent.searcher.actors.dao.postgres.PostgresPartialIndexationReadState
+import com.stratio.governance.agent.search.testit.utils.SystemPropertyConfigurator
+import com.stratio.governance.agent.searcher.actors.dao.postgres.{PartialIndexationFields, PostgresPartialIndexationReadState, PostgresSourceDao}
 import com.stratio.governance.agent.searcher.model.es.ElasticObject
-import com.stratio.governance.agent.searcher.model.{BusinessAsset, KeyValuePair, QualityRule}
+import com.stratio.governance.agent.searcher.model.{BusinessAsset, BusinessType, KeyValuePair, QualityRule}
 import com.typesafe.scalalogging.LazyLogging
 import org.junit.{FixMethodOrder, Test}
 import org.junit.Assert._
@@ -19,19 +19,21 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 class PostgresSourceDaoIT extends LazyLogging {
 
   lazy val exponentialBackOff :ExponentialBackOff = ExponentialBackOff(AppConf.extractorExponentialbackoffPauseMs, AppConf.extractorExponentialbackoffMaxErrorRetry)
-  val postgresDao: PostgresSourceDaoTest = new PostgresSourceDaoTest(
+  lazy val schemaTest :String = AppConf.sourceSchema + "_test"
+
+  val postgresDao: PostgresSourceDao = new PostgresSourceDao(
     SystemPropertyConfigurator.get(AppConf.sourceConnectionUrl,"SOURCE_CONNECTION_URL"),
     SystemPropertyConfigurator.get(AppConf.sourceConnectionUser,"SOURCE_CONNECTION_USER"),
     SystemPropertyConfigurator.get(AppConf.sourceConnectionPassword,"SOURCE_CONNECTION_PASSWORD"),
     SystemPropertyConfigurator.get(AppConf.sourceDatabase,"SOURCE_DATABASE"),
-    AppConf.sourceSchema, 1, 4, exponentialBackOff, new AdditionalBusiness("","bt/", "GLOSSARY","BUSINESS_TERM", "qr/", "QUALITY", "RULES"),true)
+    schemaTest, 1, 4, exponentialBackOff, new AdditionalBusiness("","bt/", "GLOSSARY", "qr/", "QUALITY", "RULES"),true)
 
   @Test
   def test00beforeAll(): Unit = {
     logger.info("Creating dataBase structure to test ...")
 
     // Let's create schema
-    postgresDao.execute(s"create schema ${AppConf.sourceSchema}")
+    postgresDao.execute(s"create schema ${schemaTest}")
     logger.info("schema created")
 
     // Let's obtain database structure information and insert it
@@ -46,13 +48,12 @@ class PostgresSourceDaoIT extends LazyLogging {
       val orderedResources = resources.sortWith(_.getFilename < _.getFilename)
       for (resource <- orderedResources) {
         logger.info(s"loading ${resource.getFilename} ...")
-        val scriptSql: String = scala.io.Source.fromInputStream(resource.getInputStream).getLines.mkString("\n")
+        val scriptSql: String = scala.io.Source.fromInputStream(resource.getInputStream).getLines.mkString("\n").replace(AppConf.sourceSchema, schemaTest)
         postgresDao.execute(scriptSql)
         logger.info(s"${resource.getFilename} executed!!")
       }
     }
 
-    postgresDao.startParent()
     logger.info("DataBase structure created!")
 
     // Inserting test data
@@ -64,12 +65,12 @@ class PostgresSourceDaoIT extends LazyLogging {
 
   //"PostgresDao keyValuePairProcess method " should " retrieve all information related" in {
   @Test
-  def test01keyValuePairProcess: Unit = {
+  def test01keyValuePairForDataAsset: Unit = {
 
-    val list: List[KeyValuePair] = postgresDao.keyValuePairProcess(List[String]("hdfsFinance://department/marketing/2018>/:region.parquet:R_REGIONKEY:", "hdfsFinance://department/marketing/2017>/:region.parquet:R_REGIONKEY:", "hdfsFinance://department/finance/2018>/:region.parquet:R_COMMENT:"))
+    val list: List[KeyValuePair] = postgresDao.keyValuePairForDataAsset(List[String]("hdfsFinance://department/marketing/2018>/:region.parquet:R_REGIONKEY:", "hdfsFinance://department/marketing/2017>/:region.parquet:R_REGIONKEY:", "hdfsFinance://department/finance/2018>/:region.parquet:R_COMMENT:"))
 
     assertEquals(4, list.size)
-    assertEquals(3, list.map(_.metadataPath).distinct.size)
+    assertEquals(3, list.map(_.identifier).distinct.size)
 
   }
 
@@ -77,10 +78,10 @@ class PostgresSourceDaoIT extends LazyLogging {
   @Test
   def test02businessAssetsMethod: Unit = {
 
-    val list: List[BusinessAsset] = postgresDao.businessAssets(List[String]("hdfsFinance://department/marketing/2018>/:region.parquet:R_REGIONKEY:", "hdfsFinance://department/marketing/2017>/:region.parquet:R_REGIONKEY:", "hdfsFinance://department/finance/2018>/:region.parquet:R_COMMENT:"))
+    val list: List[BusinessAsset] = postgresDao.businessTermsForDataAsset(List[String]("hdfsFinance://department/marketing/2018>/:region.parquet:R_REGIONKEY:", "hdfsFinance://department/marketing/2017>/:region.parquet:R_REGIONKEY:", "hdfsFinance://department/finance/2018>/:region.parquet:R_COMMENT:"))
 
     assertEquals(5, list.size)
-    assertEquals(3, list.map(_.metadataPath).distinct.size)
+    assertEquals(3, list.map(_.identifier).distinct.size)
 
   }
 
@@ -88,7 +89,7 @@ class PostgresSourceDaoIT extends LazyLogging {
   @Test
   def test02qualityRulesMethod: Unit = {
 
-    val list: List[QualityRule] = postgresDao.qualityRules(List[String]("hdfsFinance://department/marketing/2018>/:region.parquet:R_REGIONKEY:", "hdfsFinance://department/marketing/2017>/:region.parquet:R_REGIONKEY:", "hdfsFinance://department/finance/2018>/:region.parquet:R_COMMENT:"))
+    val list: List[QualityRule] = postgresDao.qualityRulesForDataAsset(List[String]("hdfsFinance://department/marketing/2018>/:region.parquet:R_REGIONKEY:", "hdfsFinance://department/marketing/2017>/:region.parquet:R_REGIONKEY:", "hdfsFinance://department/finance/2018>/:region.parquet:R_COMMENT:"))
 
     assertEquals(4, list.size)
     assertEquals(3, list.map(_.metadataPath).distinct.size)
@@ -99,13 +100,13 @@ class PostgresSourceDaoIT extends LazyLogging {
   @Test
   def test03readDataAssetsSinceMethod: Unit = {
 
-    val (list1, next1): (Array[ElasticObject],Int) = postgresDao.readDataAssetsSince(0,6)
+    val (list1, next1): (Array[ElasticObject],Int) = postgresDao.readElementsSince(0,6)
     assertEquals(6, list1.size)
     assertEquals(6, next1)
 
     assertEquals("bt/3", list1(0).id)
     assertEquals("Glossary", list1(0).tpe)
-    assertEquals("BUSINESS_TERM", list1(0).subtype)
+    assertEquals("Business term", list1(0).subtype)
 
     assertEquals("qr/3", list1(1).id)
     assertEquals("Quality", list1(1).tpe)
@@ -118,7 +119,7 @@ class PostgresSourceDaoIT extends LazyLogging {
 
     assertEquals("bt/2", list1(3).id)
     assertEquals("Glossary", list1(3).tpe)
-    assertEquals("BUSINESS_TERM", list1(3).subtype)
+    assertEquals("Business term", list1(3).subtype)
 
 
 
@@ -128,25 +129,28 @@ class PostgresSourceDaoIT extends LazyLogging {
 
     assertEquals("bt/1", list1(5).id)
     assertEquals("Glossary", list1(5).tpe)
-    assertEquals("BUSINESS_TERM", list1(5).subtype)
+    assertEquals("Business term", list1(5).subtype)
 
 
-    val (list2,next2): (Array[ElasticObject],Int) = postgresDao.readDataAssetsSince(6,2)
+    val (list2,next2): (Array[ElasticObject],Int) = postgresDao.readElementsSince(6,2)
     assertEquals(2, list2.size)
     assertEquals(8, next2)
-    assertEquals("201", list2(0).id)
+    assertEquals("bt/5", list2(0).id)
+    assertEquals("Glossary", list2(0).tpe)
+    assertEquals("Business rule", list2(0).subtype)
     assertEquals("qr/4", list2(1).id)
     assertEquals("Quality", list2(1).tpe)
     assertEquals("RULES", list2(1).subtype)
 
-    val (list3,next3): (Array[ElasticObject],Int) = postgresDao.readDataAssetsSince(8,2)
+    val (list3,next3): (Array[ElasticObject],Int) = postgresDao.readElementsSince(8,2)
     assertEquals(2, list3.size)
     assertEquals(10, next3)
-    assertEquals("203", list3(0).id)
-    assertEquals("202", list3(1).id)
+    assertEquals("202", list3(0).id)
+    assertEquals("201", list3(1).id)
 
-    val (list4,_): (Array[ElasticObject],Int) = postgresDao.readDataAssetsSince(10,2)
-    assertEquals(0, list4.size)
+    val (list4,_): (Array[ElasticObject],Int) = postgresDao.readElementsSince(10,2)
+    assertEquals(1, list4.size)
+    assertEquals("203", list4(0).id)
 
   }
 
@@ -166,7 +170,7 @@ class PostgresSourceDaoIT extends LazyLogging {
   @Test
   def test05readBusinessTermsWhereIdsIn: Unit = {
 
-    val list: Array[ElasticObject] = postgresDao.readBusinessTermsWhereIdsIn(List[Int](1,2,3))
+    val list: Array[ElasticObject] = postgresDao.readBusinessAssetsWhereIdsIn(List[Int](1,2,3))
     assertEquals(3, list.size)
     val ids = list.map(_.id)
     // Order is not defined
@@ -177,7 +181,7 @@ class PostgresSourceDaoIT extends LazyLogging {
     assertEquals("Glossary", tpe(0))
     val subtype = list.map(_.subtype).distinct
     assertEquals(1, subtype.size)
-    assertEquals("BUSINESS_TERM", subtype(0))
+    assertEquals("Business term", subtype(0))
 
   }
 
@@ -187,53 +191,108 @@ class PostgresSourceDaoIT extends LazyLogging {
 
     val statusInit = postgresDao.readPartialIndexationState()
     val emptyTs = Timestamp.valueOf("1970-01-01 01:00:0")
-    assertEquals(emptyTs, statusInit.readDataAsset)
-    assertEquals(emptyTs, statusInit.readBusinessAssets)
-    assertEquals(emptyTs, statusInit.readBusinessAssetsDataAsset)
-    assertEquals(emptyTs, statusInit.readKey)
-    assertEquals(emptyTs, statusInit.readKeyDataAsset)
+    assertEquals(emptyTs, statusInit.getTimeStamp(PartialIndexationFields.DATA_ASSET))
+    assertEquals(emptyTs, statusInit.getTimeStamp(PartialIndexationFields.BUSINESS_ASSET))
+    assertEquals(emptyTs, statusInit.getTimeStamp(PartialIndexationFields.BUSINESS_ASSET_DATA_ASSET))
+    assertEquals(emptyTs, statusInit.getTimeStamp(PartialIndexationFields.KEY))
+    assertEquals(emptyTs, statusInit.getTimeStamp(PartialIndexationFields.KEY_DATA_ASSET))
+    assertEquals(emptyTs, statusInit.getTimeStamp(PartialIndexationFields.QUALITY_RULE))
+    assertEquals(emptyTs, statusInit.getTimeStamp(PartialIndexationFields.KEY_BUSINESS_ASSET))
+    assertEquals(emptyTs, statusInit.getTimeStamp(PartialIndexationFields.KEY_QUALITY))
+    assertEquals(emptyTs, statusInit.getTimeStamp(PartialIndexationFields.BUSINESS_ASSET_QUALITY))
 
-    val (list1, list2, list3, statusEnd): (List[String], List[Int], List[Int], PostgresPartialIndexationReadState) = postgresDao.readUpdatedDataAssetsIdsSince(statusInit)
+    val (list1, list2, list3, statusEnd): (List[String], List[Int], List[Int], PostgresPartialIndexationReadState) = postgresDao.readUpdatedElementsIdsSince(statusInit)
     assertEquals(3, list1.size)
     assert(list1.contains("hdfsFinance://department/marketing/2018>/:region.parquet:R_REGIONKEY:") && list1.contains("hdfsFinance://department/marketing/2017>/:region.parquet:R_REGIONKEY:") && list1.contains("hdfsFinance://department/finance/2018>/:region.parquet:R_COMMENT:"))
-    assertEquals(3, list2.size)
-    assert(list2.contains(1) && list2.contains(2) && list2.contains(3))
+    assertEquals(4, list2.size)
+    assert(list2.contains(1) && list2.contains(2) && list2.contains(3) && list2.contains(5))
 
     assertEquals(4, list3.size)
     assert(list3.contains(1) && list3.contains(2) && list3.contains(3) && list3.contains(4))
 
     val refTs = Timestamp.valueOf("2018-12-10 09:27:17.815")
-    assertEquals(refTs, statusEnd.readDataAsset)
-    assertEquals(refTs, statusEnd.readBusinessAssets)
-    assertEquals(refTs, statusEnd.readBusinessAssetsDataAsset)
-    assertEquals(refTs, statusEnd.readKey)
-    assertEquals(refTs, statusEnd.readKeyDataAsset)
+    val refTs2 = Timestamp.valueOf("2019-07-31 06:52:00.238")
+    assertEquals(refTs, statusEnd.getTimeStamp(PartialIndexationFields.DATA_ASSET))
+    assertEquals(refTs, statusEnd.getTimeStamp(PartialIndexationFields.BUSINESS_ASSET))
+    assertEquals(refTs, statusEnd.getTimeStamp(PartialIndexationFields.BUSINESS_ASSET_DATA_ASSET))
+    assertEquals(refTs, statusEnd.getTimeStamp(PartialIndexationFields.KEY))
+    assertEquals(refTs, statusEnd.getTimeStamp(PartialIndexationFields.KEY_DATA_ASSET))
+    assertEquals(refTs, statusEnd.getTimeStamp(PartialIndexationFields.QUALITY_RULE))
+    assertEquals(refTs2, statusEnd.getTimeStamp(PartialIndexationFields.KEY_BUSINESS_ASSET))
+    assertEquals(refTs2, statusEnd.getTimeStamp(PartialIndexationFields.KEY_QUALITY))
+    assertEquals(refTs2, statusEnd.getTimeStamp(PartialIndexationFields.BUSINESS_ASSET_QUALITY))
 
     postgresDao.writePartialIndexationState(statusEnd)
 
     val statusEndRetrieved = postgresDao.readPartialIndexationState()
-    assertEquals(refTs, statusEndRetrieved.readDataAsset)
-    assertEquals(refTs, statusEndRetrieved.readBusinessAssets)
-    assertEquals(refTs, statusEndRetrieved.readBusinessAssetsDataAsset)
-    assertEquals(refTs, statusEndRetrieved.readKey)
-    assertEquals(refTs, statusEndRetrieved.readKeyDataAsset)
+    assertEquals(refTs, statusEndRetrieved.getTimeStamp(PartialIndexationFields.DATA_ASSET))
+    assertEquals(refTs, statusEndRetrieved.getTimeStamp(PartialIndexationFields.BUSINESS_ASSET))
+    assertEquals(refTs, statusEndRetrieved.getTimeStamp(PartialIndexationFields.BUSINESS_ASSET_DATA_ASSET))
+    assertEquals(refTs, statusEndRetrieved.getTimeStamp(PartialIndexationFields.KEY))
+    assertEquals(refTs, statusEndRetrieved.getTimeStamp(PartialIndexationFields.KEY_DATA_ASSET))
+    assertEquals(refTs, statusEndRetrieved.getTimeStamp(PartialIndexationFields.QUALITY_RULE))
+    assertEquals(refTs2, statusEndRetrieved.getTimeStamp(PartialIndexationFields.KEY_BUSINESS_ASSET))
+    assertEquals(refTs2, statusEndRetrieved.getTimeStamp(PartialIndexationFields.KEY_QUALITY))
+    assertEquals(refTs2, statusEndRetrieved.getTimeStamp(PartialIndexationFields.BUSINESS_ASSET_QUALITY))
 
-    val (list1b, list2b, list3b, statusEndRetrievedFixed): (List[String], List[Int], List[Int], PostgresPartialIndexationReadState) = postgresDao.readUpdatedDataAssetsIdsSince(statusInit)
+    val (list1b, list2b, list3b, statusEndRetrievedFixed): (List[String], List[Int], List[Int], PostgresPartialIndexationReadState) = postgresDao.readUpdatedElementsIdsSince(statusInit)
     assertEquals(0,list1b.size)
     assertEquals(0, list2b.size)
     assertEquals(0, list3b.size)
-    assertEquals(refTs, statusEndRetrievedFixed.readDataAsset)
-    assertEquals(refTs, statusEndRetrievedFixed.readBusinessAssets)
-    assertEquals(refTs, statusEndRetrievedFixed.readBusinessAssetsDataAsset)
-    assertEquals(refTs, statusEndRetrievedFixed.readKey)
-    assertEquals(refTs, statusEndRetrievedFixed.readKeyDataAsset)
+    assertEquals(refTs, statusEndRetrievedFixed.getTimeStamp(PartialIndexationFields.DATA_ASSET))
+    assertEquals(refTs, statusEndRetrievedFixed.getTimeStamp(PartialIndexationFields.BUSINESS_ASSET))
+    assertEquals(refTs, statusEndRetrievedFixed.getTimeStamp(PartialIndexationFields.BUSINESS_ASSET_DATA_ASSET))
+    assertEquals(refTs, statusEndRetrievedFixed.getTimeStamp(PartialIndexationFields.KEY))
+    assertEquals(refTs, statusEndRetrievedFixed.getTimeStamp(PartialIndexationFields.KEY_DATA_ASSET))
+    assertEquals(refTs, statusEndRetrievedFixed.getTimeStamp(PartialIndexationFields.QUALITY_RULE))
+    assertEquals(refTs2, statusEndRetrievedFixed.getTimeStamp(PartialIndexationFields.KEY_BUSINESS_ASSET))
+    assertEquals(refTs2, statusEndRetrievedFixed.getTimeStamp(PartialIndexationFields.KEY_QUALITY))
+    assertEquals(refTs2, statusEndRetrievedFixed.getTimeStamp(PartialIndexationFields.BUSINESS_ASSET_QUALITY))
 
+  }
+
+  @Test
+  def test07keyValuePairProcessForBusinessAsset: Unit = {
+
+    val list: List[KeyValuePair] = postgresDao.keyValuePairForBusinessAsset(List[Long](1,5))
+
+    assertEquals(2, list.size)
+    assertEquals("5", list(0).identifier)
+    assertEquals("OWNER", list(0).key)
+    assertEquals("{\"name\": \"\", \"value\": \"YourSelf\"}", list(0).value.trim)
+    assertEquals("1", list(1).identifier)
+    assertEquals("OWNER", list(1).key)
+    assertEquals("{\"name\": \"\", \"value\": \"HimSelf\"}", list(1).value.trim)
+
+  }
+
+  @Test
+  def test08keyValuePairProcessForBusinessAsset: Unit = {
+
+    val list: List[KeyValuePair] = postgresDao.keyValuePairForQualityRule(List[Long](1))
+
+    assertEquals(1, list.size)
+    assertEquals("1", list(0).identifier)
+    assertEquals("OWNER", list(0).key)
+    assertEquals("{\"name\": \"\", \"value\": \"YourSelf\"}", list(0).value.trim)
+
+  }
+
+  @Test
+  def test09businessRulesForQualityRule: Unit = {
+
+    val list: List[BusinessAsset] = postgresDao.businessRulesForQualityRule(List[Long](1))
+
+    assertEquals(1, list.size)
+    assertEquals("1", list(0).identifier)
+    assertEquals("LegalAge", list(0).name)
+    assertEquals(BusinessType.RULE, list(0).tpe)
   }
 
   @Test
   def test99afterAll(): Unit = {
     logger.info("Deleting dataBase structure ...")
-    postgresDao.execute(s"drop schema ${AppConf.sourceSchema} cascade")
+    postgresDao.execute(s"drop schema ${schemaTest} cascade")
     logger.info("DataBase structure deleted!")
   }
 

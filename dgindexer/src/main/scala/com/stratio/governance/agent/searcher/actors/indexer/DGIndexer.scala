@@ -2,6 +2,8 @@ package com.stratio.governance.agent.searcher.actors.indexer
 
 import akka.actor.Actor
 import com.stratio.governance.agent.searcher.actors.indexer.DGIndexer.IndexerEvent
+import com.stratio.governance.agent.searcher.domain.SearchElementDomain.{BusinessAssetIndexerElement, DataAssetIndexerElement, QualityRuleIndexerElement}
+import com.stratio.governance.agent.searcher.domain.SearchElementDomain
 import com.stratio.governance.agent.searcher.actors.manager.DGManager
 import com.stratio.governance.agent.searcher.model._
 import com.stratio.governance.agent.searcher.model.es.ElasticObject
@@ -9,6 +11,7 @@ import com.stratio.governance.agent.searcher.model.utils.TimestampUtils
 import org.json4s.DefaultFormats
 import org.json4s.JsonAST.JArray
 import org.slf4j.{Logger, LoggerFactory}
+
 
 class DGIndexer(params: IndexerParams) extends Actor {
 
@@ -21,63 +24,20 @@ class DGIndexer(params: IndexerParams) extends Actor {
         try {
           LOG.debug("handling Indexer Event. token: " + token)
 
-          // first at all separate dataAsset information from additional, this last one will not be process here
-          val realda: Array[ElasticObject] = chunk.filter(a => !params.getAdditionalBusiness.isAdaptable(a.tpe))
-          val additionalda: Array[ElasticObject] = chunk.filter(a => params.getAdditionalBusiness.isAdaptable(a.tpe))
+          // separate dataAsset information from additional (Business Assets and Quality Rules)
+          val dataAssets: Array[ElasticObject] = chunkEnricher[DataAssetIndexerElement, String](chunk.filter( a => !params.getAdditionalBusiness.isAdditionalBusinessItem(a.tpe)),
+            new DataAssetIndexerElement(params.getSourceDao)
+          )
 
-          val batches: List[Array[ElasticObject]] = realda.grouped(params.getPartition).toList
+          val businessAssets: Array[ElasticObject] = chunkEnricher[BusinessAssetIndexerElement, Long](chunk.filter( a => a.tpe == params.getAdditionalBusiness.btType),
+            new BusinessAssetIndexerElement(params.getSourceDao)
+          )
 
-          val batchesEnriched: List[Array[ElasticObject]] = batches.map((x: Array[ElasticObject]) => {
+          val qualityRules: Array[ElasticObject] = chunkEnricher[QualityRuleIndexerElement, Long](chunk.filter( a => a.tpe == params.getAdditionalBusiness.qrType),
+            new QualityRuleIndexerElement(params.getSourceDao)
+          )
 
-            val ids: Map[String, Long] = x.filter( dadao => !params.getAdditionalBusiness.isAdaptable(dadao.tpe)).map((dadao: ElasticObject) => (dadao.metadataPath, dataAssetIdtoLong(dadao.id))).toMap
-
-            val functionList: List[List[String] => List[EntityRow]] = List(params.getSourceDao.keyValuePairProcess, params.getSourceDao.businessAssets, params.getSourceDao.qualityRules)
-
-            val relatedInfo: List[List[EntityRow]] = functionList.par.map(f => {
-              val erES = f(ids.keySet.toList)
-              erES
-            }).toList
-
-            val additionals: Array[(Long, List[EntityRow])] = pivotRelatedInfo(relatedInfo, ids)
-            val ids_adds = additionals.map(a => a._1).toList
-
-            val x_adds = x.filter(a => ids_adds.contains(dataAssetIdtoLong(a.id)))
-            val x_noAdds = x.filter(a => !ids_adds.contains(dataAssetIdtoLong(a.id)))
-
-            // x_adds management
-            val ordered_x = x_adds.sortWith((a, b) => dataAssetIdtoLong(a.id) < dataAssetIdtoLong(b.id))
-            val ordered_additionales = additionals.sortWith((a, b) => a._1 < b._1)
-            val batchEnriched_adds: Array[ElasticObject] = for ((x, a) <- ordered_x zip ordered_additionales) yield {
-              var maxTime: Long = x.getModifiedAt
-              a._2.foreach {
-                case BusinessAsset(_, name, _, _, _, modifiedAt) =>
-                  x.addBusinessTerm(name)
-                  val upatedTs: Long = TimestampUtils.toLong(modifiedAt)
-                  if (upatedTs > maxTime) {
-                    maxTime = upatedTs
-                  }
-                case KeyValuePair(_, key, value, updated_at) =>
-                  x.addKeyValue(key, value)
-                  val upatedTs: Long = TimestampUtils.toLong(updated_at)
-                  if (upatedTs > maxTime) {
-                    maxTime = upatedTs
-                  }
-                case QualityRule(_, name, modifiedAt) =>
-                  x.addQualityRule(name)
-                  val upatedTs: Long = TimestampUtils.toLong(modifiedAt)
-                  if (upatedTs > maxTime) {
-                    maxTime = upatedTs
-                  }
-              }
-              x.modifiedAt = TimestampUtils.fromLong(maxTime)
-              x
-            }
-            batchEnriched_adds ++ x_noAdds
-          })
-
-          val list: Array[ElasticObject] = batchesEnriched.fold[Array[ElasticObject]](Array())((a: Array[ElasticObject], b: Array[ElasticObject]) => {
-            a ++ b
-          }) ++ additionalda
+          val list: Array[ElasticObject] = dataAssets ++ businessAssets ++ qualityRules
 
           if (!list.isEmpty) {
             val jlist: JArray = JArray( list.map( a => a.getJsonObject ).toList )
@@ -101,18 +61,55 @@ class DGIndexer(params: IndexerParams) extends Actor {
 
   }
 
-  def pivotRelatedInfo(info: List[List[EntityRow]], idsMap: Map[String, Long]): Array[(Long,List[EntityRow])] = {
+  def chunkEnricher[T,V](chunk: Array[ElasticObject], searchElement: T)(implicit indexerEnricher: SearchElementDomain.IndexerEnricher[T,V]): Array[ElasticObject] = {
+    val batches: List[Array[ElasticObject]] = chunk.grouped(params.getPartition).toList
 
-    val list_completed: List[EntityRow] = info.fold[List[EntityRow]](List())( (a,b) => { a ++ b } )
-    val list_completed_by_id: Map[Long,List[EntityRow]] =  list_completed.map( e => (idsMap.get(e.getMatadataPath).get,e) ).groupBy[Long]( a => a._1 ).mapValues( (l: List[(Long,EntityRow)]) => {
-      l.map( a => a._2 )
+    val batchesEnriched: List[Array[ElasticObject]] = batches.map((x: Array[ElasticObject]) => {
+
+      val additionals: Array[(Long, List[EntityRow])] = indexerEnricher.getAdditionals(x, searchElement)
+      val ids_adds = additionals.map(a => a._1).toList
+
+      val x_adds = x.filter(a => ids_adds.contains(SearchElementDomain.idtoLong(a.id)))
+      val x_noAdds = x.filter(a => !ids_adds.contains(SearchElementDomain.idtoLong(a.id)))
+
+      // x_adds management
+      val ordered_x = x_adds.sortWith((a, b) => SearchElementDomain.idtoLong(a.id) < SearchElementDomain.idtoLong(b.id))
+      val ordered_additionales = additionals.sortWith((a, b) => a._1 < b._1)
+      val batchEnriched_adds: Array[ElasticObject] = for ((x, a) <- ordered_x zip ordered_additionales) yield {
+        var maxTime: Long = x.getModifiedAt
+        a._2.foreach {
+          case BusinessAsset(_, name, _, _, tpe, modifiedAt) =>
+            tpe match {
+              case BusinessType.TERM => x.addBusinessTerm(name)
+              case BusinessType.RULE => x.addBusinessRules(name)
+            }
+            val upatedTs: Long = TimestampUtils.toLong(modifiedAt)
+            if (upatedTs > maxTime) {
+              maxTime = upatedTs
+            }
+          case KeyValuePair(_, key, value, updated_at) =>
+            x.addKeyValue(key, value)
+            val upatedTs: Long = TimestampUtils.toLong(updated_at)
+            if (upatedTs > maxTime) {
+              maxTime = upatedTs
+            }
+          case QualityRule(_, name, modifiedAt) =>
+            x.addQualityRule(name)
+            val upatedTs: Long = TimestampUtils.toLong(modifiedAt)
+            if (upatedTs > maxTime) {
+              maxTime = upatedTs
+            }
+        }
+        x.modifiedAt = TimestampUtils.fromLong(maxTime)
+        x
+      }
+      batchEnriched_adds ++ x_noAdds
     })
 
-    list_completed_by_id.toArray[(Long, List[EntityRow])]
-  }
+    batchesEnriched.fold[Array[ElasticObject]](Array())((a: Array[ElasticObject], b: Array[ElasticObject]) => {
+      a ++ b
+    })
 
-  private def dataAssetIdtoLong(identifier: String): Long = {
-    identifier.split("/").last.toLong
   }
 
 }

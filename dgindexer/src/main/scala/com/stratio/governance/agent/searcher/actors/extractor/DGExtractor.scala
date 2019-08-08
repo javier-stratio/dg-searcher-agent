@@ -36,7 +36,7 @@ object DGExtractor {
 
   case class PartialIndexationAdditionalBusinessProcess(adds: List[SendPartialIndexationAdditionalBusiness])
   abstract class SendPartialIndexationAdditionalBusiness(ids: List[Int])
-  case class SendPartialIndexationBusinessTerm(ids: List[Int], state: PostgresPartialIndexationReadState, exponentialBackOff: ExponentialBackOff) extends SendPartialIndexationAdditionalBusiness(ids)
+  case class SendPartialIndexationBusinessAssets(ids: List[Int], state: PostgresPartialIndexationReadState, exponentialBackOff: ExponentialBackOff) extends SendPartialIndexationAdditionalBusiness(ids)
   case class SendPartialIndexationQualityRules(ids: List[Int], state: PostgresPartialIndexationReadState, exponentialBackOff: ExponentialBackOff) extends SendPartialIndexationAdditionalBusiness(ids)
 
 }
@@ -63,7 +63,7 @@ class DGExtractor(indexer: ActorRef, params: DGExtractorParams) extends Actor {
 
     case TotalIndexationMessage(offset, limit, exponentialBackOff: ExponentialBackOff, token) =>
       LOG.debug("Handling total Indexation messages. limit: " + limit + ", token: " + token)
-      val results: (Array[ElasticObject], Int) = params.sourceDao.readDataAssetsSince(offset, limit)
+      val results: (Array[ElasticObject], Int) = params.readerElementDao.readElementsSince(offset, limit)
       if (results._1.length == limit) {
         self ! SendTotalBatchToIndexerMessage(results, Some(DGExtractor.TotalIndexationMessage(results._2, limit, exponentialBackOff, token)), exponentialBackOff, token)
       } else {
@@ -101,13 +101,13 @@ class DGExtractor(indexer: ActorRef, params: DGExtractorParams) extends Actor {
     case PartialIndexationMessage(state, limit, exponentialBackOff) =>
       LOG.debug("Handling partial Indexation messages. limit: " + limit)
       var status = state.getOrElse(params.sourceDao.readPartialIndexationState())
-      val results:(List[String], List[Int], List[Int], PostgresPartialIndexationReadState) = params.sourceDao.readUpdatedDataAssetsIdsSince(status)
+      val results:(List[String], List[Int], List[Int], PostgresPartialIndexationReadState) = params.readerElementDao.readUpdatedElementsIdsSince(status)
       status = results._4
       val additionalBusiness: ListBuffer[SendPartialIndexationAdditionalBusiness] = ListBuffer()
 
 
       if (results._2.nonEmpty) {
-        additionalBusiness += SendPartialIndexationBusinessTerm(results._2, status, exponentialBackOff)
+        additionalBusiness += SendPartialIndexationBusinessAssets(results._2, status, exponentialBackOff)
       }
       if (results._3.nonEmpty) {
         additionalBusiness += SendPartialIndexationQualityRules(results._3, status, exponentialBackOff)
@@ -118,9 +118,9 @@ class DGExtractor(indexer: ActorRef, params: DGExtractorParams) extends Actor {
       LOG.debug("splitter partial Indexation messages. limit: " + limit + ", status: " + status)
       val mdps_tuple = mdps.splitAt(limit)
       if (mdps_tuple._1.length == limit) {
-        self ! SendPartialBatchToIndexerMessage(params.sourceDao.readDataAssetsWhereMdpsIn(mdps_tuple._1), None, Some(DGExtractor.SplitterPartialIndexationMessage(mdps_tuple._2, limit, status, exponentialBackOff, additionalBusiness)), exponentialBackOff, additionalBusiness)
+        self ! SendPartialBatchToIndexerMessage(params.readerElementDao.readDataAssetsWhereMdpsIn(mdps_tuple._1), None, Some(DGExtractor.SplitterPartialIndexationMessage(mdps_tuple._2, limit, status, exponentialBackOff, additionalBusiness)), exponentialBackOff, additionalBusiness)
       } else {
-        self ! SendPartialBatchToIndexerMessage(params.sourceDao.readDataAssetsWhereMdpsIn(mdps_tuple._1), status, Some(PartialIndexationMessageEnd()), exponentialBackOff, additionalBusiness)
+        self ! SendPartialBatchToIndexerMessage(params.readerElementDao.readDataAssetsWhereMdpsIn(mdps_tuple._1), status, Some(PartialIndexationMessageEnd()), exponentialBackOff, additionalBusiness)
       }
 
     case SendPartialBatchToIndexerMessage(dataAssets: Array[ElasticObject], state: Option[PostgresPartialIndexationReadState], continue: Option[Message], exponentialBackOff: ExponentialBackOff, additionalBusiness) =>
@@ -158,10 +158,10 @@ class DGExtractor(indexer: ActorRef, params: DGExtractorParams) extends Actor {
     case PartialIndexationAdditionalBusinessProcess(adds: List[SendPartialIndexationAdditionalBusiness]) =>
       LOG.debug("Partial Indexation Additional Business Process")
       val addToIndex: (Array[ElasticObject], PostgresPartialIndexationReadState, ExponentialBackOff) = adds.head match {
-        case SendPartialIndexationBusinessTerm(ids, state, exponentialBackOff) =>
-          (params.sourceDao.readBusinessTermsWhereIdsIn(ids), state, exponentialBackOff)
+        case SendPartialIndexationBusinessAssets(ids, state, exponentialBackOff) =>
+          (params.readerElementDao.readBusinessAssetsWhereIdsIn(ids), state, exponentialBackOff)
         case SendPartialIndexationQualityRules(ids, state, exponentialBackOff) =>
-          (params.sourceDao.readQualityRulesWhereIdsIn(ids), state, exponentialBackOff)
+          (params.readerElementDao.readQualityRulesWhereIdsIn(ids), state, exponentialBackOff)
       }
       val future = (indexer ? DGIndexer.IndexerEvent(addToIndex._1, None))
       future.onComplete{

@@ -4,16 +4,16 @@ import java.sql.{ResultSet, Timestamp}
 
 import com.stratio.governance.agent.searcher.model.utils.TimestampUtils
 
-case class KeyValuePair(metadataPath: String,
+case class KeyValuePair(identifier: String,
                         key: String,
                         value: String,
-                        modifiedAt: Timestamp) extends EntityRow(metadataPath) {
-  def this(metadataPath: String, key: String, value: String, modifiedAt: String) = this (metadataPath, key, value, TimestampUtils.fromString(modifiedAt))
+                        modifiedAt: Timestamp) extends EntityRow(identifier) {
+  def this(identifier: String, key: String, value: String, modifiedAt: String) = this (identifier, key, value, TimestampUtils.fromString(modifiedAt))
 }
 
 object KeyValuePair {
 
-  def apply(metadataPath: String, key: String, value: String, modifiedAt: String): KeyValuePair = new KeyValuePair(metadataPath, key, value, modifiedAt)
+  def apply(identifier: String, key: String, value: String, modifiedAt: String): KeyValuePair = new KeyValuePair(identifier, key, value, modifiedAt)
 
   @scala.annotation.tailrec
   def getValueFromResult(resultSet: ResultSet, list: List[KeyValuePair] = Nil): List[KeyValuePair] = {

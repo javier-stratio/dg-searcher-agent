@@ -5,6 +5,7 @@
 * [DGPB-2299] Adapt searcher agent for tenant filter
 * [DGPB-2376] BPM business assets visualization
 * [DGPB-2165] Indexation logic refactor
+* [DGPB-2387] Business Rules and attributes "for all" management
 
 ## 1.1.0-f2011be (Built: July 12, 2019 | Released: July 26, 2019)
 

@@ -1,5 +1,5 @@
 package com.stratio.governance.agent.searcher.model
 
-abstract class EntityRow(metadataPath: String) {
-  def getMatadataPath: String = metadataPath
+abstract class EntityRow(identifier: String) {
+  def getIdentifier: String = identifier
 }

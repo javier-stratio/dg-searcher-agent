@@ -109,6 +109,14 @@
         "aggregable": true
       },
       {
+        "field": "businessRules",
+        "name": "Business rules",
+        "type": "text",
+        "searchable": true,
+        "sortable": true,
+        "aggregable": true
+      },
+      {
         "field": "qualityRules",
         "name": "Quality rules",
         "type": "text",
@@ -143,6 +151,7 @@
     "discoveredAt": 1,
     "modifiedAt": 1,
     "businessTerms": RELEVANCE_BUSINESSTERM,
+    "businessRules": RELEVANCE_BUSINESSTERM,
     "qualityRules": RELEVANCE_QUALITYRULES,
     "keys": RELEVANCE_KEY,
     "keysValues": RELEVANCE_KEY

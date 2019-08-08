@@ -6,27 +6,28 @@ import com.stratio.governance.agent.searcher.model.utils.TimestampUtils
 
 object BusinessType extends Enumeration {
   val TERM: BusinessType.Value = Value
+  val RULE: BusinessType.Value = Value
 
   def fromString(value: String): BusinessType.Value = {
     BusinessType.withName(value)
   }
 }
 
-case class BusinessAsset( metadataPath: String,
+case class BusinessAsset( identifier: String,
                           name: String,
                           description: String,
                           status: String,
                           tpe: BusinessType.Value,
-                          modifiedAt: Timestamp) extends EntityRow(metadataPath) {
+                          modifiedAt: Timestamp) extends EntityRow(identifier) {
 
-  def this(metadataPath: String, name: String, description: String, status: String, tpe: String, modifiedAt: String) =
-    this(metadataPath, name, description, status, BusinessType.fromString(tpe), TimestampUtils.fromString(modifiedAt))
+  def this(identifier: String, name: String, description: String, status: String, tpe: String, modifiedAt: String) =
+    this(identifier, name, description, status, BusinessType.fromString(tpe), TimestampUtils.fromString(modifiedAt))
 }
 
 object BusinessAsset {
 
-  def apply(metadataPath: String, name: String, description: String, status: String, tpe: String, modifiedAt: String): BusinessAsset =
-    new BusinessAsset(metadataPath, name, description, status, tpe, modifiedAt)
+  def apply(identifier: String, name: String, description: String, status: String, tpe: String, modifiedAt: String): BusinessAsset =
+    new BusinessAsset(identifier, name, description, status, tpe, modifiedAt)
 
   @scala.annotation.tailrec
   def getValueFromResult(resultSet: ResultSet, list: List[BusinessAsset] = Nil): List[BusinessAsset] = {

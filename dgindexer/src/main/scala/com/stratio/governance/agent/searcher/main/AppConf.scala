@@ -69,19 +69,15 @@ object AppConf {
 
   lazy val additionalBusinessDataAssetPrefix: String = envOrElseConfigOrElseDefault("additionalBusiness.dataAsset.prefix","catalog/dataAsset/")
 
-  lazy val additionalBusinessBusinessTermPrefix: String = envOrElseConfigOrElseDefault("additionalBusiness.businessTerm.prefix","glossary/businessAssets/")
+  lazy val additionalBusinessBusinessAssetPrefix: String = envOrElseConfigOrElseDefault("additionalBusiness.businessAsset.prefix","glossary/businessAssets/")
 
-  lazy val additionalBusinessBusinessTermType: String = envOrElseConfigOrElseDefault("additionalBusiness.businessTerm.type","GLOSSARY")
-
-  lazy val additionalBusinessBusinessTermSubtype: String = envOrElseConfigOrElseDefault("additionalBusiness.businessTerm.subtype","BUSINESS_TERM")
+  lazy val additionalBusinessBusinessAssetType: String = envOrElseConfigOrElseDefault("additionalBusiness.businessAsset.type","GLOSSARY")
 
   lazy val additionalBusinessQualityRulePrefix: String = envOrElseConfigOrElseDefault("additionalBusiness.qualityRule.prefix","quality/qualityRules/")
 
   lazy val additionalBusinessQualityRuleType: String = envOrElseConfigOrElseDefault("additionalBusiness.qualityRule.type","QUALITY")
 
   lazy val additionalBusinessQualityRuleSubtype: String = envOrElseConfigOrElseDefault("additionalBusiness.qualityRule.subtype","RULE")
-
-
 
   lazy val managerRelevanceAlias: Int = envOrElseConfigOrElseDefault(RelevanceRef.RELEVANCE_ALIAS_REF._1,1000)
 

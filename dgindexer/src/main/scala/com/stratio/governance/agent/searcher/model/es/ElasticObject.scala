@@ -30,6 +30,8 @@ case class ElasticObject(id: String,
 
   var businessTerms: Option[List[String]] = None
 
+  var businessRules: Option[List[String]] = None
+
   var qualityRules: Option[List[String]] = None
 
   var keyValues: Option[List[(String, String)]] = None
@@ -52,6 +54,12 @@ case class ElasticObject(id: String,
     if (businessTerms.isEmpty)
       businessTerms = Some(List())
     businessTerms = Some(bt :: businessTerms.get)
+  }
+
+  def addBusinessRules(bt: String): Unit = {
+    if (businessRules.isEmpty)
+      businessRules = Some(List())
+    businessRules = Some(bt :: businessRules.get)
   }
 
   def addKeyValue(k: String, v: String): Unit = {
@@ -80,6 +88,7 @@ case class ElasticObject(id: String,
     jsonObject = jsonObject ~ ("modifiedAt" -> JString(getModifiedAtAsString))
     jsonObject = jsonObject ~ ("dataStore" -> JString(dataStore))
     if (businessTerms.isDefined) jsonObject = jsonObject ~ ("businessTerms" -> JArray(businessTerms.get.map(a=>JString(a))))
+    if (businessRules.isDefined) jsonObject = jsonObject ~ ("businessRules" -> JArray(businessRules.get.map(a=>JString(a))))
     if (qualityRules.isDefined) jsonObject = jsonObject ~ ("qualityRules" -> JArray(qualityRules.get.map(a=>JString(a))))
     if (keyValues.isDefined) {
       jsonObject = jsonObject ~ ("keys" -> JArray(keyValues.get.map(a=>JString(a._1))))
