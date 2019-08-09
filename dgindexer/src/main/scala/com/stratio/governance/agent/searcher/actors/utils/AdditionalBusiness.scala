@@ -12,7 +12,7 @@ class AdditionalBusiness(dataAssetPrefix: String, businessTermPrefix: String, va
   private val STORE_WITH_FILES: String = "HDFS"
   private val EXTRA_RESOURCE_FOR_FILES: String = "RESOURCE_FILE"
   private val FILE_DEFINITION_KEY: String = "schema"
-  private val FILE_DEFINITION_VALUE: String = "na"
+  private val FILE_DEFINITION_VALUE: String = "-"
 
   private val subtypeMap = Map("DS" -> "Data store", "PATH" -> "Path", "RESOURCE" -> "Table", EXTRA_RESOURCE_FOR_FILES -> "File", "FIELD" -> "Column")
 

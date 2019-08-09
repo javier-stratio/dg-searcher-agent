@@ -40,13 +40,13 @@ class AdditionalBusinessUnitTest extends FlatSpec {
     assertResult("Hdfs")(result._3)
     assertResult("Table")(result._4)
 
-    val result2: (String, String, String, String) = additionalBusiness.adaptInfo(1, "HDFS", "RESOURCE", MetadataPath.factory("ds", Some("/path"), Some("resource"), None).toString(), parse("{\"hdfsFile\":{\"schema\":\"na\",\"type\":\"whatever\"}}"))
+    val result2: (String, String, String, String) = additionalBusiness.adaptInfo(1, "HDFS", "RESOURCE", MetadataPath.factory("ds", Some("/path"), Some("resource"), None).toString(), parse("{\"hdfsFile\":{\"schema\":\"-\",\"type\":\"whatever\"}}"))
     assertResult("1")(result2._1)
     assertResult("ds")(result2._2)
     assertResult("Hdfs")(result2._3)
     assertResult("File")(result2._4)
 
-    val result3: (String, String, String, String) = additionalBusiness.adaptInfo(1, "SQL", "RESOURCE", MetadataPath.factory("ds", Some("/path"), Some("resource"), None).toString(), parse("{\"hdfsFile\":{\"schema\":\"na\",\"type\":\"whatever\"}}"))
+    val result3: (String, String, String, String) = additionalBusiness.adaptInfo(1, "SQL", "RESOURCE", MetadataPath.factory("ds", Some("/path"), Some("resource"), None).toString(), parse("{\"hdfsFile\":{\"schema\":\"-\",\"type\":\"whatever\"}}"))
     assertResult("1")(result3._1)
     assertResult("ds")(result3._2)
     assertResult("Sql")(result3._3)
