@@ -1,7 +1,7 @@
 # Version History
 
 
-#### 1.1.1-a9a4782 (Built: August 09, 2019 | Pre-release)
+#### 1.1.1-a9a4782 (Built: August 09, 2019 | Released: August 09, 2019)
 
 #### 1.1.0-f2011be (Built: July 12, 2019 | Released: July 26, 2019)
 
