@@ -11,6 +11,7 @@ import com.stratio.governance.agent.searcher.actors.manager.utils.defimpl.DGMana
 import com.stratio.governance.agent.searcher.actors.utils.AdditionalBusiness
 import com.stratio.governance.agent.searcher.http.defimpl.DGHttpManager
 import com.stratio.governance.agent.searcher.model.utils.ExponentialBackOff
+import com.stratio.governance.commons.metrics.Metrics
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.concurrent.Await
@@ -45,6 +46,8 @@ object BootDGIndexer extends App with LazyLogging {
     val dgManagerParams: DGManagerUtils = new DGManagerUtils(scheduler, sourceDao, List[Int](AppConf.managerRelevanceAlias, AppConf.managerRelevanceName, AppConf.managerRelevanceDescription, AppConf.managerRelevanceBusinessterm, AppConf.managerRelevanceQualityRules, AppConf.managerRelevanceKey, AppConf.managerRelevanceValue).map(i => i.toString))
     val dgExtractorParams: DGExtractorParams = DGExtractorParams(sourceDao, sourceDao, AppConf.extractorLimit, AppConf.extractorPeriodMs, exponentialBackOff, AppConf.extractorDelayMs, manager_name)
     val dgIndexerParams: DGIndexerParams = new DGIndexerParams(sourceDao, searcherDao, AppConf.indexerPartition, additionalBusiness)
+
+    Metrics.initialize
 
     // initialize the actor system
     indexerRef = Some(system.actorOf(Props(classOf[DGIndexer], dgIndexerParams), indexer_name))

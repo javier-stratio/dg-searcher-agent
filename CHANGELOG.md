@@ -7,6 +7,7 @@
 * [DGPB-2165] Indexation logic refactor
 * [DGPB-2387] Business Rules and attributes "for all" management
 * [DGPB-2445] HDFS file metadata is indexed as an empty table
+* [DGPB-2447] Metrics endpoint for Prometheus
 
 ## 1.1.0-f2011be (Built: July 12, 2019 | Released: July 26, 2019)
 

@@ -21,6 +21,10 @@
             <artifactId>model</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.stratio.governance</groupId>
+            <artifactId>service</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
         </dependency>

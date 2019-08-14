@@ -22,7 +22,7 @@
         <akka-quartz.version>1.7.1-akka-2.5.x</akka-quartz.version>
         <akka.version>2.5.19</akka.version>
         <debug.suspend>n</debug.suspend>
-        <dg.commons.version>1.1.0-0afa325</dg.commons.version>
+        <dg.commons.version>1.2.0-SNAPSHOT</dg.commons.version>
         <dg.business.glossary>1.2.0-SNAPSHOT</dg.business.glossary>
         <encoding>UTF-8</encoding>
         <http_client_version>4.5.5</http_client_version>
@@ -40,7 +40,6 @@
         <junit.version>4.12</junit.version>
         <hikaricp.version>3.2.0</hikaricp.version>
         <scoverage.plugin.version>1.3.0</scoverage.plugin.version>
-        <vspy.mustache>1.3</vspy.mustache>
     </properties>
 
     <dependencyManagement>
@@ -68,6 +67,11 @@
             <dependency>
                 <groupId>com.stratio.governance</groupId>
                 <artifactId>model</artifactId>
+                <version>${dg.commons.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.stratio.governance</groupId>
+                <artifactId>service</artifactId>
                 <version>${dg.commons.version}</version>
             </dependency>
             <dependency>
