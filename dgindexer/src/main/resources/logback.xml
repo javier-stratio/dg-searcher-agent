@@ -32,11 +32,14 @@
         </encoder>
     </appender>
 
+    <appender name="METRICS" class="io.prometheus.client.logback.InstrumentedAppender"/>
+
     <logger name="slick" level="INFO"/>
     <logger name="com.stratio" level="DEBUG"/>
 
     <root level="ERROR" additivity="false">
         <appender-ref ref="STDERR" />
         <appender-ref ref="STDOUT" />
+        <appender-ref ref="METRICS" />
     </root>
 </configuration>
