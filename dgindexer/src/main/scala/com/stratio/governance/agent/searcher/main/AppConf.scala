@@ -79,6 +79,8 @@ object AppConf {
 
   lazy val additionalBusinessQualityRuleSubtype: String = envOrElseConfigOrElseDefault("additionalBusiness.qualityRule.subtype","RULE")
 
+  lazy val metricsLatencyLog: Boolean = envOrElseConfigOrElseDefault("metrics.latency.log", false)
+
   lazy val managerRelevanceAlias: Int = envOrElseConfigOrElseDefault(RelevanceRef.RELEVANCE_ALIAS_REF._1,1000)
 
   lazy val managerRelevanceName: Int = envOrElseConfigOrElseDefault(RelevanceRef.RELEVANCE_NAME_REF._1,10)

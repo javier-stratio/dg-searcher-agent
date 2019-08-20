@@ -6,6 +6,7 @@ import java.util.UUID.randomUUID
 import com.stratio.governance.agent.searcher.actors.extractor.DGExtractor.{PartialIndexationMessageInit, TotalIndexationMessageInit}
 import com.stratio.governance.agent.searcher.actors.manager.dao.{Available, Busy, Error, SearcherDao, TotalIndexationState}
 import com.stratio.governance.agent.searcher.actors.manager.utils.ManagerUtils
+import com.stratio.governance.agent.searcher.timing.MetricsLatency
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -22,6 +23,9 @@ class DGManager(extractor: ActorRef, managerUtils: ManagerUtils, searcherDao: Se
   val PARTIAL_INDEXATION: String = "partial_indexation"
 
   private val UNRECOVER_ERROR: String = "Governance Search domain is in an unrecoverable Error State. Total indexation can not be done!!. Contact your administrator."
+
+  private var totalIndexationLatency: Option[MetricsLatency] = None
+  private var partialIndexationLatency: Option[MetricsLatency] = None
 
   context.system.scheduler.scheduleOnce(1000 millis, self, BOOT)
 
@@ -64,6 +68,7 @@ class DGManager(extractor: ActorRef, managerUtils: ManagerUtils, searcherDao: Se
           case Busy =>
             LOG.warn("partial indexation can not be executed because there is a total indexation on course")
           case Available =>
+            partialIndexationLatency = Some(MetricsLatency.build(PARTIAL_INDEXATION))
             launchPartialIndexation
           case Error =>
             LOG.warn("partial indexation will be executed but there have been an error in last total indexation")
@@ -98,6 +103,7 @@ class DGManager(extractor: ActorRef, managerUtils: ManagerUtils, searcherDao: Se
         val check: (TotalIndexationState, Option[String]) = searcherDao.checkTotalIndexation(DGManager.MODEL_NAME)
         check._1 match {
           case Available =>
+            totalIndexationLatency = Some(MetricsLatency.build(TOTAL_INDEXATION))
             val token: String = searcherDao.initTotalIndexationProcess(DGManager.MODEL_NAME)
             try {
               val model = managerUtils.getGeneratedModel()
@@ -118,7 +124,7 @@ class DGManager(extractor: ActorRef, managerUtils: ManagerUtils, searcherDao: Se
     }
 
     case DGManager.ManagerPartialIndexationEvent(status) => {
-      LOG.info("PARTIAL_INDEXATION END event received")
+      LOG.info("PARTIAL_INDEXATION END event received (" + checkIndexationLatency(partialIndexationLatency, false) + ")")
       active_partial_indexation = false
       if (totalIndexationPending) {
         totalIndexationPending = false
@@ -131,11 +137,11 @@ class DGManager(extractor: ActorRef, managerUtils: ManagerUtils, searcherDao: Se
       status match {
         case IndexationStatus.SUCCESS => {
           searcherDao.finishTotalIndexationProcess(DGManager.MODEL_NAME, token)
-          LOG.debug("TOTAL_INDEXATION END. SUCCESS")
+          LOG.debug("TOTAL_INDEXATION END. SUCCESS (" + checkIndexationLatency(totalIndexationLatency, true) + ")")
         }
         case IndexationStatus.ERROR => {
           searcherDao.cancelTotalIndexationProcess(DGManager.MODEL_NAME, token)
-          LOG.debug("TOTAL_INDEXATION END. ERROR")
+          LOG.debug("TOTAL_INDEXATION END. ERROR (" + checkIndexationLatency(totalIndexationLatency, true) + ")")
         }
       }
     }
@@ -162,6 +168,14 @@ class DGManager(extractor: ActorRef, managerUtils: ManagerUtils, searcherDao: Se
     managerUtils.getScheduler().schedulePartialIndexation(self, PARTIAL_INDEXATION)
     managerUtils.getScheduler().scheduleTotalIndexation(self,TOTAL_INDEXATION)
   }
+
+  private def checkIndexationLatency(indexationLatency: Option[MetricsLatency], inSeconds: Boolean): String = indexationLatency match {
+      case None => "WARNING: Timer not initialized!"
+      case Some(l) => inSeconds match {
+        case true => l.observe/1000 + " s"
+        case false => l.observe + " ms"
+      }
+    }
 
 }
 

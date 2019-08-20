@@ -8,6 +8,7 @@ import com.stratio.governance.agent.searcher.actors.utils.AdditionalBusiness
 import com.stratio.governance.agent.searcher.domain.SearchElementDomain
 import com.stratio.governance.agent.searcher.domain.SearchElementDomain.{BusinessAssetReaderElement, DataAssetReaderElement, QualityRuleReaderElement}
 import com.stratio.governance.agent.searcher.model.QualityRule
+import com.stratio.governance.agent.searcher.timing.MetricsLatency
 
 //import collection.JavaConverters._
 
@@ -32,6 +33,7 @@ class PostgresSourceDao(sourceConnectionUrl: String,
                         maxSize: Int,
                         var exponentialBackOff: ExponentialBackOff,
                         additionalBusiness: AdditionalBusiness,
+                        loggable: Boolean,
                         allowedToCreateContext: Boolean = false) extends ExtractorSourceDao with ReaderElementDao with IndexerSourceDao with ManagerSourceDao {
 
   private lazy val LOG: Logger = LoggerFactory.getLogger(getClass.getName)
@@ -70,8 +72,9 @@ class PostgresSourceDao(sourceConnectionUrl: String,
     preparedStatements = Map[String, PreparedStatement]()
   }
 
-  override def prepareStatement(query: String): PreparedStatement =
-    preparedStatements.get(query) match {
+  override def prepareStatement(query: String): PreparedStatement = {
+    val latency: MetricsLatency = MetricsLatency.build( "prepareStatement", query, loggable)
+    val prepStatement: PreparedStatement = preparedStatements.get( query ) match {
       case None =>
         var preparedStatement: PreparedStatement = null
         try {
@@ -91,8 +94,12 @@ class PostgresSourceDao(sourceConnectionUrl: String,
         preparedStatements(query)
       case Some(ps) => ps
     }
+    latency.observe
+    prepStatement
+  }
 
   def executeQuery(sql: String): ResultSet = {
+    val latency: MetricsLatency = MetricsLatency.build( "executeQuery", sql, loggable)
     try{
       val rs = connection.createStatement().executeQuery(sql)
       exponentialBackOff = initialExponentialBackOff
@@ -107,10 +114,13 @@ class PostgresSourceDao(sourceConnectionUrl: String,
         }
         exponentialBackOff = exponentialBackOff.next
         executeQuery(sql)
+    } finally {
+      latency.observe
     }
   }
 
   def execute(sql: String): Unit = {
+    val latency: MetricsLatency = MetricsLatency.build( "execute", sql, loggable)
     try{
       val rs = connection.createStatement().execute(sql)
       exponentialBackOff = initialExponentialBackOff
@@ -124,10 +134,13 @@ class PostgresSourceDao(sourceConnectionUrl: String,
         }
         exponentialBackOff = exponentialBackOff.next
         execute(sql)
+    } finally {
+      latency.observe
     }
   }
 
   def executePreparedStatement(sql: PreparedStatement): Unit = {
+    val latency: MetricsLatency = MetricsLatency.build( "executePreparedStatement", loggable)
     try{
       val rs = sql.execute()
       exponentialBackOff = initialExponentialBackOff
@@ -141,10 +154,13 @@ class PostgresSourceDao(sourceConnectionUrl: String,
         }
         exponentialBackOff = exponentialBackOff.next
         executePreparedStatement(sql)
+    } finally {
+      latency.observe
     }
   }
 
   def executeQueryPreparedStatement(sql: PreparedStatement): ResultSet = {
+    val latency: MetricsLatency = MetricsLatency.build( "executeQueryPreparedStatement", loggable)
     try{
       val rs = sql.executeQuery()
       exponentialBackOff = initialExponentialBackOff
@@ -159,11 +175,14 @@ class PostgresSourceDao(sourceConnectionUrl: String,
         }
         exponentialBackOff = exponentialBackOff.next
         executeQueryPreparedStatement(sql)
+    } finally {
+      latency.observe
     }
   }
 
 
   def executeUpdatePreparedStatement(sql: PreparedStatement): Unit = {
+    val latency: MetricsLatency = MetricsLatency.build( "executeUpdatePreparedStatement", loggable)
     try{
       val rs = sql.executeUpdate()
       exponentialBackOff = initialExponentialBackOff
@@ -177,6 +196,8 @@ class PostgresSourceDao(sourceConnectionUrl: String,
         }
         exponentialBackOff = exponentialBackOff.next
         executeUpdatePreparedStatement(sql)
+    } finally {
+      latency.observe
     }
   }
 
@@ -237,7 +258,7 @@ class PostgresSourceDao(sourceConnectionUrl: String,
           selectKeyValuePairStatement.setString( index, mdp )
         } )
 
-        KeyValuePair.getValueFromResult( selectKeyValuePairStatement.executeQuery() )
+        KeyValuePair.getValueFromResult( executeQueryPreparedStatement(selectKeyValuePairStatement) )
       } catch {
         case e: Throwable =>
           LOG.error( "error while getting key-Value Pairs", e )
@@ -500,7 +521,7 @@ class PostgresSourceDao(sourceConnectionUrl: String,
           selectKeyValuePairStatement.setLong( index, id )
         } )
 
-        KeyValuePair.getValueFromResult( selectKeyValuePairStatement.executeQuery() )
+        KeyValuePair.getValueFromResult( executeQueryPreparedStatement(selectKeyValuePairStatement) )
       } catch {
         case e: Throwable =>
           LOG.error( "error while getting key-Value Pairs", e )
@@ -526,7 +547,7 @@ class PostgresSourceDao(sourceConnectionUrl: String,
           selectKeyValuePairStatement.setLong( index, id )
         } )
 
-        KeyValuePair.getValueFromResult( selectKeyValuePairStatement.executeQuery() )
+        KeyValuePair.getValueFromResult( executeQueryPreparedStatement(selectKeyValuePairStatement) )
       } catch {
         case e: Throwable =>
           LOG.error( "error while getting key-Value Pairs", e )
