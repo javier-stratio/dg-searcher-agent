@@ -49,6 +49,14 @@ values (3,'hdfsFinance://department/finance/2018>/:region.parquet:R_COMMENT:','c
 insert into dg_metadata_test.quality(id,metadata_path,name, description, type, catalog_attribute_type, query, parameters, link, active, result_unit, result_operation_type, result_operation, result_action, result_execute, tenant, created_at, modified_at)
 values (4,'hdfsFinance://department/marketing/2018>/:region.parquet:R_REGIONKEY:','2018', 'description','SPARK', 'catalog', 'select *', '{"name": "John","phone": ["333-3333", "555-5555"]}'::jsonb, '{"name": "John","phone": ["333-3333", "555-5555"]}'::jsonb, true, '{"name":"","value":"1.0"}'::jsonb, 'int', 'blabla', '{"name": "John","phone": ["333-3333", "555-5555"]}'::jsonb, '{"name": "John","phone": ["333-3333", "555-5555"]}'::jsonb, 'NONE', '2018-12-10 09:27:17.815'::timestamp, '2018-12-10 09:27:17.815'::timestamp);
 
+-- Generic and assigned Quality rule
+insert into dg_metadata_test.quality(id,metadata_path,name, description, type, catalog_attribute_type, query, parameters, link, active, result_unit, result_operation_type, result_operation, result_action, result_execute, tenant, created_at, modified_at)
+values (5,'','qualityGeneric1', 'description','SPARK', 'catalog', 'select *', '{"name": "John","phone": ["333-3333", "555-5555"]}'::jsonb, '{"name": "John","phone": ["333-3333", "555-5555"]}'::jsonb, true, '{"name":"","value":"1.0"}'::jsonb, 'int', 'blabla', '{"name": "John","phone": ["333-3333", "555-5555"]}'::jsonb, '{"name": "John","phone": ["333-3333", "555-5555"]}'::jsonb, 'NONE', '2018-12-10 09:27:17.815'::timestamp, '2018-12-10 09:27:17.815'::timestamp);
+
+insert into dg_metadata_test.quality(id,metadata_path,name, description, type, catalog_attribute_type, query, parameters, link, active, result_unit, result_operation_type, result_operation, result_action, result_execute, tenant, quality_generic_id, created_at, modified_at)
+values (6,'hdfsFinance://department/marketing/2017>/:region.parquet:R_REGIONKEY:','qualityAssigned1', 'description','SPARK', 'catalog', 'select *', '{"name": "John","phone": ["333-3333", "555-5555"]}'::jsonb, '{"name": "John","phone": ["333-3333", "555-5555"]}'::jsonb, true, '{"name":"","value":"1.0"}'::jsonb, 'int', 'blabla', '{"name": "John","phone": ["333-3333", "555-5555"]}'::jsonb, '{"name": "John","phone": ["333-3333", "555-5555"]}'::jsonb, 'NONE', 5, '2018-12-10 09:27:17.815'::timestamp, '2018-12-10 09:27:17.815'::timestamp);
+
+
 -- Business Rule
 insert into dg_metadata_test.business_assets (id,"name",description,properties,tenant,business_assets_type_id,domain_id,business_assets_status_id,modified_at,user_id)
 values (5,'LegalAge','<p>Different types of legal age definitions</p>','{"examples": "<p>Come of Age in USA = 21</p><p>Come of Age in Spain = 18</p><p><br></p>"}','NONE',2,1,4,('2018-12-10 09:27:17.815'::timestamp),'anonymous');

@@ -6,7 +6,7 @@ import org.scalatest.FlatSpec
 
 class AdditionalBusinessUnitTest extends FlatSpec {
 
-  val additionalBusiness: AdditionalBusiness = new AdditionalBusiness("","bt/", "GLOSSARY", "qr/", "QUALITY", "RULES")
+  val additionalBusiness: AdditionalBusiness = new AdditionalBusiness("","bt/", "GLOSSARY", "qr/", "QUALITY", "RULES", "RULES GENERIC")
 
   "method getAdditionalBusinessTotalIndexationSubquery" should "be processed properly" in {
 
@@ -14,7 +14,9 @@ class AdditionalBusinessUnitTest extends FlatSpec {
     assertResult("select ba.id as id,ba.name as name,'' as alias,ba.description as description,'' as metadata_path,'GLOSSARY' as type,bat.description as subtype,ba.tenant,null as properties,true as active,ba.modified_at as discovered_at,ba.modified_at as modified_at " +
       "from dg_metadata.business_assets as ba, dg_metadata.business_assets_type as bat, dg_metadata.bpm_status as bas where ba.business_assets_type_id = bat.id and ba.business_assets_status_id = bas.id and bas.active = true " +
       "UNION " +
-      "select id,name,'' as alias,description,'' as metadata_path,'QUALITY' as type,'RULES' as subtype, tenant,null as properties, active, modified_at as discovered_at, modified_at from dg_metadata.quality")(result)
+      "(select id,name,'' as alias,description,'' as metadata_path,'QUALITY' as type,'RULES' as subtype, tenant,null as properties, active, modified_at as discovered_at, modified_at from dg_metadata.quality where metadata_path <> '' and quality_generic_id is null ) " +
+      "UNION " +
+      "(select id,name,'' as alias,description,'' as metadata_path,'QUALITY' as type,'RULES GENERIC' as subtype, tenant,null as properties, active, modified_at as discovered_at, modified_at from dg_metadata.quality where metadata_path = '' )")(result)
 
   }
 
@@ -28,7 +30,10 @@ class AdditionalBusinessUnitTest extends FlatSpec {
   "method getQualityRulesPartialIndexationSubqueryInfoById" should "be processed properly" in {
 
     val result: String = additionalBusiness.getQualityRulesPartialIndexationSubqueryInfoById("dg_metadata", "quality")
-    assertResult("select id,name,'' as alias,description,'' as metadata_path,'QUALITY' as type,'RULES' as subtype, tenant,null as properties, active, modified_at as discovered_at, modified_at from dg_metadata.quality where id IN({{ids}})")(result)
+    assertResult("" +
+      "(select id,name,'' as alias,description,'' as metadata_path,'QUALITY' as type,'RULES' as subtype, tenant,null as properties, active, modified_at as discovered_at, modified_at from dg_metadata.quality where metadata_path <> '' and quality_generic_id is null and id IN({{ids}})) " +
+      "UNION " +
+      "(select id,name,'' as alias,description,'' as metadata_path,'QUALITY' as type,'RULES GENERIC' as subtype, tenant,null as properties, active, modified_at as discovered_at, modified_at from dg_metadata.quality where metadata_path = '' and id IN({{ids}}))")(result)
 
   }
 

@@ -166,7 +166,7 @@ class PartialIndexerTestParams(s: Semaphore, noAdds: Boolean, value_type: Option
     2
   }
 
-  override def getAdditionalBusiness: AdditionalBusiness =   new AdditionalBusiness("da/", "bt/", "GLOSSARY", "qr/", "QUALITY", "RULES")
+  override def getAdditionalBusiness: AdditionalBusiness =   new AdditionalBusiness("da/", "bt/", "GLOSSARY", "qr/", "QUALITY", "RULES", "GENERIC RULES")
 }
 
 class SASTExtractor(indexer: ActorRef, params: ExtractorTestParams) extends Actor {

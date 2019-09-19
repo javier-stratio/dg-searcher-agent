@@ -318,9 +318,9 @@ class PostgresSourceDao(sourceConnectionUrl: String,
   }
 
   def readElementsSince(offset: Int, limit: Int): (Array[ElasticObject], Int) = {
-    val dataAssetQuery = getTotalIndexationQueryInfo(dataAssetReaderElement, "", "")
-    val businessAssetQuery = getTotalIndexationQueryInfo(businessAssetReaderElement, additionalBusiness.btType, "")
-    val qualityRuleQuery = getTotalIndexationQueryInfo(qualityRuleReaderElement, additionalBusiness.qrType, additionalBusiness.qrSubtype)
+    val dataAssetQuery = getTotalIndexationQueryInfo(dataAssetReaderElement, List())
+    val businessAssetQuery = getTotalIndexationQueryInfo(businessAssetReaderElement, List(additionalBusiness.btType))
+    val qualityRuleQuery = getTotalIndexationQueryInfo(qualityRuleReaderElement, List(additionalBusiness.qrType, additionalBusiness.qrSubtypeStd, additionalBusiness.qrSubtypeGen)).replace(SearchElementDomain.IDS_CONDITION_PLACEHOLDER,"")
     val selectFromDataAssetWithWhereStatement: PreparedStatement = prepareStatement("(" +
       dataAssetQuery + " UNION " +
       businessAssetQuery + " UNION " +
@@ -382,6 +382,11 @@ class PostgresSourceDao(sourceConnectionUrl: String,
         index+=1
         selectFromBusinessTermWithIdsInStatement.setInt(index, id)
       })
+      // It is necessary to iterate two times in this case due to the union query ...
+      ids.foreach(id => {
+        index+=1
+        selectFromBusinessTermWithIdsInStatement.setInt(index, id)
+      })
 
       ElasticObject.getValuesFromResult(additionalBusiness.adaptInfo, executeQueryPreparedStatement(selectFromBusinessTermWithIdsInStatement)).toArray
     }
@@ -423,7 +428,7 @@ class PostgresSourceDao(sourceConnectionUrl: String,
     while (resultSet.next()) {
       list = Result(resultSet.getString(1), resultSet.getInt(2), resultSet.getTimestamp(3), resultSet.getShort(4)) :: list
     }
-    val mdps = list.filter(_.literal < (ref + dataAssetQueryInfo._2.size)).map(_.metadataPath).distinct
+    val mdps = list.filter(e => (e.literal < (ref + dataAssetQueryInfo._2.size)) && (!e.metadataPath.isEmpty)).map(_.metadataPath).distinct
     val idsBusinessTerms = list.filter(e => (e.literal >= (ref + dataAssetQueryInfo._2.size) && e.literal < (ref + dataAssetQueryInfo._2.size + businessAssetsQueryInfo._2.size))).map(_.baId).distinct
     val idsQualityRules = list.filter(e => (e.literal >= (ref + dataAssetQueryInfo._2.size + businessAssetsQueryInfo._2.size)) && e.literal < (ref + dataAssetQueryInfo._2.size + businessAssetsQueryInfo._2.size + qualityRuleQueryInfo._2.size)).map(_.baId).distinct
 
@@ -592,8 +597,8 @@ class PostgresSourceDao(sourceConnectionUrl: String,
     }
   }
 
-  def getTotalIndexationQueryInfo[W](w: W, typ: String, subTpe: String)(implicit reader: SearchElementDomain.Reader[W]): String = {
-    reader.getTotalIndexationQueryInfo(w, typ, subTpe)
+  def getTotalIndexationQueryInfo[W](w: W, types: List[String])(implicit reader: SearchElementDomain.Reader[W]): String = {
+    reader.getTotalIndexationQueryInfo(w, types)
   }
 
   def getPartialIndexationQueryInfo[W](w: W, resultNumber: Int)(implicit reader: SearchElementDomain.Reader[W]): (String, List[(Int, String)]) = {

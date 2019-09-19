@@ -77,7 +77,9 @@ object AppConf {
 
   lazy val additionalBusinessQualityRuleType: String = envOrElseConfigOrElseDefault("additionalBusiness.qualityRule.type","QUALITY")
 
-  lazy val additionalBusinessQualityRuleSubtype: String = envOrElseConfigOrElseDefault("additionalBusiness.qualityRule.subtype","RULE")
+  lazy val additionalBusinessQualityRuleSubtypeStd: String = envOrElseConfigOrElseDefault("additionalBusiness.qualityRule.subtypeStd","RULE")
+
+  lazy val additionalBusinessQualityRuleSubtypeGen: String = envOrElseConfigOrElseDefault("additionalBusiness.qualityRule.subtypeGen","RULE GENERIC")
 
   lazy val metricsLatencyLog: Boolean = envOrElseConfigOrElseDefault("metrics.latency.log", false)
 

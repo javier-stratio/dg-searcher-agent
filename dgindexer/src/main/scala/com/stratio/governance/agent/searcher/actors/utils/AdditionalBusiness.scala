@@ -5,7 +5,7 @@ import com.stratio.governance.agent.searcher.domain.SearchElementDomain.{Busines
 import org.json4s.JsonAST._
 import org.slf4j.{Logger, LoggerFactory}
 
-class AdditionalBusiness(dataAssetPrefix: String, businessTermPrefix: String, val btType: String, qualityRulePrefix: String, val qrType: String, val qrSubtype: String) {
+class AdditionalBusiness(dataAssetPrefix: String, businessTermPrefix: String, val btType: String, qualityRulePrefix: String, val qrType: String, val qrSubtypeStd: String, val qrSubtypeGen: String) {
 
   private lazy val LOG: Logger = LoggerFactory.getLogger(getClass.getName)
 
@@ -20,23 +20,23 @@ class AdditionalBusiness(dataAssetPrefix: String, businessTermPrefix: String, va
 
   // Additional union/Query to obtain Business Assets and Quality for Total indexation
   def getAdditionalBusinessTotalIndexationSubquery(schema: String, businessAsset: String, businessAssetType: String, businessAssetStatus: String, quality: String): String = {
-    getTotalIndexationQueryInfo(new BusinessAssetReaderElement(schema, businessAsset, businessAssetType, businessAssetStatus, "", ""), btType, "") + " UNION " +
-      getTotalIndexationQueryInfo(new QualityRuleReaderElement(schema, quality, "", "", "", ""), qrType, qrSubtype)
+    getTotalIndexationQueryInfo(new BusinessAssetReaderElement(schema, businessAsset, businessAssetType, businessAssetStatus, "", ""), List(btType)) + " UNION " +
+      getTotalIndexationQueryInfo(new QualityRuleReaderElement(schema, quality, "", "", "", ""), List(qrType, qrSubtypeStd, qrSubtypeGen)).replace(SearchElementDomain.IDS_CONDITION_PLACEHOLDER,"")
   }
 
   // Additional union/Query to obtain Business Asset from previously retrieved Ids for partial indexation
   def getBusinessAssetsPartialIndexationSubqueryInfoById(schema: String, businessAsset: String, businessAssetType: String, businessAssetStatus: String): String = {
-    getTotalIndexationQueryInfo(new BusinessAssetReaderElement(schema, businessAsset, businessAssetType, businessAssetStatus, "", ""), btType, "") + " and ba.id IN({{ids}})"
+    getTotalIndexationQueryInfo(new BusinessAssetReaderElement(schema, businessAsset, businessAssetType, businessAssetStatus, "", ""), List(btType)) + " and ba.id IN({{ids}})"
   }
 
   // Additional union/Query to obtain QualityRules from previously retrieved Ids for partial indexation
   def getQualityRulesPartialIndexationSubqueryInfoById(schema: String, qualityAsset: String): String = {
-    getTotalIndexationQueryInfo(new QualityRuleReaderElement(schema, qualityAsset, "", "", "", ""), qrType, qrSubtype) + " where id IN({{ids}})"
+    getTotalIndexationQueryInfo(new QualityRuleReaderElement(schema, qualityAsset, "", "", "", ""), List(qrType, qrSubtypeStd, qrSubtypeGen)).replace(SearchElementDomain.IDS_CONDITION_PLACEHOLDER,"and id IN({{ids}})")
   }
 
   // Additional Total indexation query parameters for W
-  private def getTotalIndexationQueryInfo[W](w: W, typ: String, subTpe: String)(implicit reader: SearchElementDomain.Reader[W]): String = {
-    reader.getTotalIndexationQueryInfo(w, typ, subTpe)
+  private def getTotalIndexationQueryInfo[W](w: W, types: List[String])(implicit reader: SearchElementDomain.Reader[W]): String = {
+    reader.getTotalIndexationQueryInfo(w, types)
   }
 
   // Retrieve the enriched (id_extended and dataStore) information given certain parameters of a Search Document
@@ -50,7 +50,9 @@ class AdditionalBusiness(dataAssetPrefix: String, businessTermPrefix: String, va
         dataAssetPrefix + id.toString
     }
     val dataStore: String = (typ, subtype) match {
-      case (_,`qrSubtype`) =>
+      case (_,`qrSubtypeStd`) =>
+        qrType
+      case (_,`qrSubtypeGen`) =>
         qrType
       case (`btType`,_) =>
         btType

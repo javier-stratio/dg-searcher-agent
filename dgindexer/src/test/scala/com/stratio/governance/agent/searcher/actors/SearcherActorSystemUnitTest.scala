@@ -85,7 +85,7 @@ class CommonParams(s: Semaphore, sourceDao: CustomSourceDao, reference: String) 
 
   override def getPartition: Int = ???
 
-  override def getAdditionalBusiness: AdditionalBusiness = new AdditionalBusiness("","bt/", "GLOSSARY", "qr/", "QUALITY", "RULES")
+  override def getAdditionalBusiness: AdditionalBusiness = new AdditionalBusiness("","bt/", "GLOSSARY", "qr/", "QUALITY", "RULES", "GENERIC RULES")
 }
 
 case class MetaInfo(value: String)

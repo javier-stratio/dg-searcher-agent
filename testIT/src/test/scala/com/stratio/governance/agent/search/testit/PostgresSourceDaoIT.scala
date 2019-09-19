@@ -26,7 +26,7 @@ class PostgresSourceDaoIT extends LazyLogging {
     SystemPropertyConfigurator.get(AppConf.sourceConnectionUser,"SOURCE_CONNECTION_USER"),
     SystemPropertyConfigurator.get(AppConf.sourceConnectionPassword,"SOURCE_CONNECTION_PASSWORD"),
     SystemPropertyConfigurator.get(AppConf.sourceDatabase,"SOURCE_DATABASE"),
-    schemaTest, 1, 4, exponentialBackOff, new AdditionalBusiness("","bt/", "GLOSSARY", "qr/", "QUALITY", "RULES"),true)
+    schemaTest, 1, 4, exponentialBackOff, new AdditionalBusiness("","bt/", "GLOSSARY", "qr/", "QUALITY", "RULES", "GENERIC_RULES"),true)
 
   @Test
   def test00beforeAll(): Unit = {
@@ -91,7 +91,7 @@ class PostgresSourceDaoIT extends LazyLogging {
 
     val list: List[QualityRule] = postgresDao.qualityRulesForDataAsset(List[String]("hdfsFinance://department/marketing/2018>/:region.parquet:R_REGIONKEY:", "hdfsFinance://department/marketing/2017>/:region.parquet:R_REGIONKEY:", "hdfsFinance://department/finance/2018>/:region.parquet:R_COMMENT:"))
 
-    assertEquals(4, list.size)
+    assertEquals(5, list.size)
     assertEquals(3, list.map(_.metadataPath).distinct.size)
 
   }
@@ -145,12 +145,19 @@ class PostgresSourceDaoIT extends LazyLogging {
     val (list3,next3): (Array[ElasticObject],Int) = postgresDao.readElementsSince(8,2)
     assertEquals(2, list3.size)
     assertEquals(10, next3)
-    assertEquals("202", list3(0).id)
-    assertEquals("201", list3(1).id)
+    assertEquals("201", list3(0).id)
+    assertEquals("qr/5", list3(1).id)
+    assertEquals("Quality", list3(1).tpe)
+    assertEquals("GENERIC_RULES", list3(1).subtype)
 
-    val (list4,_): (Array[ElasticObject],Int) = postgresDao.readElementsSince(10,2)
-    assertEquals(1, list4.size)
+    val (list4,next4): (Array[ElasticObject],Int) = postgresDao.readElementsSince(10,2)
+    assertEquals(2, list4.size)
+    assertEquals(12, next4)
     assertEquals("203", list4(0).id)
+    assertEquals("202", list4(1).id)
+
+    val (list5,_): (Array[ElasticObject],Int) = postgresDao.readElementsSince(12,2)
+    assertEquals(0, list5.size)
 
   }
 
@@ -185,6 +192,26 @@ class PostgresSourceDaoIT extends LazyLogging {
 
   }
 
+  //"PostgresDao readQualityRulesWhereIdsIn method " should " retrieve all information related" in {
+  @Test
+  def test05readQualityWhereIdsIn: Unit = {
+
+    val list: Array[ElasticObject] = postgresDao.readQualityRulesWhereIdsIn(List[Int](1,2,3,4,5,6))
+    assertEquals(5, list.size)
+    val ids = list.map(_.id)
+    // Order is not defined
+    assert(ids.contains("qr/1") && ids.contains("qr/2") && ids.contains("qr/3") && ids.contains("qr/4") && ids.contains("qr/5"))
+
+    val tpe = list.map(_.tpe).distinct
+    assertEquals(1, tpe.size)
+    assertEquals("Quality", tpe(0))
+    val subtype = list.map(_.subtype).distinct
+    assertEquals(2, subtype.size)
+    assertEquals("GENERIC_RULES", subtype(0))
+    assertEquals("RULES", subtype(1))
+
+  }
+
   //"Partial Indexation State cycle " should " be coherent" in {
   @Test
   def test06IndexationStateCycle: Unit = {
@@ -207,8 +234,8 @@ class PostgresSourceDaoIT extends LazyLogging {
     assertEquals(4, list2.size)
     assert(list2.contains(1) && list2.contains(2) && list2.contains(3) && list2.contains(5))
 
-    assertEquals(4, list3.size)
-    assert(list3.contains(1) && list3.contains(2) && list3.contains(3) && list3.contains(4))
+    assertEquals(6, list3.size)
+    assert(list3.contains(1) && list3.contains(2) && list3.contains(3) && list3.contains(4) && list3.contains(5) && list3.contains(6))
 
     val refTs = Timestamp.valueOf("2018-12-10 09:27:17.815")
     val refTs2 = Timestamp.valueOf("2019-07-31 06:52:00.238")

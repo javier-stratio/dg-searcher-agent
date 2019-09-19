@@ -7,6 +7,8 @@ import com.stratio.governance.agent.searcher.model.es.ElasticObject
 
 object SearchElementDomain {
 
+  val IDS_CONDITION_PLACEHOLDER: String = "{{idscond}}"
+
   trait IndexerElement // T class
   class DataAssetIndexerElement(val sourceDao: SourceDao) extends IndexerElement
   class BusinessAssetIndexerElement(val sourceDao: SourceDao) extends IndexerElement
@@ -25,7 +27,7 @@ object SearchElementDomain {
 
   // W Type Class interfaces
   trait Reader[W] {
-    def getTotalIndexationQueryInfo(w: W, tpe: String, subTpe: String): String
+    def getTotalIndexationQueryInfo(w: W, types: List[String]): String
     def getPartialIndexationQueryInfo(w: W, resultNumber: Int): (String, List[(Int, String)])
   }
 
@@ -112,7 +114,7 @@ object SearchElementDomain {
 
     implicit def DataAssetReaderInstance = new Reader[DataAssetReaderElement] {
 
-      def getTotalIndexationQueryInfo(w: DataAssetReaderElement, tpe: String, subTpe: String): String = {
+      def getTotalIndexationQueryInfo(w: DataAssetReaderElement, types: List[String]): String = {
         s"SELECT id,name,alias,description,metadata_path,type,subtype,tenant,properties,active,discovered_at,modified_at FROM ${w.schema}.${w.dataAsset} WHERE active = true"
       }
 
@@ -144,8 +146,8 @@ object SearchElementDomain {
 
     implicit def BusinessAssetReaderInstance = new Reader[BusinessAssetReaderElement] {
 
-      def getTotalIndexationQueryInfo(w: BusinessAssetReaderElement, tpe: String, subTpe: String): String = {
-        s"select ba.id as id,ba.name as name,'' as alias,ba.description as description,'' as metadata_path,'$tpe' as type,bat.description as subtype,ba.tenant,null as properties,true as active,ba.modified_at as discovered_at,ba.modified_at as modified_at from ${w.schema}.${w.businessAssets} as ba, ${w.schema}.${w.businessAssetType} as bat, ${w.schema}.${w.businessAssetsStatus} as bas where ba.business_assets_type_id = bat.id and ba.business_assets_status_id = bas.id and bas.active = true"
+      def getTotalIndexationQueryInfo(w: BusinessAssetReaderElement, types: List[String]): String = {
+        s"select ba.id as id,ba.name as name,'' as alias,ba.description as description,'' as metadata_path,'${types(0)}' as type,bat.description as subtype,ba.tenant,null as properties,true as active,ba.modified_at as discovered_at,ba.modified_at as modified_at from ${w.schema}.${w.businessAssets} as ba, ${w.schema}.${w.businessAssetType} as bat, ${w.schema}.${w.businessAssetsStatus} as bas where ba.business_assets_type_id = bat.id and ba.business_assets_status_id = bas.id and bas.active = true"
       }
 
       def getPartialIndexationQueryInfo(w: BusinessAssetReaderElement, resultNumber: Int): (String, List[(Int, String)]) = {
@@ -167,8 +169,9 @@ object SearchElementDomain {
 
     implicit def QualityRuleReaderInstance = new Reader[QualityRuleReaderElement] {
 
-      def getTotalIndexationQueryInfo(w: QualityRuleReaderElement, tpe: String, subTpe: String): String = {
-        s"select id,name,'' as alias,description,'' as metadata_path,'${tpe}' as type,'${subTpe}' as subtype, tenant,null as properties, active, modified_at as discovered_at, modified_at from ${w.schema}.${w.quality}"
+      def getTotalIndexationQueryInfo(w: QualityRuleReaderElement, types: List[String]): String = {
+        s"(select id,name,'' as alias,description,'' as metadata_path,'${types(0)}' as type,'${types(1)}' as subtype, tenant,null as properties, active, modified_at as discovered_at, modified_at from ${w.schema}.${w.quality} where metadata_path <> '' and quality_generic_id is null " + IDS_CONDITION_PLACEHOLDER + ") UNION " +
+        s"(select id,name,'' as alias,description,'' as metadata_path,'${types(0)}' as type,'${types(2)}' as subtype, tenant,null as properties, active, modified_at as discovered_at, modified_at from ${w.schema}.${w.quality} where metadata_path = '' " + IDS_CONDITION_PLACEHOLDER + ")"
       }
 
       def getPartialIndexationQueryInfo(w: QualityRuleReaderElement, resultNumber: Int): (String, List[(Int, String)]) = {
