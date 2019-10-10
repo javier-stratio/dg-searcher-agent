@@ -22,8 +22,8 @@
         <akka-quartz.version>1.7.1-akka-2.5.x</akka-quartz.version>
         <akka.version>2.5.19</akka.version>
         <debug.suspend>n</debug.suspend>
-        <dg.commons.version>1.2.0-SNAPSHOT</dg.commons.version>
-        <dg.business.glossary>1.2.0-SNAPSHOT</dg.business.glossary>
+        <dg.commons.version>1.2.0-32c4d76</dg.commons.version>
+        <dg.business.glossary>1.2.0-9aaf423</dg.business.glossary>
         <encoding>UTF-8</encoding>
         <http_client_version>4.5.5</http_client_version>
         <json4s_version>3.5.2</json4s_version>
