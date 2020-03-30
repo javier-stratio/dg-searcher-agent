@@ -5,8 +5,8 @@
     "language": "english",
     "search_fuzzy_enabled": true,
     "search_ngram_enabled": true,
-    "autocomplete_phonetic_enabled": true,
-    "search_phonetic_enabled": true,
+    "autocomplete_phonetic_enabled": false,
+    "search_phonetic_enabled": false,
     "fields": [
       {
         "field": "id",
